@@ -8,7 +8,7 @@ param flavor string = 'ITPro'
 @description('Azure Region to deploy the Log Analytics Workspace')
 param location string = resourceGroup().location
 
-@description('Choice to deploy Bastion to connect to the client VM')
+@description('Deploy network prerequisites for Bastion access to the client VM')
 param deployBastion bool = false
 
 @description('Bastion host Sku name')
@@ -22,13 +22,12 @@ param bastionSku string = 'Basic'
 @description('DNS Server configuration')
 param dnsServers array = []
 
-@maxLength(7)
-@description('The naming prefix for the nested virtual machines. Example: ArcBox-Win2k19')
-param Prefix string = 'MHBox'
+@minLength(1)
+@maxLength(9)
+param resourceNameSuffix string
+param tags object = {}
 
-var userName = contains(deployer().userPrincipalName, '@') ? substring(deployer().userPrincipalName, 0, indexOf(deployer().userPrincipalName, '@')) : deployer().userPrincipalName
-
-var namingPrefix = '${Prefix}-${userName}'
+var namingPrefix = 'mh-${resourceNameSuffix}'
 
 @description('Name of the VNet')
 var virtualNetworkNameDST string = '${namingPrefix}-destination-VNet'
@@ -86,6 +85,7 @@ var bastionDSTSubnet = bastionSku != 'Developer'
 resource destinationVirtualNetwork 'Microsoft.Network/virtualNetworks@2024-07-01' = {
   name: virtualNetworkNameDST
   location: location
+  tags: tags
   dependsOn: [
     
   ]
@@ -112,6 +112,7 @@ resource destinationVirtualNetwork 'Microsoft.Network/virtualNetworks@2024-07-01
 resource natDSTGatewayPublicIp 'Microsoft.Network/publicIPAddresses@2024-07-01' = if (deployBastion || flavor != 'ITPro') {
   name: '${natGatewayNameDST}-PIP'
   location: location
+  tags: tags
   properties: {
     publicIPAllocationMethod: 'Static'
     publicIPAddressVersion: 'IPv4'
@@ -125,6 +126,7 @@ resource natDSTGatewayPublicIp 'Microsoft.Network/publicIPAddresses@2024-07-01' 
 resource natGatewayDST 'Microsoft.Network/natGateways@2024-07-01' = if (deployBastion || flavor != 'ITPro') {
   name: natGatewayNameDST
   location: location
+  tags: tags
   sku: {
     name: 'Standard'
   }
@@ -142,6 +144,7 @@ resource natGatewayDST 'Microsoft.Network/natGateways@2024-07-01' = if (deployBa
 resource networkSecurityGroupDST 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
   name: networkSecurityGroupDSTName
   location: location
+  tags: tags
   dependsOn: [
     
   ]
@@ -177,9 +180,10 @@ resource networkSecurityGroupDST 'Microsoft.Network/networkSecurityGroups@2024-0
   }
 }
 
-resource bastionnetworkSecurityGroupDST 'Microsoft.Network/networkSecurityGroups@2024-05-01' = if (deployBastion == true) {
+resource bastionnetworkSecurityGroupDST 'Microsoft.Network/networkSecurityGroups@2024-05-01' = if (deployBastion && bastionSku != 'Developer') {
   name: bastionDSTNetworkSecurityGroupName
   location: location
+  tags: tags
   dependsOn: [
     
   ]
@@ -305,9 +309,10 @@ resource bastionnetworkSecurityGroupDST 'Microsoft.Network/networkSecurityGroups
   }
 }
 
-resource publicIpAddressDST 'Microsoft.Network/publicIPAddresses@2024-05-01' = if (deployBastion == true) {
+resource publicIpAddressDST 'Microsoft.Network/publicIPAddresses@2024-05-01' = if (deployBastion && bastionSku != 'Developer') {
   name: bastionDSTPublicIpAddressName
   location: location
+  tags: tags
   dependsOn: [
     
   ]
@@ -321,40 +326,9 @@ resource publicIpAddressDST 'Microsoft.Network/publicIPAddresses@2024-05-01' = i
   }
 }
 
-resource bastionHostDST 'Microsoft.Network/bastionHosts@2024-05-01' = if (deployBastion == true) {
-  name: bastionDSTName
-  location: location
-  dependsOn: [
-    
-  ]
-  sku: {
-    name: bastionSku
-  }
-  properties: {
-    virtualNetwork: bastionSku == 'Developer'
-      ? {
-          id: destinationVirtualNetwork.id
-        }
-      : null
-    ipConfigurations: bastionSku != 'Developer'
-      ? [
-          {
-            name: 'IpConf'
-            properties: {
-              publicIPAddress: {
-                id: publicIpAddressDST.id
-              }
-              subnet: {
-                id: bastionDSTSubnetRef
-              }
-            }
-          }
-        ]
-      : null
-  }
-}
-
-
-
 output vnetId string = destinationVirtualNetwork.id
 output subnetId string = destinationVirtualNetwork.properties.subnets[0].id
+output vnetName string = destinationVirtualNetwork.name
+output bastionName string = bastionDSTName
+output bastionSubnetId string = (deployBastion && bastionSku != 'Developer') ? bastionDSTSubnetRef : ''
+output bastionPublicIpId string = (deployBastion && bastionSku != 'Developer') ? publicIpAddressDST!.id : ''

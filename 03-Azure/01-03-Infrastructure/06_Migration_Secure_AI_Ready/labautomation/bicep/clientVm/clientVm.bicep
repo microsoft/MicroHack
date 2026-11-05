@@ -22,6 +22,13 @@ param location string = resourceGroup().location
 @description('Resource Id of the subnet in the virtual network')
 param subnetId string
 
+@minLength(1)
+@maxLength(9)
+param resourceNameSuffix string
+param keyVaultName string
+param participantObjectIds array
+param tags object = {}
+
 param spnAuthority string = environment().authentication.loginEndpoint
 
 @description('Your Microsoft Entra tenant Id')
@@ -82,16 +89,14 @@ param zones string = '1'
 @description('Option to enable spot pricing for the ArcBox Client VM')
 param enableAzureSpotPricing bool = false
 
-var userName = contains(deployer().userPrincipalName, '@') ? substring(deployer().userPrincipalName, 0, indexOf(deployer().userPrincipalName, '@')) : deployer().userPrincipalName
-
-var namingPrefix = '${Prefix}-${userName}'
+var namingPrefix = 'mh-${resourceNameSuffix}'
 
 @description('The name of your Virtual Machine')
-var vmName string = '${userName}-HV'
+var hostName string = '${namingPrefix}-hv'
 
 var bastionName = '${namingPrefix}-Bastion'
-var publicIpAddressName = deployBastion == false ? '${vmName}-PIP' : '${bastionName}-PIP'
-var networkInterfaceName = '${vmName}-NIC'
+var publicIpAddressName = deployBastion == false ? '${hostName}-PIP' : '${bastionName}-PIP'
+var networkInterfaceName = '${hostName}-NIC'
 var osDiskType = 'Premium_LRS'
 var PublicIPNoBastion = {
   id: publicIpAddress.id
@@ -99,6 +104,7 @@ var PublicIPNoBastion = {
 resource networkInterface 'Microsoft.Network/networkInterfaces@2024-05-01' = {
   name: networkInterfaceName
   location: location
+  tags: tags
   properties: {
     ipConfigurations: [
       {
@@ -118,6 +124,7 @@ resource networkInterface 'Microsoft.Network/networkInterfaces@2024-05-01' = {
 resource publicIpAddress 'Microsoft.Network/publicIPAddresses@2024-05-01' = if (deployBastion == false) {
   name: publicIpAddressName
   location: location
+  tags: tags
   zones: [zones]
   properties: {
     publicIPAllocationMethod: 'Static'
@@ -131,7 +138,8 @@ resource publicIpAddress 'Microsoft.Network/publicIPAddresses@2024-05-01' = if (
 
 resource vmDisk 'Microsoft.Compute/disks@2024-03-02' = {
   location: location
-  name: '${vmName}-VMsDisk'
+  tags: tags
+  name: '${hostName}-VMsDisk'
   zones: [zones]
   sku: {
     name: vmsDiskSku
@@ -148,8 +156,9 @@ resource vmDisk 'Microsoft.Compute/disks@2024-03-02' = {
 }
 
 resource vm 'Microsoft.Compute/virtualMachines@2024-07-01' = {
-  name: vmName
+  name: hostName
   location: location
+  tags: tags
   zones: [zones]
   identity: {
     type: 'SystemAssigned'
@@ -160,7 +169,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2024-07-01' = {
     }
     storageProfile: {
       osDisk: {
-        name: '${vmName}-OSDisk'
+        name: '${hostName}-OSDisk'
         caching: 'ReadWrite'
         createOption: 'FromImage'
         managedDisk: {
@@ -192,7 +201,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2024-07-01' = {
       ]
     }
     osProfile: {
-      computerName: vmName
+      computerName: hostName
       adminUsername: windowsAdminUsername
       adminPassword: windowsAdminPassword
       windowsConfiguration: {
@@ -216,69 +225,108 @@ resource vm 'Microsoft.Compute/virtualMachines@2024-07-01' = {
   tags: {
     displayName: 'config-bootstrap'
   }
+  dependsOn: [
+    vmVaultReader
+    vmResourceReader
+    vmTagContributor
+    vmDiskContributor
+    vmScheduleContributor
+    vmShutdownTargetContributor
+  ]
   properties: {
     publisher: 'Microsoft.Compute'
     type: 'CustomScriptExtension'
     typeHandlerVersion: '1.10'
     autoUpgradeMinorVersion: true
+    // Rerun failed Bootstrap for this fix without changing the tag on every deployment.
+    forceUpdateTag: 'bootstrap-deferred-restart-v2'
     protectedSettings: {
       fileUris: [
         uri(templateBaseUrl, 'artifacts/Bootstrap.ps1')
       ]
-      //commandToExecute: 'powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File Bootstrap.ps1 -adminUsername ${windowsAdminUsername} -tenantId ${tenantId} -spnAuthority ${spnAuthority} -subscriptionId ${subscription().subscriptionId} -resourceGroup ${resourceGroup().name} -acceptEula ${acceptEula} -registryUsername ${registryUsername} -azureLocation ${location} -templateBaseUrl "${templateBaseUrl}" -flavor ${flavor} -githubUser ${githubUser} -githubBranch "${githubBranch}" -vmAutologon ${vmAutologon} -rdpPort ${rdpPort} -namingPrefix ${namingPrefix} -debugEnabled ${debugEnabled} -sqlServerEdition ${sqlServerEdition} -autoShutdownEnabled ${autoShutdownEnabled}'
-      commandToExecute: 'powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File Bootstrap.ps1 -adminUsername ${windowsAdminUsername} -tenantId ${tenantId} -spnAuthority ${spnAuthority} -subscriptionId ${subscription().subscriptionId} -resourceGroup ${resourceGroup().name} -acceptEula ${acceptEula} -registryUsername ${registryUsername} -azureLocation ${location} -templateBaseUrl "${templateBaseUrl}" -flavor ${flavor} -githubUser ${githubUser} -githubBranch "${githubBranch}" -vmAutologon ${vmAutologon} -rdpPort ${rdpPort} -namingPrefix "MHBox" -debugEnabled ${debugEnabled} -sqlServerEdition ${sqlServerEdition} -autoShutdownEnabled ${autoShutdownEnabled}'
+      commandToExecute: 'powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File Bootstrap.ps1 -adminUsername ${windowsAdminUsername} -tenantId ${tenantId} -spnAuthority ${spnAuthority} -subscriptionId ${subscription().subscriptionId} -resourceGroup "${resourceGroup().name}" -hostVmName "${hostName}" -keyVaultName "${keyVaultName}" -acceptEula ${acceptEula} -registryUsername ${registryUsername} -azureLocation ${location} -templateBaseUrl "${templateBaseUrl}" -flavor ${flavor} -githubUser ${githubUser} -githubBranch "${githubBranch}" -vmAutologon ${vmAutologon} -rdpPort ${rdpPort} -namingPrefix "${Prefix}" -debugEnabled ${debugEnabled} -sqlServerEdition ${sqlServerEdition} -autoShutdownEnabled ${autoShutdownEnabled}'
     }
   }
 } 
 
 
-// Add role assignment for the VM: Azure Key Vault Administrator role
-resource vmRoleAssignment_KeyVaultAdministrator 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(vm.id, 'Microsoft.Authorization/roleAssignments', 'Administrator')
-  scope: resourceGroup()
-  properties: {
-    principalId: vm.identity.principalId
-    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', '00482a5a-887f-4fb3-b363-3b7fe8e74483')
-    principalType: 'ServicePrincipal'
-
-  }
+resource vault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
+  name: keyVaultName
 }
 
-// Add role assignment for the deploy user: Azure Key Vault Administrator role
-resource deployerRoleAssignment_KeyVaultAdministrator 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(resourceGroup().id,deployer().objectId, resourceId('Microsoft.Authorization/roleDefinitions', '00482a5a-887f-4fb3-b363-3b7fe8e74483'))
-  scope: resourceGroup()
-  properties: {
-    principalId: deployer().objectId
-    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', '00482a5a-887f-4fb3-b363-3b7fe8e74483')
-  }
-}
-
-// Add role assignment for the VM: Owner role
-resource vmRoleAssignment_Owner 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(vm.id, 'Microsoft.Authorization/roleAssignments', 'Owner')
-  scope: resourceGroup()
+resource vmVaultReader 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(vault.id, vm.id, 'secrets-reader')
+  scope: vault
   properties: {
     principalId: vm.identity.principalId
-    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', '8e3af657-a8ff-443c-a75c-2fe8c4bcb635')
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')
     principalType: 'ServicePrincipal'
   }
 }
 
-// Add role assignment for the VM: Storage Blob Data Contributor
-resource vmRoleAssignment_Storage 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(vm.id, 'Microsoft.Authorization/roleAssignments', 'Storage Blob Data Contributor')
-  scope: resourceGroup()
+resource participantVaultReaders 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for participantId in participantObjectIds: {
+  name: guid(vault.id, participantId, 'secrets-reader')
+  scope: vault
+  properties: {
+    principalId: participantId
+    principalType: 'User'
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')
+  }
+}]
+
+resource vmResourceReader 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(resourceGroup().id, vm.id, 'reader')
   properties: {
     principalId: vm.identity.principalId
-    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
     principalType: 'ServicePrincipal'
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'acdd72a7-3385-48ef-bd42-f606fba81ae7')
+  }
+}
+
+resource vmTagContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(resourceGroup().id, vm.id, 'tag-contributor')
+  properties: {
+    principalId: vm.identity.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4a9ae827-6dc8-4573-8ac7-8239d42aa03f')
+  }
+}
+
+resource vmDiskContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(vmDisk.id, vm.id, 'contributor')
+  scope: vmDisk
+  properties: {
+    principalId: vm.identity.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')
+  }
+}
+
+resource vmScheduleContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (autoShutdownEnabled) {
+  name: guid(autoShutdown.id, vm.id, 'contributor')
+  scope: autoShutdown
+  properties: {
+    principalId: vm.identity.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')
+  }
+}
+
+// Schedule writes also authorize Microsoft.Compute/virtualMachines/write on the linked VM.
+resource vmShutdownTargetContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (autoShutdownEnabled) {
+  name: guid(vm.id, 'shutdown-target-contributor')
+  scope: vm
+  properties: {
+    principalId: vm.identity.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '9980e02c-c2be-4d73-94e8-173b1dc7cf3c')
   }
 }
 
 resource autoShutdown 'Microsoft.DevTestLab/schedules@2018-09-15' = if (autoShutdownEnabled) {
   name: 'shutdown-computevm-${vm.name}'
   location: location
+  tags: tags
   properties: {
     status: 'Enabled'
     taskType: 'ComputeVmShutdownTask'
@@ -299,3 +347,4 @@ resource autoShutdown 'Microsoft.DevTestLab/schedules@2018-09-15' = if (autoShut
 
 output adminUsername string = windowsAdminUsername
 output publicIP string = deployBastion == false ? publicIpAddress!.properties.ipAddress : ''
+output vmName string = vm.name

@@ -16,6 +16,6 @@
     "auth:setup": "npx playwright test --project=setup"
   },
   "devDependencies": {
-    "@playwright/test": "^1.50.0"
+    "@playwright/test": "^1.55.1"
   }
 }

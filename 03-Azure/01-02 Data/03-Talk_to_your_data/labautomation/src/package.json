@@ -8,7 +8,11 @@
     "start": "node server.js"
   },
   "overrides": {
-    "hasown": "2.0.3"
+    "hasown": "2.0.3",
+    "@azure/identity": "~4.2.1",
+    "@azure/msal-node": {
+      "uuid": "^11.1.1"
+    }
   },
   "dependencies": {
     "dotenv": "^16.4.5",

@@ -16,7 +16,7 @@ Copy them if you get stuck. Producing them yourself, with GitHub Copilot, is the
 
 | File | Step | What it does |
 | --- | --- | --- |
-| `app/src/LegoCatalog.App/LegoCatalog.App.csproj` | 1 | Target framework moved to `net10.0`, EF Core packages to 10.0.11 |
+| `app/src/LegoCatalog.App/LegoCatalog.App.csproj` | 1 | Target framework moved to `net10.0`, EF Core packages to 10.0.11, patched `System.Security.Cryptography.Pkcs` pinned |
 | `app/tests/LegoCatalog.App.Tests/LegoCatalog.App.Tests.csproj` | 1 | Same upgrade for the test project |
 | `bicep/` | 2, 4, 5, 6 | SQL, ACR, firewall and Container Apps — see [`bicep/README.md`](./bicep/README.md) |
 | `app/Dockerfile` | 3 | Multi-stage build; SDK image to compile, ASP.NET runtime image to run |
@@ -35,6 +35,11 @@ Two changes, in both project files:
 The explicit `Microsoft.AspNetCore.Components.Web` reference is **removed**: it ships as
 part of the ASP.NET Core shared framework that `Microsoft.NET.Sdk.Web` already references,
 so pinning a version only risks drift against the installed runtime.
+
+The app project also pins `System.Security.Cryptography.Pkcs` to `10.0.14`. EF Core
+10.0.11 pulls it in transitively through `Microsoft.Data.SqlClient` at `9.0.11`, which has
+known vulnerabilities. .NET 10 audits transitive packages by default and the projects
+treat warnings as errors, so without the pin `dotnet restore` fails with NU1902/NU1903.
 
 The OpenTelemetry packages are already current and need no change.
 

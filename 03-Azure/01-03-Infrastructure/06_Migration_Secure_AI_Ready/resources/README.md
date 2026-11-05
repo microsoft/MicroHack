@@ -76,7 +76,7 @@ By default, the signed-in user receives Key Vault secret access. To deploy for o
 
 ### Create a fresh lab and deploy
 
-Choose a new RG, not an existing or Console-managed lab. Keep the number as a quoted string to preserve leading zeros. The example reads the same source JSON as Console deployment; there is no hardcoded test account or branch.
+Choose a new RG, not an existing or Console-managed lab. Keep the number as a quoted string to preserve leading zeros. The example reads the same deployment-source settings as Console deployment.
 
 Azure CLI will prompt securely for the omitted `windowsAdminPassword`. Use a unique 12-123 character password meeting Windows complexity requirements and retain it securely for recovery. It is not placed in the temporary parameters file or command history.
 
@@ -136,8 +136,6 @@ For manual labs, securely provide the subscription, RG, region, host, Key Vault,
 
 Keep the RG through Challenges 2-8: it contains both source and migrated resources. Azure Monitor may create an Azure-managed `MA_*_managed` group for workspace internals; do not delete it separately. At the end, obtain approval, complete supported migration/replication and backup cleanup, then remove the lab RG. Deletion removes the entire lab, not just the source environment.
 
-## Testing changes
+## Deployment source
 
-Use a fresh test RG and a real learner account with **subscription Owner** to exercise deployment, both dashboard variants, provider registration during Challenges 2-8, and preservation of learner progress on a completed Console rerun. The [local harness](../../../../99-MicroHack-Template/labautomation/README.md#local-testing) is also available for testing Console automation; its helpers are local-development stand-ins, not the manual deployment requirement.
-
-To test unpublished changes, set `githubAccount` and `githubBranch` in [deployment-settings.json](../labautomation/deployment-settings.json) to a repository account and branch or commit containing the matching artifacts. The source must be publicly downloadable by the VMs. Re-import the Console package after edits; the manual example reads the JSON directly. Keep these fields out of `lab-defaults.json`. For official upstream deployment, use `microsoft` and `main` once the matching version is published there. Complete the Azure deployment and learner-flow tests before upstream integration; syntax checks alone are not sufficient.
+[deployment-settings.json](../labautomation/deployment-settings.json) selects the official `microsoft/MicroHack` repository and `main` branch for both deployment options. Import the complete `labautomation` folder from upstream `main` so the Bicep package and downloaded artifacts match. Re-import the Console package after upstream updates; already verified labs continue to reuse their existing baseline.

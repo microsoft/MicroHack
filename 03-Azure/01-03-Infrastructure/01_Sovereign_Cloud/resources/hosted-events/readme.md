@@ -303,6 +303,46 @@ bounded intervals and potential optimizations.
 
 ### Diagnostics and reruns
 
+#### Guarded startup for new Client VMs
+
+Re-import the complete `labautomation` directory, including
+[localbox-startup.ps1](../../labautomation/localbox-startup.ps1) and
+[localbox-startup-watch.ps1](../../labautomation/localbox-startup-watch.ps1).
+New Client VMs receive a deployment-specific startup guard through immutable VM
+custom data. Existing unprotected VMs are **not migrated or repaired**; existing
+guarded VMs keep their original payload and startup identity.
+
+The guard replaces the recognized upstream base-VHD download/checksum block:
+
+- Each base image gets at most **three attempts**, with **60 seconds** between
+  retries. The shared download-phase budget is **two hours**; each AzCopy process
+  is capped at 30 minutes or the remaining budget, whichever is shorter.
+- AzCopy exit codes, file existence, nonempty images and valid SHA256 checksums
+  are mandatory. Missing image and checksum files can never count as a match.
+- Verified cached pairs are reused. Downloads are staged separately and promoted
+  only after verification; failed downloads do not replace canonical cached files.
+- Only recognized upstream public sources are accepted. A persistent 401 fails
+  explicitly; there is no authentication bypass or fallback to obsolete images.
+- An incomplete or failed startup is **not automatically replayed**, because the
+  upstream storage initialization is not safe to repeat blindly. Unsupported
+  upstream template/script changes also fail explicitly rather than dropping protection.
+
+While neither `localcluster-validate` nor `localcluster-deploy` exists, Console
+uses the read-only `sovereign-localbox-startup-watch` Managed Run Command.
+It verifies the startup identity and scope, then reports the failure phase, code
+and bounded diagnostic message (for example, `BaseImages`,
+`BaseImageDownloadFailed`, and `HTTP 401`) instead of waiting eight hours for a
+deployment that was never started. No startup report within **one hour** fails
+the gate; a Running report with a stopped task fails after a **two-minute
+monitoring grace period**. Inspect the protected
+`C:\LocalBox\SovereignStartup\state.json` and the LocalBox startup logs.
+
+Startup success is **not infrastructure readiness**. All existing ARM, cluster,
+connectivity and Full health checks remain required. Monitoring uses the remaining
+nested-readiness budget. Offline tests and compilation against the real upstream
+templates/scripts validate this integration; a fresh Windows/Console deployment
+is still required to verify the complete new-VM path.
+
 #### Automatic Azure Local validation recovery
 
 The Console can perform **one automatic validation retry**, after a **two-minute

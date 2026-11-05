@@ -9,6 +9,7 @@ BeforeAll {
     $fixture = Join-Path $TestDrive 'lab'
     New-Item -ItemType Directory -Path "$fixture/labautomation", "$fixture/resources/manual-setup/localbox" -Force | Out-Null
     Copy-Item "$root/labautomation/deploy-localbox.ps1" "$fixture/labautomation"
+    Copy-Item "$root/labautomation/localbox-startup.ps1" "$fixture/labautomation"
     Copy-Item "$root/resources/manual-setup/localbox/deploy-localbox.ps1" "$fixture/resources/manual-setup/localbox"
     function az {}
 }
@@ -55,12 +56,14 @@ Describe 'LocalBox deployment entry points' {
             GroupExists = $false
             Bastions = @()
             Networks = @()
+            Clients = @()
             QueriesFail = $false
             ValidationFails = $false
             Submitted = 0
             Builds = 0
             Parameters = $null
             NetworkSource = $null
+            HostSource = $null
             Downloads = [Collections.Generic.List[string]]::new()
         }
         $arguments = @{
@@ -73,7 +76,19 @@ Describe 'LocalBox deployment entry points' {
         }
         Mock Invoke-WebRequest {
             $deploymentTestState.Downloads.Add([string]$Uri)
-            Set-Content -LiteralPath $OutFile '// upstream fixture; full compilation is validated separately'
+            if ($Uri -like '*/host/host.bicep') {
+                @'
+var profile = {
+  osProfile: {
+    computerName: 'LocalBox-Client'
+  }
+}
+var settings = {
+  commandToExecute: 'powershell.exe -ExecutionPolicy Bypass -File Bootstrap.ps1 -adminPassword opaque'
+}
+'@ | Set-Content -LiteralPath $OutFile
+            }
+            else { Set-Content -LiteralPath $OutFile '// upstream fixture; full compilation is validated separately' }
         }
         Mock az {
             $global:LASTEXITCODE = 0
@@ -93,11 +108,13 @@ Describe 'LocalBox deployment entry points' {
                     break
                 }
                 '^network vnet list' { ConvertTo-Json -InputObject @($deploymentTestState.Networks) -Depth 10; break }
+                '^resource list' { ConvertTo-Json -InputObject @($deploymentTestState.Clients) -Depth 10; break }
                 '^group (create|show|update)' { '{"name":"rg-localbox-test","location":"spaincentral"}'; break }
                 '^bicep build' {
                     $deploymentTestState.Builds++
                     $path = $args[[array]::IndexOf($args, '--file') + 1]
                     $deploymentTestState.NetworkSource = Get-Content (Join-Path (Split-Path $path) 'network/network.bicep') -Raw
+                    $deploymentTestState.HostSource = Get-Content (Join-Path (Split-Path $path) 'host/host.bicep') -Raw
                     break
                 }
                 '^deployment group validate' {
@@ -112,6 +129,26 @@ Describe 'LocalBox deployment entry points' {
             }
         }
     }
+    It 'preserves the bootstrap of an existing unprotected VM' {
+        $deploymentTestState.Clients = @(@{ name = 'LocalBox-Client'; tags = @{} })
+        & "$fixture/labautomation/deploy-localbox.ps1" @arguments
+        $deploymentTestState.HostSource | Should -Not -Match 'customData|SovereignStartup'
+        $deploymentTestState.Parameters.tags.value.PSObject.Properties.Name | Should -Not -Contain 'microhack-startup-id'
+    }
+    It 'retains the immutable startup identity on a guarded existing VM' {
+        $deploymentTestState.Clients = @(@{ name = 'LocalBox-Client'; tags = @{
+            'microhack-startup-version' = '1'; 'microhack-startup-id' = '40000000-0000-0000-0000-000000000001'
+        } })
+        & "$fixture/labautomation/deploy-localbox.ps1" @arguments
+        $deploymentTestState.HostSource | Should -Match 'SovereignStartup'
+        $deploymentTestState.HostSource | Should -Not -Match 'customData:'
+        $deploymentTestState.Parameters.tags.value.'microhack-startup-id' | Should -Be '40000000-0000-0000-0000-000000000001'
+    }
+    It 'rejects unknown protection metadata without submitting deployment' {
+        $deploymentTestState.Clients = @(@{ name = 'LocalBox-Client'; tags = @{ 'microhack-startup-version' = '2' } })
+        { & "$fixture/labautomation/deploy-localbox.ps1" @arguments } | Should -Throw '*No bootstrap migration*'
+        $deploymentTestState.Submitted | Should -Be 0
+    }
     It 'packages the local module alongside upstream templates and preserves default Bastion/private-host parameters' {
         $result = & "$fixture/labautomation/deploy-localbox.ps1" @arguments
         $result.ProvisioningState | Should -Be 'Submitted'
@@ -119,6 +156,9 @@ Describe 'LocalBox deployment entry points' {
         $deploymentTestState.Parameters.deployBastion.value | Should -BeTrue
         $deploymentTestState.Parameters.tags.value.SecurityControl | Should -Be 'Ignore'
         $deploymentTestState.Parameters.tags.value.CostControl | Should -Be 'Ignore'
+        $deploymentTestState.Parameters.tags.value.'microhack-startup-version' | Should -Be '1'
+        $deploymentTestState.Parameters.tags.value.'microhack-startup-id' | Should -Match '^[a-f0-9-]{36}$'
+        $deploymentTestState.HostSource | Should -Match 'customData:'
         $deploymentTestState.NetworkSource | Should -Be (Get-Content "$root/labautomation/localbox-network.bicep" -Raw)
         $deploymentTestState.Downloads.Count | Should -Be 5
         @($deploymentTestState.Downloads | Where-Object { $_ -like '*/network/network.bicep' }).Count | Should -Be 0

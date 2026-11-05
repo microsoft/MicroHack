@@ -90,10 +90,77 @@ function Get-LocalBoxValidationRetryState {
         Detail = "Automatic validation retry 1/1: $($state.executionState). Deployment remains gated on successful validation." }
 }
 
+function Get-LocalBoxStartupProgress {
+    param([hashtable]$Tracking, [string]$SubscriptionId, [string]$ResourceGroupName, [int]$TimeoutSeconds)
+    $vmId = "/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Compute/virtualMachines/LocalBox-Client"
+    $uri = "$vmId/runCommands/sovereign-localbox-startup-watch?api-version=2024-07-01"
+    if (-not $Tracking.Checked) {
+        $vm = Invoke-LocalBoxAutomationRequest -Path "$vmId`?api-version=2024-07-01"
+        $Tracking.Checked = $true
+        if (-not $vm.tags.'microhack-startup-version' -and -not $vm.tags.'microhack-startup-id') { return }
+        $id = [guid]::Empty
+        if ($vm.tags.'microhack-startup-version' -ne '1' -or
+            -not [guid]::TryParse([string]$vm.tags.'microhack-startup-id', [ref]$id) -or $id -eq [guid]::Empty) {
+            throw 'Invalid VM startup-protection metadata. Startup readiness cannot be verified.'
+        }
+        $Tracking.Id = $id.ToString()
+        $command = Invoke-LocalBoxAutomationRequest -Path "$uri&`$expand=instanceView" -AllowNotFound
+        if (-not $command) {
+            if ($TimeoutSeconds -le 0) { throw 'No nested-deployment budget remains for startup monitoring.' }
+            $startedAfter = [datetime]::UtcNow.ToString('o')
+            Invoke-LocalBoxAutomationRequest -Path $uri -Method PUT -Body @{
+                location = $vm.location
+                properties = @{
+                    source = @{ script = Get-Content (Join-Path $PSScriptRoot 'localbox-startup-watch.ps1') -Raw -ErrorAction Stop }
+                    asyncExecution = $true; timeoutInSeconds = $TimeoutSeconds
+                    parameters = @(
+                        @{ name = 'BootstrapId'; value = $Tracking.Id }
+                        @{ name = 'SubscriptionId'; value = $SubscriptionId }
+                        @{ name = 'ResourceGroupName'; value = $ResourceGroupName }
+                        @{ name = 'StartedAfter'; value = $startedAfter }
+                        @{ name = 'TimeoutSeconds'; value = [string]$TimeoutSeconds }
+                    )
+                }
+            } | Out-Null
+        }
+    }
+    if (-not $Tracking.Id) { return }
+    $command = Invoke-LocalBoxAutomationRequest -Path "$uri&`$expand=instanceView"
+    $metadata = @{}
+    foreach ($parameter in $command.properties.parameters) {
+        if ($metadata.ContainsKey($parameter.name)) { throw 'Duplicate startup-monitor metadata.' }
+        $metadata[$parameter.name] = $parameter.value
+    }
+    $started = [datetimeoffset]::MinValue
+    if ($metadata.BootstrapId -ne $Tracking.Id -or $metadata.SubscriptionId -ne $SubscriptionId -or
+        $metadata.ResourceGroupName -ne $ResourceGroupName -or
+        -not [datetimeoffset]::TryParse([string]$metadata.StartedAfter, [ref]$started)) {
+        throw 'An existing startup monitor does not match this VM deployment; it was not replaced.'
+    }
+    if ($command.properties.provisioningState -in @('Failed', 'Canceled')) { throw 'The LocalBox startup monitor could not be provisioned.' }
+    $instance = $command.properties.instanceView
+    if (-not $instance.startTime -or [datetimeoffset]$instance.startTime -lt $started -or
+        $instance.executionState -notin @('Succeeded', 'Failed', 'Canceled', 'TimedOut')) { return }
+    $matches = [regex]::Matches([string]$instance.output, '(?m)^LOCALBOX_STARTUP_REPORT:(.+)\r?$')
+    if ($matches.Count -ne 1) { throw 'LocalBox startup monitoring stopped without a verified report. Inspect sovereign-localbox-startup-watch.' }
+    try { $report = $matches[0].Groups[1].Value | ConvertFrom-Json -AsHashtable -ErrorAction Stop }
+    catch { throw 'Invalid LocalBox startup report. Inspect sovereign-localbox-startup-watch.' }
+    if ($report.BootstrapId -ne $Tracking.Id -or $report.SubscriptionId -ne $SubscriptionId -or $report.ResourceGroupName -ne $ResourceGroupName) {
+        throw 'LocalBox startup report identity mismatch; no report details were accepted.'
+    }
+    if ($report.State -eq 'Failed') {
+        throw "Upstream LocalBox startup failed during $(ConvertTo-LocalBoxDiagnosticText $report.Phase 80) [$(ConvertTo-LocalBoxDiagnosticText $report.Code 80)]: $(ConvertTo-LocalBoxDiagnosticText $report.Message). Azure Local validation/deployment has not started; no infrastructure readiness is claimed."
+    }
+    if ($report.State -ne 'Succeeded' -or $instance.executionState -ne 'Succeeded' -or $null -eq $instance.exitCode -or $instance.exitCode -ne 0) {
+        throw 'The LocalBox startup monitor did not finish successfully; readiness remains unverified.'
+    }
+}
+
 function Wait-LocalBoxNestedDeployment {
     param([string]$SubscriptionId, [string]$ResourceGroupName, [int]$TimeoutSeconds = 28800)
     $deadline = [datetime]::UtcNow.AddSeconds($TimeoutSeconds)
     $retry = @{ Checked = $false; Command = $null; OriginalCorrelationId = $null }
+    $startup = @{ Checked = $false; Id = $null }
     $vmId = "/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Compute/virtualMachines/LocalBox-Client"
     $retryUri = "$vmId/runCommands/sovereign-localbox-validation-retry?api-version=2024-07-01"
     Wait-LocalBoxAutomation -Phase 'nested deployment' -TimeoutSeconds $TimeoutSeconds -Probe {
@@ -101,6 +168,10 @@ function Wait-LocalBoxNestedDeployment {
         $clusterDeployment = @($deployments | Where-Object name -eq 'localcluster-deploy')
         $validation = @($deployments | Where-Object name -eq 'localcluster-validate')
         if ($clusterDeployment.Count -gt 1 -or $validation.Count -gt 1) { throw 'Ambiguous nested deployment records.' }
+        if (-not $clusterDeployment.Count -and -not $validation.Count) {
+            $remaining = [int][math]::Max(0, [math]::Floor(($deadline - [datetime]::UtcNow).TotalSeconds))
+            Get-LocalBoxStartupProgress -Tracking $startup -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -TimeoutSeconds $remaining
+        }
         if ($clusterDeployment.Count -eq 1 -and $clusterDeployment[0].properties.provisioningState -in @('Failed', 'Canceled')) {
             throw 'Nested deployment localcluster-deploy failed. Inspect its deployment operations and Client logs.'
         }
@@ -165,7 +236,10 @@ function Wait-LocalBoxNestedDeployment {
             return @{ Ready = $false; Detail = 'Automatic validation retry 1/1 submitted. Credentials and existing ARM files remain on LocalBox-Client.' }
         }
         if ($clusterDeployment.Count -ne 1 -or $clusterDeployment[0].properties.provisioningState -ne 'Succeeded') {
-            return @{ Ready = $false; Detail = 'Waiting for localcluster-deploy to succeed.' }
+            $detail = if (-not $validation.Count -and -not $clusterDeployment.Count) {
+                'Azure Local validation/deployment records are absent; waiting for upstream Client startup.'
+            } else { 'Waiting for localcluster-deploy to succeed.' }
+            return @{ Ready = $false; Detail = $detail }
         }
         $resources = @(Invoke-LocalBoxAutomationAz @('resource', 'list', '--subscription', $SubscriptionId, '--resource-group', $ResourceGroupName))
         foreach ($type in @('Microsoft.AzureStackHCI/clusters', 'Microsoft.ResourceConnector/appliances', 'Microsoft.ExtendedLocation/customLocations')) {

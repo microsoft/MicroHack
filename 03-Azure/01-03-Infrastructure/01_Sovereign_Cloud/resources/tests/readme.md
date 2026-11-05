@@ -58,6 +58,18 @@ required to validate regional service availability and effective inherited polic
 
 ## Global event LocalBox checks
 
+Run `Invoke-Pester ./localbox-startup.tests.ps1,./localbox-deployment.tests.ps1 -Output Detailed`
+for future-only startup protection. Offline checks cover new/existing VM
+custom-data handling, immutable identity retention, strict upstream source
+recognition, checksum/cache validation, bounded retries, native exit/timeout
+handling, cleanup, persistent replay prevention, Console report correlation and
+one-hour/two-minute monitoring thresholds. Mocked transfers never download VHDs
+or restart a live VM. The modified real upstream Bicep was compiled, and both
+upstream script transformations were syntax-checked offline. A new Windows
+deployment is still required to verify custom-data delivery, scheduled-task
+execution and end-to-end Console reporting together; existing failed instances
+are deliberately not retrofitted.
+
 Run `Invoke-Pester ./localbox-failure-summary.tests.ps1,./localbox-automation.tests.ps1 -Output Detailed`
 for Console failure reporting. Tests cover run/content/group/scope correlation,
 real NUnit failure counts and messages, missing/malformed reports, prohibited XML

@@ -133,6 +133,8 @@ $networkTemplateFile = Join-Path $PSScriptRoot 'localbox-network.bicep'
 if (-not (Test-Path -LiteralPath $networkTemplateFile -PathType Leaf)) {
     throw 'Missing localbox-network.bicep. Import the complete labautomation directory before deploying LocalBox.'
 }
+$startupSource = Join-Path $PSScriptRoot 'localbox-startup.ps1'
+. $startupSource
 
 if (-not (Get-Command az -ErrorAction SilentlyContinue)) {
     throw 'Azure CLI is required to deploy LocalBox.'
@@ -330,6 +332,29 @@ try {
         Project = 'jumpstart_LocalBox'
         SecurityControl = 'Ignore'
         CostControl = 'Ignore'
+    }
+    $clients = @(Invoke-AzJson -Arguments @('resource', 'list', '--subscription', $SubscriptionId,
+        '--resource-group', $ResourceGroupName, '--resource-type', 'Microsoft.Compute/virtualMachines') |
+        Where-Object name -eq 'LocalBox-Client')
+    if ($clients.Count -gt 1) { throw 'Cannot uniquely identify the existing LocalBox Client.' }
+    $newClient = $clients.Count -eq 0
+    $startupId = [guid]::Empty
+    if ($newClient) { $startupId = [guid]::NewGuid() }
+    elseif ($clients[0].tags.'microhack-startup-version' -or $clients[0].tags.'microhack-startup-id') {
+        if ($clients[0].tags.'microhack-startup-version' -ne '1' -or
+            -not [guid]::TryParse([string]$clients[0].tags.'microhack-startup-id', [ref]$startupId) -or $startupId -eq [guid]::Empty) {
+            throw 'Existing LocalBox startup-protection metadata is unrecognized. No bootstrap migration was attempted.'
+        }
+    }
+    if ($startupId -ne [guid]::Empty) {
+        $resourceTags['microhack-startup-version'] = '1'
+        $resourceTags['microhack-startup-id'] = $startupId.ToString()
+        Set-LocalBoxStartupTemplate -HostTemplate (Join-Path $tempDirectory 'host/host.bicep') `
+            -StartupSource $startupSource -Id $startupId -NewVm:$newClient
+        Write-Host 'Using correlated startup protection with bounded base-image downloads. Existing VM custom data is never replaced.'
+    }
+    else {
+        Write-Warning 'This existing Client predates startup protection. Its bootstrap is left unchanged; use a new VM to enable guarded startup.'
     }
 
     @{

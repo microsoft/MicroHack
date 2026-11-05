@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.venv/
+tickets.jsonl
+sop_index.json
+benchmark_results.json
+artifacts/
+work/

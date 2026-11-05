@@ -18,6 +18,19 @@ A fresh Codespace smoke test is still required to validate the devcontainer buil
 
 ## MetalLB preparation checks
 
+Run `Invoke-Pester ./localbox-metallb-recovery.tests.ps1,./localbox-automation.tests.ps1 -Output Detailed`
+for hosted runtime recovery. Coverage includes healthy no-op and delayed initial
+convergence, pool-only/advertisement-only readiness, one unchanged Azure PUT,
+post-PUT convergence/exhaustion, persistent attempt recording before ambiguous
+submission failure, scope/configuration conflicts, API errors, and route cleanup.
+Recovery runs before the normal Full suite; the tests themselves remain read-only.
+Offline fixtures simulate missing objects without deleting healthy live resources.
+Live verification on traininglab-02 confirmed that the recovery preflight performs
+no PUT when the objects exist, followed by **14/14 Full health tests passing** and
+verified temporary-route cleanup. The missing-object/retry branches are tested
+with fixtures; no healthy live objects were removed to manufacture a failure.
+A fresh deployment exercising automatic recovery remains a separate live gate.
+
 MetalLB preparation tests are included in `prepare-localbox.tests.ps1`. Run
 `Invoke-Pester ./prepare-localbox.tests.ps1 -FullName 'LocalBox MetalLB preparation*','MetalLB health evidence*','CLI output streams*' -Output Detailed`
 for the focused offline checks. They cover reserved VIP validation, idempotent

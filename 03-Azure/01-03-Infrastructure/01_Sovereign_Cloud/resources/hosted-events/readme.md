@@ -183,6 +183,33 @@ The [orchestrator](../../labautomation/localbox-automation.ps1) implements:
    If the parent process is forcibly terminated, its `finally` cannot run;
    inspect the API host route before retrying rather than deleting existing
    routes indiscriminately. ActiveStore routes do not survive a reboot.
+
+   Before starting the Sovereign suite, the hosted runner uses that same
+   temporary route to check the in-cluster MetalLB IPAddressPool and
+   L2Advertisement. Missing objects get a **120-second reconciliation grace
+   period**, then at most **one unchanged Azure-managed pool PUT per guest run**.
+   Recovery requires a matching deployment manifest and network reservation,
+   exactly the expected Azure pool, and an already successful Arc networking
+   extension and ARP pool. Additional pools, conflicting settings, deletion,
+   authentication/connectivity errors, missing CRDs and malformed responses stop
+   the run rather than trigger a repair. No Kubernetes objects are directly
+   applied or deleted.
+
+   After the PUT, the runner polls for up to **300 seconds**, requiring both Azure
+   success and the expected Kubernetes objects before continuing with all Full
+   health tests. Individual Kubernetes requests retain their 20-second timeout;
+   recovery ARM reads use 30 seconds and the single PUT uses 120 seconds.
+   An in-flight request can finish after a polling deadline.
+   The attempt is recorded **before submission** in the private
+   `metallb-recovery.json` report. A timeout or restart cannot submit another PUT
+   for that run. A resumed run may proceed if objects have since become healthy;
+   otherwise it stops for organizer review. An explicitly retriggered Console
+   deployment with a new run ID has a new one-attempt budget.
+   Route cleanup still runs on recovery failure. Standalone health checks and
+   `-HealthOnly` remain read-only; this recovery is enabled by hosted deployment,
+   not by the health tests. It mitigates the observed Azure/Kubernetes state
+   mismatch, but does not establish the underlying provider cause or guarantee
+   against future drift.
 7. Require a zero guest exit code, matching run/content/group/scope metadata,
    nonempty passing suites without skipped/not-run tests, and matching NUnit XML
    before publishing global discovery credentials and returning to Console.

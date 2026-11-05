@@ -200,7 +200,7 @@ function Initialize-LocalBoxCliExtension {
 }
 
 function Get-LocalBoxResource {
-    param([string]$Id)
+    param([string]$Id, [int]$TimeoutSeconds = 300)
     $arguments = @('resource', 'show', '--ids', $Id)
     if ($Id -match '/providers/Microsoft\.HybridContainerService/provisionedClusterInstances/') {
         $arguments += @('--api-version', '2024-01-01')
@@ -217,7 +217,7 @@ function Get-LocalBoxResource {
     elseif ($Id -match '/providers/Microsoft\.HybridCompute/machines/') {
         $arguments += @('--api-version', '2024-07-10')
     }
-    Invoke-LocalBoxAz $arguments
+    Invoke-LocalBoxAz $arguments -TimeoutSeconds $TimeoutSeconds
 }
 
 function New-LocalBoxVmTemplate {
@@ -660,9 +660,9 @@ function Get-LocalBoxMetalLbPlan {
 }
 
 function Get-LocalBoxArmCollection {
-    param([Parameter(Mandatory)][string]$Url)
+    param([Parameter(Mandatory)][string]$Url, [int]$TimeoutSeconds = 300)
     do {
-        $page = Invoke-LocalBoxAz @('rest', '--method', 'get', '--url', $Url)
+        $page = Invoke-LocalBoxAz @('rest', '--method', 'get', '--url', $Url) -TimeoutSeconds $TimeoutSeconds
         # Background-job deserialization turns nested JSON arrays into ArrayList.
         if ($page -isnot [System.Collections.IDictionary] -or -not $page.Contains('value') -or
             $page.value -isnot [System.Collections.IList]) {

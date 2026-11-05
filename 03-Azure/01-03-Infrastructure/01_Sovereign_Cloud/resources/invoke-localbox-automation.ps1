@@ -62,7 +62,7 @@ function Assert-LocalBoxAutomationTests {
 
 function Send-LocalBoxAutomationFiles {
     param([hashtable]$Configuration, [string]$Directory)
-    foreach ($name in @('status.json', 'health.json', 'health.xml', 'upstream.xml', 'automation.log')) {
+    foreach ($name in @('status.json', 'health.json', 'health.xml', 'upstream.xml', 'automation.log', 'metallb-recovery.json')) {
         $path = Join-Path $Directory $name
         if (Test-Path -LiteralPath $path) {
             Invoke-LocalBoxAz @('storage', 'blob', 'upload', '--account-name', $Configuration.StorageAccountName,
@@ -99,8 +99,132 @@ function Invoke-LocalBoxAutomationHealthProcess {
     if ($LASTEXITCODE -ne 0) { throw 'Sovereign Cloud Full health tests failed. Inspect health.xml and health.json.' }
 }
 
+function Test-LocalBoxAutomationMetalLbRuntime {
+    param([string]$Kubeconfig, [hashtable]$Plan)
+    $pools = Invoke-SovereignKubectl $Kubeconfig @('get', 'ipaddresspools.metallb.io', '--all-namespaces')
+    $advertisements = Invoke-SovereignKubectl $Kubeconfig @('get', 'l2advertisements.metallb.io', '--all-namespaces')
+    foreach ($list in @($pools, $advertisements)) {
+        if ($list -isnot [System.Collections.IDictionary] -or $list.items -isnot [System.Collections.IList]) {
+            throw 'Invalid MetalLB Kubernetes list response; missing objects cannot be determined safely.'
+        }
+    }
+    $expected = @($pools.items | Where-Object { $_.metadata.name -eq 'aks-pool' -and $_.metadata.namespace -eq 'kube-system' })
+    if ($pools.items.Count -ne $expected.Count -or $expected.Count -gt 1) {
+        throw 'Conflicting MetalLB IPAddressPool objects exist. Organizer review is required; no automatic repair is allowed.'
+    }
+    if ($expected.Count) {
+        $pool = $expected[0]
+        Assert-LocalBoxProperties $pool.spec @{ addresses = $Plan.PoolExpected.properties.addresses }
+        if ($pool.spec.autoAssign -eq $false -or $pool.metadata.deletionTimestamp) {
+            throw 'The MetalLB pool disables auto-assignment or is being deleted; no automatic repair is allowed.'
+        }
+    }
+    $matching = @($advertisements.items | Where-Object {
+        $_.metadata.namespace -eq 'kube-system' -and $_.spec.ipAddressPools -contains 'aks-pool'
+    })
+    foreach ($advertisement in @($advertisements.items | Where-Object {
+        $_.metadata.namespace -eq 'kube-system' -and
+        ($_.metadata.name -eq 'aks-pool' -or $_.spec.ipAddressPools -contains 'aks-pool')
+    })) {
+        Assert-LocalBoxProperties $advertisement.spec @{ ipAddressPools = @('aks-pool') }
+        foreach ($key in @('interfaces', 'nodeSelectors', 'ipAddressPoolSelectors')) {
+            if ($advertisement.spec[$key].Count -gt 0) {
+                throw "The MetalLB L2Advertisement has custom $key configured; organizer review is required."
+            }
+        }
+    }
+    if (@($matching | Where-Object { $_.metadata.deletionTimestamp }).Count) {
+        throw 'A MetalLB L2Advertisement is being deleted; no automatic repair is allowed.'
+    }
+    return ($expected.Count -eq 1 -and $matching.Count -gt 0)
+}
+
+function Sync-LocalBoxAutomationMetalLbRuntime {
+    param(
+        [hashtable]$Manifest, [hashtable]$Configuration, [string]$Kubeconfig,
+        [Parameter(Mandatory)][string]$StatePath,
+        [ValidateRange(0, 600)][int]$GraceSeconds = 120,
+        [ValidateRange(0, 600)][int]$RecoverySeconds = 300
+    )
+    $ErrorActionPreference = 'Stop'
+    $aksId = "/subscriptions/$env:subscriptionId/resourceGroups/$env:resourceGroup/providers/Microsoft.Kubernetes/connectedClusters/localbox-aks"
+    if (-not $env:subscriptionId -or -not $env:resourceGroup -or $Manifest.AksId -ine $aksId -or
+        $Manifest.SubscriptionId -ine $env:subscriptionId -or $Manifest.ResourceGroupName -ine $env:resourceGroup) {
+        throw 'MetalLB recovery manifest does not match this hosted LocalBox scope.'
+    }
+    $plan = Get-LocalBoxMetalLbPlan -Configuration $Configuration -ClusterId $aksId
+    Assert-LocalBoxProperties $Manifest.MetalLb $plan
+    $deadline = [datetime]::UtcNow.AddSeconds($GraceSeconds)
+    do {
+        if (Test-LocalBoxAutomationMetalLbRuntime -Kubeconfig $Kubeconfig -Plan $plan) {
+            Write-Host 'MetalLB runtime objects are verified; no recovery PUT is needed.'
+            return
+        }
+        if ([datetime]::UtcNow -ge $deadline) { break }
+        Write-Host 'MetalLB runtime pool or L2 advertisement is missing; waiting for initial reconciliation.'
+        Start-Sleep -Seconds ([math]::Min(15, [math]::Max(0, ($deadline - [datetime]::UtcNow).TotalSeconds)))
+    } while ($true)
+    if (Test-Path -LiteralPath $StatePath) {
+        throw 'MetalLB runtime objects remain missing and automatic recovery was already recorded for this run. No second PUT will be submitted; inspect the private metallb-recovery.json report.'
+    }
+    $extension = Get-LocalBoxResource $plan.ExtensionId -TimeoutSeconds 30
+    Assert-LocalBoxProperties $extension @{ properties = @{ provisioningState = 'Succeeded'; extensionType = 'microsoft.arcnetworking' } }
+    $url = "https://management.azure.com$aksId/providers/Microsoft.KubernetesRuntime/loadBalancers?api-version=2024-08-01"
+    $pools = @(Get-LocalBoxArmCollection $url -TimeoutSeconds 30)
+    if ($pools.Count -ne 1 -or $pools[0].id -ine $plan.PoolId) {
+        throw 'The existing Azure-managed MetalLB pool is missing or additional pools exist; no automatic repair is allowed.'
+    }
+    $pool = $pools[0]
+    Assert-LocalBoxProperties $pool $plan.PoolExpected
+    if ($pool.properties.provisioningState -ne 'Succeeded') {
+        throw "The Azure-managed MetalLB pool is $($pool.properties.provisioningState), not Succeeded; no automatic repair is allowed."
+    }
+    foreach ($key in @('bgpPeers', 'communities', 'serviceSelector')) {
+        if ($pool.properties[$key].Count -gt 0) {
+            throw "The Azure-managed MetalLB pool has $key configured; organizer review is required."
+        }
+    }
+    if (Test-LocalBoxAutomationMetalLbRuntime -Kubeconfig $Kubeconfig -Plan $plan) {
+        Write-Host 'MetalLB runtime objects converged before recovery; no PUT was submitted.'
+        return
+    }
+    $body = @{ properties = @{
+        addresses = $pool.properties.addresses; advertiseMode = $pool.properties.advertiseMode
+        bgpPeers = $pool.properties.bgpPeers; communities = $pool.properties.communities
+        serviceSelector = $pool.properties.serviceSelector
+    } } | ConvertTo-Json -Depth 10 -Compress
+    $record = @{ PoolId = $plan.PoolId; Attempt = 1; State = 'Attempted'; StartedAt = [datetime]::UtcNow.ToString('o') }
+    # Record before submitting: a timeout or guest restart must not cause a second PUT.
+    New-Item -Path $StatePath -ItemType File -Value ($record | ConvertTo-Json) -ErrorAction Stop | Out-Null
+    Write-Host 'MetalLB automatic recovery 1/1: reapplying the unchanged Azure-managed ARP pool; no resources will be deleted.'
+    Invoke-LocalBoxAz @('rest', '--method', 'put', '--url',
+        "https://management.azure.com$($plan.PoolId)?api-version=2024-08-01", '--body', $body) -TimeoutSeconds 120 -NoOutput
+    $deadline = [datetime]::UtcNow.AddSeconds($RecoverySeconds)
+    do {
+        $actual = Get-LocalBoxResource $plan.PoolId -TimeoutSeconds 30
+        Assert-LocalBoxProperties $actual $plan.PoolExpected
+        $state = $actual.properties.provisioningState
+        if ([string]::IsNullOrWhiteSpace($state) -or $state -in @('Failed', 'Canceled', 'Deleting')) {
+            throw "MetalLB automatic recovery failed: Azure provisioning state is '$state'. No further automatic attempt is allowed."
+        }
+        $ready = Test-LocalBoxAutomationMetalLbRuntime -Kubeconfig $Kubeconfig -Plan $plan
+        if ($state -eq 'Succeeded' -and $ready) {
+            $record.State = 'Succeeded'
+            $record.CompletedAt = [datetime]::UtcNow.ToString('o')
+            $record | ConvertTo-Json | Set-Content -LiteralPath $StatePath -ErrorAction Stop
+            Write-Host 'MetalLB automatic recovery succeeded: Kubernetes pool and L2 advertisement verified. Full health tests must still pass.'
+            return
+        }
+        if ([datetime]::UtcNow -ge $deadline) {
+            throw "MetalLB automatic recovery exhausted after one PUT: Azure state=$state; Kubernetes pool/L2 advertisement ready=$ready. Inspect the Arc networking controller and private reports; readiness remains unverified."
+        }
+        Write-Host "Waiting for MetalLB recovery: Azure state=$state; Kubernetes pool/L2 advertisement ready=$ready."
+        Start-Sleep -Seconds ([math]::Min(15, [math]::Max(0, ($deadline - [datetime]::UtcNow).TotalSeconds)))
+    } while ($true)
+}
+
 function Invoke-LocalBoxAutomationRoutedHealth {
-    param([string]$ResourceRoot, [string]$InputPath, [string]$ManifestPath, [string]$Kubeconfig)
+    param([string]$ResourceRoot, [string]$InputPath, [string]$ManifestPath, [string]$Kubeconfig, [switch]$RecoverMetalLb)
     $ErrorActionPreference = 'Stop'
     $config = Import-PowerShellDataFile -LiteralPath $env:LocalBoxConfigFile
     foreach ($key in @('AKSControlPlaneIP', 'PhysicalHostInternalIP', 'SDNLABRoute')) {
@@ -147,6 +271,11 @@ function Invoke-LocalBoxAutomationRoutedHealth {
                 -NextHop $config.SDNLABRoute -PolicyStore ActiveStore -ErrorAction Stop
         }
         else { Write-Host "Reusing the existing AKS API route for $prefix without modifying it." }
+        if ($RecoverMetalLb) {
+            $manifest = Get-Content -LiteralPath $ManifestPath -Raw -ErrorAction Stop | ConvertFrom-Json -AsHashtable
+            Sync-LocalBoxAutomationMetalLbRuntime -Manifest $manifest -Configuration $config -Kubeconfig $Kubeconfig `
+                -StatePath (Join-Path (Split-Path -Parent $InputPath) 'metallb-recovery.json')
+        }
         Invoke-LocalBoxAutomationHealthProcess -ResourceRoot $ResourceRoot -InputPath $InputPath -ManifestPath $ManifestPath
     }
     catch { $healthError = $_.Exception.Message; throw }
@@ -256,7 +385,7 @@ function Invoke-LocalBoxGuestAutomation {
             '--resource-group', $Configuration.ResourceGroupName, '--name', 'localbox-aks', '--admin',
             '--file', "$Directory/aks.kubeconfig", '--overwrite-existing') -NoOutput
         Invoke-LocalBoxAutomationRoutedHealth -ResourceRoot $ResourceRoot -InputPath $InputPath -ManifestPath $ManifestPath `
-            -Kubeconfig "$Directory/aks.kubeconfig"
+            -Kubeconfig "$Directory/aks.kubeconfig" -RecoverMetalLb
         $health = Get-Content -LiteralPath "$Directory/health.json" -Raw | ConvertFrom-Json -AsHashtable
         if (-not $health.FullReadiness) { throw 'Sovereign Cloud tests did not establish full infrastructure health.' }
         $status.Sovereign = @{ Passed = $health.Passed; Failed = $health.Failed; Skipped = $health.Skipped; NotRun = $health.NotRun }

@@ -569,11 +569,33 @@ Describe 'Temporary AKS API routing for hosted health checks' {
             $routeState.Active.Count | Should -Be 1
             $routeState.HealthCalls++
         }
+        Mock Sync-LocalBoxAutomationMetalLbRuntime { $routeState.Active.Count | Should -Be 1 }
     }
     AfterEach { $env:LocalBoxConfigFile = $previousLocalConfig }
+    It 'runs optional recovery within the owned route before invoking health tests' {
+        $manifestPath = "$TestDrive/manifest.json"
+        '{}' | Set-Content $manifestPath
+        Invoke-LocalBoxAutomationRoutedHealth 'source' "$TestDrive/input.json" $manifestPath 'private.kubeconfig' -RecoverMetalLb
+        Should -Invoke Sync-LocalBoxAutomationMetalLbRuntime -Times 1 -Exactly -ParameterFilter {
+            $StatePath -eq "$TestDrive/metallb-recovery.json" -and $Kubeconfig -eq 'private.kubeconfig'
+        }
+        Should -Invoke Invoke-LocalBoxAutomationHealthProcess -Times 1 -Exactly
+        $routeState.Active.Count | Should -Be 0
+    }
+    It 'removes the owned route and skips health when recovery fails' {
+        $manifestPath = "$TestDrive/manifest.json"
+        '{}' | Set-Content $manifestPath
+        Mock Sync-LocalBoxAutomationMetalLbRuntime { throw 'MetalLB recovery exhausted' }
+        { Invoke-LocalBoxAutomationRoutedHealth 'source' "$TestDrive/input.json" $manifestPath 'private.kubeconfig' -RecoverMetalLb } |
+            Should -Throw '*MetalLB recovery exhausted*'
+        Should -Invoke Remove-NetRoute -Times 1 -Exactly
+        Should -Invoke Invoke-LocalBoxAutomationHealthProcess -Times 0
+        $routeState.Active.Count | Should -Be 0
+    }
     It 'adds only a nonpersistent API host route while health checks run and verifies cleanup' {
         Invoke-LocalBoxAutomationRoutedHealth 'source' 'input.json' 'manifest.json' 'private.kubeconfig'
         Should -Invoke kubectl -Times 1
+        Should -Invoke Sync-LocalBoxAutomationMetalLbRuntime -Times 0
         Should -Invoke New-NetRoute -Times 1 -Exactly -ParameterFilter {
             $DestinationPrefix -eq '10.10.0.5/32' -and $InterfaceIndex -eq 42 -and
             $NextHop -eq '192.168.1.1' -and $PolicyStore -eq 'ActiveStore'
@@ -749,7 +771,7 @@ Invoke-TestPreparation -SubscriptionId $SubscriptionId -ResourceGroupName $Resou
         Should -Invoke Invoke-LocalBoxAz -Times 1 -ParameterFilter { $Arguments[0..1] -join ' ' -eq 'connectedmachine assess-patches' }
         Should -Invoke Invoke-LocalBoxAutomationHealthProcess -Times 1
         Should -Invoke Invoke-LocalBoxAutomationRoutedHealth -Times 1 -Exactly -ParameterFilter {
-            $Kubeconfig -eq "$guestDirectory/aks.kubeconfig" -and $ManifestPath -eq $manifestFile
+            $Kubeconfig -eq "$guestDirectory/aks.kubeconfig" -and $ManifestPath -eq $manifestFile -and $RecoverMetalLb
         }
         Should -Invoke Initialize-LocalBoxAutomationKubectl -Times 1 -Exactly -ParameterFilter {
             $InstanceId -eq '/aks/instance' -and $Directory -eq $guestDirectory

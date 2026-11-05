@@ -35,7 +35,7 @@ Attendees load their industry pack, and create the knowledge bases, the four age
 
 ## Platform contract
 
-The platform sets the Az context and passes `DeploymentType`, `SubscriptionId`, `ResourceGroupName`, `PreferredLocation` and `AllowedEntraUserIds`. The default mode is `resourcegroup`. Only `subscription` mode creates a resource group, named with `Get-MhhStableHash -Length 24`. The script never signs in, switches subscription, deletes resources or silently changes region. One region is accepted (default `uksouth`); a quota or capacity failure is reported, not worked around.
+The default mode is `resourcegroup`. Only `subscription` mode creates a resource group, named with `Get-MhhStableHash -Length 24`. The script never signs in, switches subscription, deletes resources or silently changes region. One region is accepted (default `uksouth`); a quota or capacity failure is reported, not worked around.
 
 After the template, the script zips the CRM (`crm/` plus each pack's `pack.json` and `crm.json`) and publishes it to the Functions app's `/api/publish` endpoint with an ARM token, then waits until `/health` reports all five packs.
 

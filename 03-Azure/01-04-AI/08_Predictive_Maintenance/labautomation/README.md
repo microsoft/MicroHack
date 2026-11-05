@@ -1,9 +1,5 @@
 # Lab automation
 
-This folder is optional. Delete it if this MicroHack does not need automated Azure provisioning.
-
-When present, the MicroHack platform reads [lab-defaults.json](lab-defaults.json) to determine how to scope lab environments. It invokes [deploy-lab.ps1](deploy-lab.ps1) once per participant and [shared-deploy-lab.ps1](shared-deploy-lab.ps1) once per subscription before participant deployments begin.
-
 ## Folder layout
 
 ```text
@@ -61,13 +57,5 @@ instead of reporting a successfully seeded lab.
 This means participants never need to run a manual seeding step — by the time they receive their
 Hackbox credentials, the data is already loaded. `walkthrough/challenge-01/solution-01.md`
 documents a manual fallback re-seed command in case this automatic step needs to be repeated.
-
-## Authoring guidance
-
-- Keep each participant deployment isolated.
-- Put shared resources and one-time subscription preparation in `shared-deploy-lab.ps1`.
-- Use `Get-MhhStableHash` when deterministic per-participant resource names are required.
-- Return participant-facing values as `HackboxCredential` hashtables.
-- Never return participant-specific secrets from the shared deployment hook.
 
 For the complete platform contract and helper cmdlet reference, see the [upstream MicroHack template documentation](https://github.com/microsoft/MicroHack/blob/main/99-MicroHack-Template/labautomation/README.md).

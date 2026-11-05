@@ -24,10 +24,8 @@ Challenge 06 application. It never uses the worker's Kubernetes context or
 in-cluster service account. No Radius, Helm, kubectl, jq, source downloads, or
 participant checkout is needed on the worker.
 
-The [Console contract](../../../../99-MicroHack-Template/labautomation/README.md)
-supplies authenticated Az PowerShell and Azure CLI, subscription Owner for the
-deployment identity, participant object IDs, and a precreated participant RG.
-Participants have Owner on that RG. The hooks grant Reader on the AKS node RG for
+Beyond the [Console contract](../../../../99-MicroHack-Template/labautomation/README.md),
+the hooks grant Reader on the AKS node RG for
 the later recipe's egress discovery; no subscription-wide participant role or
 tenant/Graph permissions are granted. Hosted participants use a resource-group
 scoped managed identity rather than creating an Entra application.

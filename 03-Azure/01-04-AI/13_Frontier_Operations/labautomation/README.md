@@ -36,7 +36,7 @@ Attendees load their industry pack, and create the agents, skills, toolboxes and
 
 ## Platform contract
 
-The platform sets the Az context and passes `DeploymentType`, `SubscriptionId`, `ResourceGroupName`, `PreferredLocation` and `AllowedEntraUserIds`. The default mode is `resourcegroup`. Only `subscription` mode creates a resource group, named with `Get-MhhStableHash -Length 24`. The script never signs in, switches subscription, deletes resources or silently changes region. One region is accepted (default `uksouth`); a quota or capacity failure is reported, not worked around.
+The default mode is `resourcegroup`. Only `subscription` mode creates a resource group, named with `Get-MhhStableHash -Length 24`. The script never signs in, switches subscription, deletes resources or silently changes region. One region is accepted (default `uksouth`); a quota or capacity failure is reported, not worked around.
 
 The ERP key comes from `New-MhhStablePassword -Purpose 'erp-api-key'`: the platform keys it with a secret per lab, so it cannot be worked out from the subscription, resource group or attendee IDs, and a re-run keeps the same key. It is passed to the template as a secure parameter and never written to the outputs.
 

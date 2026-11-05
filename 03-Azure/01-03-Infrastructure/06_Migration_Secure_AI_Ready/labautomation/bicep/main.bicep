@@ -55,13 +55,13 @@ param githubBranch string = 'main'
 @description('Choice to deploy Bastion to connect to the client VM')
 param deployBastion bool = true
 
-@description('Bastion host Sku name. The Developer SKU is currently supported in a limited number of regions: https://learn.microsoft.com/azure/bastion/quickstart-developer-sku')
+@description('Bastion host SKU. Basic provides dedicated portal-based RDP and SSH access by default.')
 @allowed([
   'Basic'
   'Standard'
   'Developer'
 ])
-param bastionSku string = 'Developer'
+param bastionSku string = 'Basic'
 
 @description('User github account where they have forked https://github.com/Azure/jumpstart-apps')
 param githubUser string = 'Azure'

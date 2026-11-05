@@ -181,23 +181,9 @@ if (-not $alreadyReady -and ($null -eq $deployment -or $deployment.ProvisioningS
     }
     $candidateLocations = if ($location) { @($location) } else { $locations }
     $location = $null
-    # Developer SKU coverage is narrower than bastionHosts provider coverage.
-    # https://learn.microsoft.com/azure/bastion/bastion-sku-comparison#regional-availability
-    $bastionDeveloperLocations = @(
-        'brazilsouth', 'canadacentral', 'canadaeast', 'centralus', 'centraluseuap',
-        'eastus2', 'eastus2euap', 'mexicocentral', 'northcentralus', 'westcentralus', 'westus',
-        'francecentral', 'germanywestcentral', 'italynorth', 'northeurope', 'norwayeast',
-        'spaincentral', 'swedencentral', 'switzerlandnorth', 'uksouth', 'ukwest', 'westeurope',
-        'australiacentral', 'australiaeast', 'australiasoutheast', 'centralindia', 'eastasia',
-        'japaneast', 'japanwest', 'koreacentral', 'koreasouth', 'southindia', 'southeastasia',
-        'southafricanorth', 'uaenorth'
-    )
     foreach ($candidate in $candidateLocations) {
         Update-MhhToken | Out-Null
         $reasons = [Collections.Generic.List[string]]::new()
-        if ($candidate -notin $bastionDeveloperLocations) {
-            $reasons.Add('Bastion Developer is not in the documented regional availability list')
-        }
         foreach ($requiredType in @(
             @{ Provider = 'Microsoft.Network'; Type = 'virtualNetworks' },
             @{ Provider = 'Microsoft.Network'; Type = 'natGateways' },

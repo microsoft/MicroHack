@@ -7,7 +7,7 @@ param flavor string = 'ITPro'
 @description('Azure Region to deploy the Log Analytics Workspace')
 param location string = resourceGroup().location
 
-@description('Choice to deploy Bastion to connect to the client VM')
+@description('Deploy network prerequisites for Bastion access to the client VM')
 param deployBastion bool = false
 
 @description('Bastion host Sku name')
@@ -21,9 +21,10 @@ param bastionSku string = 'Basic'
 @description('DNS Server configuration')
 param dnsServers array = []
 
-@maxLength(7)
-@description('The naming prefix for the nested virtual machines. Example: ArcBox-Win2k19')
-param Prefix string = 'MHBox'
+@minLength(1)
+@maxLength(9)
+param resourceNameSuffix string
+param tags object = {}
 
 @description('Password for Windows account. Password must have 3 of the following: 1 lower case character, 1 upper case character, 1 number, and 1 special character. The value must be between 12 and 123 characters long')
 @minLength(12)
@@ -33,9 +34,7 @@ param windowsAdminPassword string?
 
 param windowsAdminUserName string?
 
-var userName = contains(deployer().userPrincipalName, '@') ? substring(deployer().userPrincipalName, 0, indexOf(deployer().userPrincipalName, '@')) : deployer().userPrincipalName
-
-var namingPrefix = '${Prefix}-${userName}'
+var namingPrefix = 'mh-${resourceNameSuffix}'
 
 @description('Name of the VNet')
 var virtualNetworkName string = '${namingPrefix}-Source-VNet'
@@ -53,8 +52,7 @@ var networkSecurityGroupName string = '${namingPrefix}-Source-NSG'
 var bastionNetworkSecurityGroupName string = '${namingPrefix}-SourceBastion-NSG'
 
 var unique = uniqueString(resourceGroup().id)
-var shortunique = substring(unique, 0, 4)
-var keyVaultName = toLower('${namingPrefix}SRC${shortunique}')
+var keyVaultName = 'mhkv${unique}'
 
 var subnetAddressPrefix = '10.1.1.0/24'
 var addressPrefix = '10.1.0.0/16'
@@ -98,6 +96,7 @@ var bastionSubnet = bastionSku != 'Developer'
 resource sourceVirtualNetwork 'Microsoft.Network/virtualNetworks@2024-07-01' = {
   name: virtualNetworkName
   location: location
+  tags: tags
   dependsOn: [
     
   ]
@@ -124,6 +123,7 @@ resource sourceVirtualNetwork 'Microsoft.Network/virtualNetworks@2024-07-01' = {
 resource natGatewayPublicIp 'Microsoft.Network/publicIPAddresses@2024-07-01' = if (deployBastion || flavor != 'ITPro') {
   name: '${natGatewayName}-PIP'
   location: location
+  tags: tags
   properties: {
     publicIPAllocationMethod: 'Static'
     publicIPAddressVersion: 'IPv4'
@@ -137,6 +137,7 @@ resource natGatewayPublicIp 'Microsoft.Network/publicIPAddresses@2024-07-01' = i
 resource natGateway 'Microsoft.Network/natGateways@2024-07-01' = if (deployBastion || flavor != 'ITPro') {
   name: natGatewayName
   location: location
+  tags: tags
   sku: {
     name: 'Standard'
   }
@@ -153,6 +154,7 @@ resource natGateway 'Microsoft.Network/natGateways@2024-07-01' = if (deployBasti
 resource networkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
   name: networkSecurityGroupName
   location: location
+  tags: tags
   dependsOn: [
     
   ]
@@ -175,9 +177,10 @@ resource networkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2024-05-0
   }
 }
 
-resource bastionNetworkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2024-05-01' = if (deployBastion == true) {
+resource bastionNetworkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2024-05-01' = if (deployBastion && bastionSku != 'Developer') {
   name: bastionNetworkSecurityGroupName
   location: location
+  tags: tags
   dependsOn: [
     
   ]
@@ -303,9 +306,10 @@ resource bastionNetworkSecurityGroup 'Microsoft.Network/networkSecurityGroups@20
   }
 }
 
-resource publicIpAddress 'Microsoft.Network/publicIPAddresses@2024-05-01' = if (deployBastion == true) {
+resource publicIpAddress 'Microsoft.Network/publicIPAddresses@2024-05-01' = if (deployBastion && bastionSku != 'Developer') {
   name: bastionPublicIpAddressName
   location: location
+  tags: tags
   dependsOn: [
     
   ]
@@ -319,40 +323,6 @@ resource publicIpAddress 'Microsoft.Network/publicIPAddresses@2024-05-01' = if (
   }
 }
 
-resource bastionHost 'Microsoft.Network/bastionHosts@2024-05-01' = if (deployBastion == true) {
-  name: bastionName
-  location: location
-  dependsOn: [
-    
-  ]
-  sku: {
-    name: bastionSku
-  }
-  properties: {
-    virtualNetwork: bastionSku == 'Developer'
-      ? {
-          id: sourceVirtualNetwork.id
-        }
-      : null
-    ipConfigurations: bastionSku != 'Developer'
-      ? [
-          {
-            name: 'IpConf'
-            properties: {
-              publicIPAddress: {
-                id: publicIpAddress.id
-              }
-              subnet: {
-                id: bastionSubnetRef
-              }
-            }
-          }
-        ]
-      : null
-  }
-}
-
-
 module keyVault 'br/public:avm/res/key-vault/vault:0.5.1' = {
   name: '${namingPrefix}-kvsrc'
   dependsOn: [
@@ -361,8 +331,9 @@ module keyVault 'br/public:avm/res/key-vault/vault:0.5.1' = {
   params: {
     name: toLower(keyVaultName)
     enablePurgeProtection: false
-    enableSoftDelete: false
+    enableRbacAuthorization: true
     location: location
+    tags: tags
   }
 }
 
@@ -397,3 +368,8 @@ resource windowsAdminUserName_kv_secret 'Microsoft.KeyVault/vaults/secrets@2024-
 
 output vnetId string = sourceVirtualNetwork.id
 output subnetId string = sourceVirtualNetwork.properties.subnets[0].id
+output vnetName string = sourceVirtualNetwork.name
+output vaultName string = kv.name
+output bastionName string = bastionName
+output bastionSubnetId string = (deployBastion && bastionSku != 'Developer') ? bastionSubnetRef : ''
+output bastionPublicIpId string = (deployBastion && bastionSku != 'Developer') ? publicIpAddress!.id : ''

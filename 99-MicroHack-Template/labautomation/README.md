@@ -168,6 +168,7 @@ Only include fields you want to set; missing fields fall back to platform defaul
 
 | Field | Type | Description |
 | --- | --- | --- |
+| `Quality` | `"Testing"` \| `"Preview"` \| `"GA"` | Optional quality (maturity) label of the MicroHack. When set, importing or refreshing the MicroHack in the platform updates its quality label to this value; an invalid value is reported as a warning and ignored. When absent, the quality label is left as it is. |
 | `groups` | `string[]` | Group-based feature activations for the Entra ID users created for this lab. See [supported values](#groups-supported-values). |
 | `deploymentType` | `"resourcegroup"` \| `"subscription"` \| `"resourcegroup-with-subscriptionowner"` | Azure scope each user receives. See [details](#deploymenttype-what-each-value-means-for-your-script). |
 | `labsPerSubscription` | `integer` (1–100) | How many users to pack into a single Azure subscription. Ignored when `deploymentType` is `subscription`. |

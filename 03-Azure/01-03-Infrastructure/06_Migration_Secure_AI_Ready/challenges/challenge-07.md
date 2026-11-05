@@ -8,6 +8,38 @@ Duration: 90 minutes (allow extra time for first-time agent installation and ing
 
 Operate both migrated web workloads through a closed-loop incident exercise. Enable modern OpenTelemetry monitoring, create an alert from the authoritative signal for each workload, induce controlled service failures, investigate the fired alerts with Azure Copilot Observability Agent, restore service under human control, and prove recovery.
 
+## Before you start: understand the agents
+
+Azure Copilot Observability Agent has **two operating models**. Azure SRE Agent is a **separate service**, not a third mode or SKU of Observability Agent.
+
+### Two models for Azure Copilot Observability Agent
+
+| Aspect | On-demand chat and deep investigations | Deployed Observability Agent resource (preview) |
+| --- | --- | --- |
+| Setup | No agent resource to create. Start from an Azure Monitor alert's **Investigate** action or a supported chat entry point. | Create a `Microsoft.Monitor/observabilityAgents` resource with durable scope and configuration. |
+| Identity | Uses the signed-in user's Azure permissions. | Uses the resource's managed identity for autonomous runs. |
+| Behavior | Investigates when a user asks; correlates telemetry and recommends next steps. | Can run opted-in background alert correlation, issue creation, and investigations, with persistent custom instructions. |
+| VM investigations | Deep investigations support virtual machines, subject to preview availability and telemetry access. | New VM-only scope is **not a supported configuration** in the current preview; the resource currently targets Application Insights. |
+| Used in this Hack? | **Yes, in Task 5.** | **No. Do not deploy this resource for Challenge 7.** |
+
+Microsoft notes that existing legacy VM scopes on deployed Observability Agent resources aren't blocked, but aren't a tested path. That exception is not a supported basis for a new VM-only lab deployment.
+
+In **both** Observability Agent models, investigation and recommendations do not mean automatic remediation. Even with autonomous operations enabled, the agent does not restart services, change workload configuration, or resolve the incident on its own. Humans decide and execute recovery.
+
+### How Azure SRE Agent differs
+
+**Azure SRE Agent** is a broader operations teammate. It connects Azure resources, observability data, incident-management tools, source repositories, and runbooks to investigate incidents and automate operational workflows.
+
+Unlike Observability Agent's recommendation-and-handoff model, SRE Agent can **execute permitted mitigations** using configured tools and access. Its permissions and approval controls are separate: in **Review** mode, Azure infrastructure write actions require approval; **Autonomous** mode can execute permitted actions without waiting for per-action approval. RBAC, tool policies, and configured access still constrain what it can do. Autonomous mode does not grant extra permissions or bypass governance.
+
+SRE Agent requires its own setup, access configuration, and cost review. **It is not deployed or required in this Hack.** Using SRE Agent for VM operations would be a separate exercise with its own scoped permissions, tools, and approval design; it does not change the Observability Agent resource's preview limitations.
+
+### What you will use in Challenge 7
+
+Tasks 2-4 prepare telemetry and alerts. Task 5 invokes the **on-demand Observability Agent** from the fired alerts. Task 6 is **human-executed recovery**. If preview access is unavailable, the manual fallback still exercises monitoring and incident analysis, but **does not demonstrate the Observability Agent**.
+
+Do not confuse these AI services with **Azure Monitor Agent (AMA)**, which runs on the VMs to collect telemetry. Likewise, `id-mh-monitor-alerts` authorizes alert queries; it is not an Observability Agent resource or the identity used by on-demand investigations.
+
 ## Workloads and authoritative signals
 
 | Workload | Service | Authoritative alert signal |
@@ -36,9 +68,6 @@ The Windows rule detects a service-state transition, not continuous availability
 > [!NOTE]
 > The lab defaults to `swedencentral`, which is not listed on the current [Observability Agent regions page](https://learn.microsoft.com/azure/azure-monitor/aiops/observability-agent-overview#regions). Do not assume preview access or move the lab to work around it. Confirm availability with the instructor; use the walkthrough's manual investigation fallback when unavailable. Query-based metric alerts have a separate supported-region list.
 
-> [!NOTE]
-> On-demand chat and deep investigations use the signed-in user's identity and require no `Microsoft.Monitor/observabilityAgents` resource. Do not provision an autonomous Observability Agent resource for this VM-only Hack. The portal preview scopes that resource to Application Insights, and virtual-machine scope isn't a supported new configuration.
-
 ## Monitoring models
 
 | | OpenTelemetry metrics-based | Classic logs-based |
@@ -56,7 +85,7 @@ Enable metrics-based OpenTelemetry monitoring for both VMs. Collect the Windows 
 
 * Warm and validate both web pages before changing either service.
 * Create the monitoring foundation using the walkthrough's code or portal path: an Azure Monitor workspace, Log Analytics workspace, alert identity, RG-scoped Monitoring Reader assignment, email action group, and Windows event DCR/association.
-* Select the pre-created alert identity in the portal's **Identity** field when opening Infrastructure monitoring for both VMs.
+* Select the pre-created identity for query-based alert rules and, when offered, recommended-alert setup. This is alert authorization, not a setting in the metrics/DCR customization pane.
 * Enable **Use resource or workspace permissions** on the Azure Monitor workspace so VM-resource-scoped PromQL works. Verify the selected VM scope before running queries.
 * Keep all user-controlled workspaces, identities, DCRs, alert rules, and action groups in the lab resource group. Verify the proposed scope before enabling monitoring; do not accept resources in another user-controlled group.
 * Enable default OpenTelemetry metrics on both VMs, per-process metrics on Linux, and recommended infrastructure alerts; use the built-in Grafana dashboards without creating Azure Managed Grafana.
@@ -98,4 +127,7 @@ Enable metrics-based OpenTelemetry monitoring for both VMs. Collect the Windows 
 * [Collect Windows events with Azure Monitor Agent](https://learn.microsoft.com/azure/azure-monitor/vm/data-collection-windows-events)
 * [Create Azure Monitor log search alert rules](https://learn.microsoft.com/azure/azure-monitor/alerts/alerts-create-log-alert-rule)
 * [Azure Copilot Observability Agent overview](https://learn.microsoft.com/azure/azure-monitor/aiops/observability-agent-overview)
+* [Observability Agent resource: operating models and preview limitations](https://learn.microsoft.com/azure/azure-monitor/aiops/observability-agent-resource)
 * [Deep investigations with Observability Agent](https://learn.microsoft.com/azure/azure-monitor/aiops/observability-agent-deep-investigations)
+* [Azure SRE Agent overview](https://learn.microsoft.com/azure/sre-agent/overview)
+* [Azure SRE Agent run modes and approval controls](https://learn.microsoft.com/azure/sre-agent/run-modes)

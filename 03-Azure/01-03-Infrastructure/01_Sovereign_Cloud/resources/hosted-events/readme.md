@@ -194,12 +194,33 @@ The [orchestrator](../../labautomation/localbox-automation.ps1) implements:
    sign-in remain explicitly listed as manual checks.
    A failed execution, unavailable report or failed validation instead prints
    **Readiness gate: FAILED - infrastructure health is NOT VERIFIED** and
-   propagates the error. It does not invent test counts or print a passing
-   summary when reports could not be verified; inspect the private diagnostics
-   for individual failed tests. These summaries do not stream guest progress.
+   propagates the error. For a correlated terminal guest execution, Console also
+   attempts to retrieve the original run's status and NUnit reports. It displays
+   the run ID, execution/exit status, last guest phase, bounded error details,
+   actual suite counts, and up to ten failed test names/reasons per suite.
+   Missing or invalid reports are explicitly **unavailable / NOT VERIFIED**;
+   mismatched run/content/group/scope metadata suppresses all report-derived
+   counts. A diagnostic-download failure never replaces the original failure.
+   Output strips terminal control codes, redacts common credential formats, and
+   does not dump transcripts, XML stack traces or raw guest stdout. Full reports
+   remain private. These summaries do not stream guest progress.
    Result downloads suppress CLI progress and discard download-command metadata;
    validation reads the downloaded JSON/XML files themselves. Native CLI stderr
    is kept separate from JSON parsing, and nonzero CLI exits still fail the gate.
+
+For example, the original traininglab-02 MetalLB failure now renders:
+
+```text
+[LocalBox] Last guest phase: Pester; reported state: Failed.
+[LocalBox] Upstream tests: 12 passed, 0 failed, 0 skipped, 0 not run.
+[LocalBox] Sovereign tests: 13 passed, 1 failed, 0 skipped, 0 not run.
+[LocalBox] FAILED TEST (Sovereign): ...has an in-cluster MetalLB address pool and L2 advertisement
+[LocalBox] Reason: ...ipaddresspools.metallb.io "aks-pool" not found
+```
+
+That failure also prints a suggested check of the Azure-managed pool against the
+Kubernetes IPAddressPool/L2Advertisement, rather than advising an environment
+rebuild. Diagnostic counts never change the overall failed readiness outcome.
 
 `Update-MhhToken` runs in the **Console process** on each poll and before Azure
 operations, including result retrieval. It refreshes Console clients, not guest

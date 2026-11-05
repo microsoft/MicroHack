@@ -45,6 +45,19 @@ required to validate regional service availability and effective inherited polic
 
 ## Global event LocalBox checks
 
+Run `Invoke-Pester ./localbox-failure-summary.tests.ps1,./localbox-automation.tests.ps1 -Output Detailed`
+for Console failure reporting. Tests cover run/content/group/scope correlation,
+real NUnit failure counts and messages, missing/malformed reports, prohibited XML
+entities, bounded output, credential redaction, and preservation of the original
+guest error when report downloads fail. No transcript or raw guest stdout is
+printed as a diagnostic fallback.
+
+The formatter was also verified on traininglab-02 against its original failed
+run (`682105d5-dfa6-4cba-a646-74ee20fe7121`): Pester phase, upstream 12/12,
+Sovereign 13 passed / 1 failed, and the missing `aks-pool` Kubernetes error.
+This read-only report check did not rerun the Console job or change readiness;
+the later passing MetalLB repair reports were not used as the failure fixture.
+
 Run `Invoke-Pester ./localbox-validation-retry.tests.ps1 -Output Detailed` for
 the bounded Azure Local validation recovery. These mocked tests cover the exact
 content-download timeout classifier, the unchanged nested wait budget, one

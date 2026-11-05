@@ -380,14 +380,24 @@ Describe 'Hosted LocalBox automation lifecycle' {
     }
     It 'fails on nonzero, absent or failed guest execution results' -TestCases @(
         @{ Code = 1; State = 'Succeeded' }; @{ Code = $null; State = 'Succeeded' }; @{ Code = 0; State = 'Failed' }
+        @{ Code = 1; State = 'Canceled' }; @{ Code = 1; State = 'TimedOut' }
     ) {
         param($Code, $State)
         $tracking.ExitCode = $Code
         $tracking.ExecutionState = $State
         { Invoke-LocalBoxHostedAutomation $subscription rg-localbox-shared $group } | Should -Throw '*LocalBox guest*'
-        Should -Invoke Invoke-LocalBoxAutomationAz -Times 0 -ParameterFilter { $Arguments[2] -eq 'download' }
+        Should -Invoke Invoke-LocalBoxAutomationAz -Times 3 -Exactly -ParameterFilter {
+            $Arguments[2] -eq 'download' -and $Arguments -contains '--no-progress' -and $NoOutput
+        }
         Should -Invoke Write-Host -Times 0 -ParameterFilter { $Object -like '*Infrastructure health: PASSED*' }
         Should -Invoke Write-Host -Times 1 -Exactly -ParameterFilter { $Object -like '*Readiness gate: FAILED*NOT VERIFIED*' }
+    }
+    It 'preserves the original guest failure if diagnostic retrieval also fails' {
+        $tracking.ExecutionState = 'Failed'
+        Mock Invoke-LocalBoxAutomationAz { throw 'Blob access denied' } -ParameterFilter { $Arguments[2] -eq 'download' }
+        { Invoke-LocalBoxHostedAutomation $subscription rg-localbox-shared $group } | Should -Throw '*LocalBox guest automation failed*'
+        Should -Invoke Write-Warning -Times 3 -Exactly -ParameterFilter { $Message -like '*Could not retrieve*Blob access denied*' }
+        Should -Invoke Write-Host -Times 0 -ParameterFilter { $Object -like '*Infrastructure health: PASSED*' }
     }
     It 'does not overwrite an active command from another revision or group' {
         $tracking.Existing = @{ properties = @{ instanceView = @{ executionState = 'Running' }; parameters = @(@{ name = 'PackageHash'; value = 'old' }) } }

@@ -285,11 +285,19 @@ try {
 '@.Replace('__CONFIG__', $configurationBase64).Replace('__ARCHIVE__', $Archive)
 }
 
+function Assert-LocalBoxAutomationReportIdentity {
+    param([hashtable]$Result, [string]$RunId, [string]$PackageHash, [string]$GroupId, [string]$SubscriptionId, [string]$ResourceGroupName)
+    if (-not $Result -or $Result.RunId -ne $RunId -or $Result.PackageHash -ne $PackageHash -or
+        $Result.AksAdminGroupObjectId -ne $GroupId -or $Result.SubscriptionId -ne $SubscriptionId -or
+        $Result.ResourceGroupName -ne $ResourceGroupName) {
+        throw 'LocalBox diagnostic report is missing, stale or belongs to a different run, package, group or Azure scope.'
+    }
+}
+
 function Assert-LocalBoxAutomationResult {
     param([hashtable]$Result, [string]$RunId, [string]$PackageHash, [string]$GroupId, [string]$SubscriptionId, [string]$ResourceGroupName)
-    if ($Result.RunId -ne $RunId -or $Result.PackageHash -ne $PackageHash -or
-        $Result.AksAdminGroupObjectId -ne $GroupId -or $Result.SubscriptionId -ne $SubscriptionId -or
-        $Result.ResourceGroupName -ne $ResourceGroupName -or $Result.State -ne 'Succeeded') {
+    Assert-LocalBoxAutomationReportIdentity @PSBoundParameters
+    if ($Result.State -ne 'Succeeded') {
         throw 'LocalBox automation result is missing, stale, mismatched or unsuccessful.'
     }
     foreach ($suite in @('Upstream', 'Sovereign')) {
@@ -303,22 +311,31 @@ function Assert-LocalBoxAutomationResult {
     }
 }
 
-function Assert-LocalBoxAutomationXml {
-    param([string]$Path, [hashtable]$Expected)
+function Read-LocalBoxAutomationXml {
+    param([string]$Path)
     $settings = [Xml.XmlReaderSettings]::new()
     $settings.DtdProcessing = [Xml.DtdProcessing]::Prohibit
+    $settings.XmlResolver = $null
+    $settings.MaxCharactersInDocument = 10485760
     $reader = [Xml.XmlReader]::Create($Path, $settings)
     try {
         $document = [Xml.XmlDocument]::new()
         $document.XmlResolver = $null
         $document.Load($reader)
-        $cases = @($document.SelectNodes('//test-case'))
-        if ($document.DocumentElement.get_LocalName() -ne 'test-results' -or $cases.Count -ne $Expected.Passed -or
-            @($cases | Where-Object { $_.GetAttribute('result') -ne 'Success' -or $_.GetAttribute('executed') -ne 'True' }).Count) {
-            throw "Pester XML does not match the successful test summary: $Path"
-        }
+        if ($document.DocumentElement.get_LocalName() -ne 'test-results') { throw 'Expected a Pester NUnit report.' }
+        return ,$document
     }
     finally { $reader.Dispose() }
+}
+
+function Assert-LocalBoxAutomationXml {
+    param([string]$Path, [hashtable]$Expected)
+    $document = Read-LocalBoxAutomationXml -Path $Path
+    $cases = @($document.SelectNodes('//test-case'))
+    if ($cases.Count -ne $Expected.Passed -or
+        @($cases | Where-Object { $_.GetAttribute('result') -ne 'Success' -or $_.GetAttribute('executed') -ne 'True' }).Count) {
+        throw "Pester XML does not match the successful test summary: $Path"
+    }
 }
 
 function Write-LocalBoxAutomationSuiteSummary {
@@ -330,6 +347,111 @@ function Write-LocalBoxAutomationSuiteSummary {
         }
     }
     Write-Host "[LocalBox] $Name tests: $($Counts.Passed) passed, $($Counts.Failed) failed, $($Counts.Skipped) skipped, $($Counts.NotRun) not run."
+}
+
+function ConvertTo-LocalBoxDiagnosticText {
+    param([string]$Text, [ValidateRange(40, [int]::MaxValue)][int]$MaximumLength = 800)
+    if ([string]::IsNullOrWhiteSpace($Text)) { return '(not reported)' }
+    $text = [regex]::Replace($Text, '\x1b\[[0-?]*[ -/]*[@-~]', '')
+    $text = [regex]::Replace($text, '(?s)-----BEGIN [^-]*PRIVATE KEY-----.*?-----END [^-]*PRIVATE KEY-----', '[REDACTED PRIVATE KEY]')
+    $text = [regex]::Replace($text, '(?i)\bBearer\s+[^\s"''<>]+', 'Bearer [REDACTED]')
+    $text = [regex]::Replace($text, '\beyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+', '[REDACTED JWT]')
+    $text = [regex]::Replace($text, '(?i)(https?://)[^/\s@]+@', '$1[REDACTED]@')
+    $text = [regex]::Replace($text, '(?i)(https?://[^\s?]+)\?[^\s"''<>]+', '$1?[REDACTED QUERY]')
+    $text = [regex]::Replace($text,
+        '(?i)(["'']?[\w-]*(?:password|secret|token|accountkey|connectionstring|authorization)["'']?\s*[:=]\s*)(?:"[^"]*"|''[^'']*''|[^\s,;]+)', '$1[REDACTED]')
+    $text = [regex]::Replace($text,
+        '(?i)(--?[\w-]*(?:password|secret|token|account-key|connection-string)\s+)(?:"[^"]*"|''[^'']*''|\S+)', '$1[REDACTED]')
+    $text = [regex]::Replace($text, '[\x00-\x1f\x7f-\x9f]', ' ')
+    $text = [regex]::Replace($text, '\s+', ' ').Trim()
+    if ($text.Length -gt $MaximumLength) {
+        $suffix = ' ... [truncated; see private report]'
+        return $text.Substring(0, $MaximumLength - $suffix.Length) + $suffix
+    }
+    $text
+}
+
+function Get-LocalBoxAutomationFailureSuite {
+    param([string]$Path)
+    $document = Read-LocalBoxAutomationXml -Path $Path
+    $cases = @($document.SelectNodes('//test-case'))
+    if (-not $cases.Count) { throw 'The test report contains no test cases.' }
+    $counts = @{ Passed = 0; Failed = 0; Skipped = 0; NotRun = 0 }
+    $failures = @(
+        foreach ($case in $cases) {
+            switch ($case.GetAttribute('result')) {
+                'Success' {
+                    if ($case.GetAttribute('executed') -ne 'True') { throw 'An unexecuted test claims success.' }
+                    $counts.Passed++
+                }
+                { $_ -in @('Failure', 'Error') } {
+                    $counts.Failed++
+                    $message = $case.SelectSingleNode('failure/message')
+                    @{ Name = $case.GetAttribute('name'); Message = if ($message) { $message.InnerText } else { 'No failure message recorded.' } }
+                }
+                { $_ -in @('Ignored', 'Skipped') } { $counts.Skipped++ }
+                { $_ -in @('Inconclusive', 'NotRunnable', 'Invalid') } { $counts.NotRun++ }
+                default { throw 'The test report contains an unsupported result value.' }
+            }
+        }
+    )
+    @{ Counts = $counts; Failures = $failures }
+}
+
+function Write-LocalBoxAutomationFailureReport {
+    param([string]$Directory, [string]$RunId, [string]$PackageHash, [string]$GroupId,
+        [string]$SubscriptionId, [string]$ResourceGroupName)
+    try {
+        $status = Get-Content -LiteralPath "$Directory/status.json" -Raw -ErrorAction Stop | ConvertFrom-Json -AsHashtable -ErrorAction Stop
+        Assert-LocalBoxAutomationReportIdentity -Result $status -RunId $RunId -PackageHash $PackageHash -GroupId $GroupId `
+            -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName
+    }
+    catch {
+        Write-Warning '[LocalBox] Detailed report unavailable or unverified: status.json could not be read and correlated. No test counts from these files will be displayed.'
+        return
+    }
+    Write-Host "[LocalBox] Last guest phase: $(ConvertTo-LocalBoxDiagnosticText $status.Phase 120); reported state: $(ConvertTo-LocalBoxDiagnosticText $status.State 80)."
+    if ($status.Error) { Write-Host "[LocalBox] Guest error: $(ConvertTo-LocalBoxDiagnosticText $status.Error)" }
+    foreach ($suite in @(@{ Name = 'Upstream'; File = 'upstream.xml' }, @{ Name = 'Sovereign'; File = 'health.xml' })) {
+        try {
+            $report = Get-LocalBoxAutomationFailureSuite -Path (Join-Path $Directory $suite.File)
+            Write-LocalBoxAutomationSuiteSummary -Name $suite.Name -Counts $report.Counts
+            foreach ($failure in @($report.Failures | Select-Object -First 10)) {
+                Write-Host "[LocalBox] FAILED TEST ($($suite.Name)): $(ConvertTo-LocalBoxDiagnosticText $failure.Name 300)"
+                Write-Host "[LocalBox] Reason: $(ConvertTo-LocalBoxDiagnosticText $failure.Message)"
+            }
+            if ($report.Failures.Count -gt 10) { Write-Host "[LocalBox] $($report.Failures.Count - 10) additional failed tests are listed in $($suite.File)." }
+            if (@($report.Failures | Where-Object {
+                $_.Message -match 'ipaddresspools\.metallb\.io' -and $_.Message -match 'not found|NotFound'
+            }).Count) {
+                Write-Host '[LocalBox] Suggested check: compare the Azure-managed MetalLB pool with its Kubernetes IPAddressPool and L2Advertisement. Azure Succeeded does not prove these objects exist; have an organizer reconcile the existing configuration rather than rebuild LocalBox.'
+            }
+        }
+        catch { Write-Warning "[LocalBox] $($suite.Name) test results unavailable or invalid ($($suite.File)); this suite is NOT VERIFIED." }
+    }
+    Write-Host '[LocalBox] These diagnostic counts do not establish overall readiness. Fix the reported failure, then retry the existing Console event; downstream stages remain blocked.'
+}
+
+function Write-LocalBoxAutomationFailureDiagnostics {
+    param([string]$Directory, [string]$StorageAccountName, [string]$Container, [string]$RunId,
+        [string]$PackageHash, [string]$GroupId, [string]$SubscriptionId, [string]$ResourceGroupName, $InstanceView)
+    $exitCode = if ($null -eq $InstanceView.exitCode) { 'not reported' } else { ConvertTo-LocalBoxDiagnosticText ([string]$InstanceView.exitCode) 40 }
+    Write-Host "[LocalBox] Run: $RunId; execution: $(ConvertTo-LocalBoxDiagnosticText $InstanceView.executionState 80); exit code: $exitCode."
+    if ($InstanceView.error) { Write-Host "[LocalBox] Execution error: $(ConvertTo-LocalBoxDiagnosticText $InstanceView.error)" }
+    foreach ($name in @('status.json', 'upstream.xml', 'health.xml')) {
+        $path = Join-Path $Directory $name
+        if (Test-Path -LiteralPath $path) { Remove-Item -LiteralPath $path -Force -ErrorAction Stop }
+        try {
+            Invoke-LocalBoxAutomationAz @('storage', 'blob', 'download', '--account-name', $StorageAccountName, '--container-name', $Container,
+                '--name', "$RunId/$name", '--file', $path, '--auth-mode', 'login', '--overwrite', 'true', '--no-progress') -NoOutput
+        }
+        catch {
+            if (Test-Path -LiteralPath $path) { Remove-Item -LiteralPath $path -Force -ErrorAction Stop }
+            Write-Warning "[LocalBox] Could not retrieve $name for this run: $(ConvertTo-LocalBoxDiagnosticText $_.Exception.Message 400)"
+        }
+    }
+    Write-LocalBoxAutomationFailureReport -Directory $Directory -RunId $RunId -PackageHash $PackageHash -GroupId $GroupId `
+        -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName
 }
 
 function Invoke-LocalBoxHostedAutomation {
@@ -351,6 +473,7 @@ function Invoke-LocalBoxHostedAutomation {
     $commandUri = "$commandPath`?api-version=2024-07-01"
     $temporary = Join-Path ([IO.Path]::GetTempPath()) "localbox-automation-$([guid]::NewGuid())"
     $resultUri = $null
+    $failureEvidence = @{ InstanceView = $null }
     New-Item -ItemType Directory -Path $temporary | Out-Null
     try {
         if (-not $Package) { $Package = New-LocalBoxAutomationPackage -ResourceRoot $ResourceRoot -Directory $temporary }
@@ -433,9 +556,11 @@ function Invoke-LocalBoxHostedAutomation {
                 return @{ Ready = $false; Detail = "Waiting for execution $runId to start; ignoring previous instanceView." }
             }
             if ($state.executionState -in @('Failed', 'Canceled', 'TimedOut')) {
+                $failureEvidence.InstanceView = $state
                 throw "LocalBox guest automation failed. Inspect $commandPath instanceView and $resultUri."
             }
             if ($state.executionState -eq 'Succeeded') {
+                $failureEvidence.InstanceView = $state
                 if ($null -eq $state.exitCode -or $state.exitCode -ne 0) { throw "LocalBox guest exit code was not zero. Inspect $resultUri." }
                 return @{ Ready = $true }
             }
@@ -462,10 +587,19 @@ function Invoke-LocalBoxHostedAutomation {
         @{ RunId = $runId; ResultsUri = $resultUri }
     }
     catch {
+        $primaryFailure = $_
         Write-Host '[LocalBox] Readiness gate: FAILED - infrastructure health is NOT VERIFIED.' -ForegroundColor Red
         Write-Host '[LocalBox] No successful end-of-run test summary was verified. See the error and diagnostic reports; do not treat deployment as ready.'
+        if ($failureEvidence.InstanceView -and $resultUri) {
+            try {
+                Write-LocalBoxAutomationFailureDiagnostics -Directory $temporary -StorageAccountName $account.name -Container $container `
+                    -RunId $runId -PackageHash $package.Hash -GroupId $AksAdminGroupObjectId.ToString() `
+                    -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -InstanceView $failureEvidence.InstanceView
+            }
+            catch { Write-Warning "[LocalBox] Failure diagnostics could not be completed: $(ConvertTo-LocalBoxDiagnosticText $_.Exception.Message 400)" }
+        }
         if ($resultUri) { Write-Host "[LocalBox] Private diagnostic reports: $resultUri (Entra authentication required)." }
-        throw
+        throw $primaryFailure
     }
     finally { Remove-Item -LiteralPath $temporary -Recurse -Force -ErrorAction Stop }
 }

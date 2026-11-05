@@ -1,8 +1,10 @@
 {
-  // MCP SERVER CONFIGURATION TEMPLATE — App Modernization
+  // MCP SERVER CONFIGURATION TEMPLATE — App Modernization (VS CODE VARIANT)
   // Copy to: <target-repo>/.vscode/mcp.json
+  // For the CLI-first path (GitHub Copilot CLI) use copilot-cli-mcp.json instead —
+  // Copilot CLI does not read .vscode/mcp.json. See README.md in this folder.
   // Replace {{PLACEHOLDER}} values. Remove servers you don't need.
-  // Docs: https://code.visualstudio.com/docs/copilot/chat/mcp-servers
+  // Docs: https://code.visualstudio.com/docs/copilot/customization/mcp-servers
   "inputs": [
     {
       // Prompted once and stored securely — never hardcode secrets here.

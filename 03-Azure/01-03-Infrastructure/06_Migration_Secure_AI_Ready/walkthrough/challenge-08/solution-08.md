@@ -453,7 +453,7 @@ import re
 
 raw = os.environ["MH_RUNTIME_OUTPUT"]
 pattern = re.compile(
-    r"(?i)(?<![A-Za-z0-9_])NODE[|:](\d+)-lts(?=$|[\s\"',}\]]|(?:19|20)\d{2}-\d{2}-\d{2}|Linux)"
+    r"(?i)(?<![A-Za-z0-9_])NODE(?:\||:)(\d+)-lts(?=$|[\s\"',}\]]|(?:19|20)\d{2}-\d{2}-\d{2}|Linux)"
 )
 majors = set()
 

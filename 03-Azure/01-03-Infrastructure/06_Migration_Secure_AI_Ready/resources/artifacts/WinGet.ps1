@@ -57,8 +57,31 @@ Install-PSResource -Name NetworkingDsc -Scope AllUsers -Quiet -AcceptLicense -Tr
 
 # Repeat repair for WinAppSDK registration; fresh installs require the v-prefixed GitHub release tag.
 $winGetReleaseTag = "v$winGetVersion"
-Repair-WinGetPackageManager -AllUsers -Force -Version $winGetReleaseTag -Verbose
-Repair-WinGetPackageManager -AllUsers -Force -Version $winGetReleaseTag -Verbose
+foreach ($repairPass in 1..2) {
+    for ($attempt = 1; $attempt -le 3; $attempt++) {
+        try {
+            Repair-WinGetPackageManager -AllUsers -Force -Version $winGetReleaseTag -Verbose -ErrorAction Stop
+            break
+        }
+        catch {
+            $statusCode = ''
+            for ($exception = $_.Exception; $null -ne $exception; $exception = $exception.InnerException) {
+                $statusCode = [string]$exception.StatusCode
+                if (-not $statusCode) { $statusCode = [string]$exception.Response.StatusCode }
+                if ($statusCode) { break }
+            }
+            # Some module errors preserve only HttpClient's status message.
+            if (-not $statusCode -and $_.Exception.Message -match 'Response status code does not indicate success:\s*(\d{3})\b') {
+                $statusCode = $Matches[1]
+            }
+            $transient = $statusCode -match '^(408|429|500|502|503|504|RequestTimeout|TooManyRequests|InternalServerError|BadGateway|ServiceUnavailable|GatewayTimeout)$'
+            if (-not $transient -or $attempt -eq 3) { throw }
+            $retryDelay = 30 * $attempt
+            Write-Warning "WinGet repair pass $repairPass, attempt $attempt/3 failed with HTTP $statusCode. Retrying in $retryDelay seconds."
+            Start-Sleep -Seconds $retryDelay
+        }
+    }
+}
 $actualWinGetVersion = (winget --version | Out-String).Trim()
 if ($LASTEXITCODE -ne 0 -or $actualWinGetVersion -ne $winGetReleaseTag) {
     throw "Expected WinGet $winGetReleaseTag; found '$actualWinGetVersion' (exit code $LASTEXITCODE)."

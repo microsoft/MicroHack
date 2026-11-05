@@ -1537,14 +1537,18 @@ Describe 'AKS Local Arc proxy RBAC' {
         $ast = [Management.Automation.Language.Parser]::ParseFile("$PSScriptRoot/../prepare-localbox.ps1", [ref]$null, [ref]$null)
         $guard = $ast.Find({ param($node)
             $node -is [Management.Automation.Language.IfStatementAst] -and
-            $node.Clauses[0].Item1.Extent.Text -eq '-not $Settings.SkipAks' -and
-            $node.Extent.Text -match 'Sync-LocalBoxAksProxyRole'
+            $node.Clauses[0].Item1.Extent.Text -eq '-not $Settings.SkipAks -and -not $aksVerificationPending' -and
+            $node.Extent.Text -match 'Complete-LocalBoxAksPreparation'
         }, $true)
         $guard | Should -Not -BeNullOrEmpty
         $reconcile = [scriptblock]::Create($guard.Extent.Text)
         $aksId = $clusterId
         $Settings = @{ SkipAks = $true; KubernetesRuntimeObjectId = $groupId }
         $metalLb = @{}
+        $aksVerificationPending = $false
+        $aksCompletion = @{ ClusterId = $clusterId; Expected = @{}; GroupId = $groupId; MetalLbPlan = @{}; RuntimeObjectId = $groupId }
+        Mock Wait-LocalBoxResource { @{ properties = @{ connectivityStatus = 'Connected' } } }
+        Mock Assert-LocalBoxProperties {}
         Mock Sync-LocalBoxAksProxyRole {}
         Mock Sync-LocalBoxMetalLb {}
         & $reconcile
@@ -2048,6 +2052,7 @@ Describe 'LocalBox preparation dependency order' {
         $imageId = 'image'
         $groupId = 'group'
         $metalLb = @{}
+        $aksVerificationPending = $false
         Mock Sync-LocalBoxResource { $events.Add("network:$($Id.Split('/')[-1])") }
         Mock Invoke-LocalBoxAz {
             if ($Arguments[0] -eq 'aksarc') {
@@ -2062,18 +2067,65 @@ Describe 'LocalBox preparation dependency order' {
         Mock Sync-LocalBoxImage { $events.Add('image') }
         Mock Sync-LocalBoxReferenceVm { $events.Add('reference') }
     }
-    It 'completes networks, AKS and MetalLB before importing the image and reference VM' {
+    It 'submits AKS asynchronously after networks and imports the image before joining AKS and MetalLB' {
         & $prepareWorkloads -Confirm:$false
-        $events -join ',' | Should -Be 'network:localbox-vm-lnet-vlan200,network:localbox-aks-lnet-vlan110,aks-validate,aks-create,proxy,metallb,image,reference'
+        $events -join ',' | Should -Be 'network:localbox-vm-lnet-vlan200,network:localbox-aks-lnet-vlan110,aks-validate,aks-create,image,proxy,metallb,reference'
+        Should -Invoke Invoke-LocalBoxAz -Times 1 -Exactly -ParameterFilter {
+            $Arguments[0] -eq 'aksarc' -and $Arguments -contains '--no-wait' -and $Arguments -notcontains '--validate'
+        }
+        Should -Invoke Invoke-LocalBoxAz -Times 1 -Exactly -ParameterFilter {
+            $Arguments[0] -eq 'aksarc' -and $Arguments -contains '--validate' -and $Arguments -notcontains '--no-wait'
+        }
         Should -Invoke Sync-LocalBoxImage -Times 1 -Exactly -ParameterFilter {
             $ClusterId -eq "$scope/providers/Microsoft.AzureStackHCI/clusters/localboxcluster" -and $CreateArguments -notcontains '--version'
         }
     }
-    It 'preserves completed infrastructure when the late image stage fails and does not start the reference VM' {
+    It 'retains serial provisioning as an explicit fallback' {
+        $Settings.SequentialProvisioning = $true
+        & $prepareWorkloads -Confirm:$false
+        $events -join ',' | Should -Be 'network:localbox-vm-lnet-vlan200,network:localbox-aks-lnet-vlan110,aks-validate,aks-create,proxy,metallb,image,reference'
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments -contains '--no-wait' }
+    }
+    It 'does not start a reference VM or claim AKS completion when image import fails' {
         Mock Sync-LocalBoxImage { $events.Add('image-failed'); throw 'Import failed' }
         { & $prepareWorkloads -Confirm:$false } | Should -Throw '*Import failed*'
-        $events -join ',' | Should -Be 'network:localbox-vm-lnet-vlan200,network:localbox-aks-lnet-vlan110,aks-validate,aks-create,proxy,metallb,image-failed'
+        $events -join ',' | Should -Be 'network:localbox-vm-lnet-vlan200,network:localbox-aks-lnet-vlan110,aks-validate,aks-create,image-failed'
         Should -Invoke Sync-LocalBoxReferenceVm -Times 0
+        Should -Invoke Wait-LocalBoxResource -Times 0
+    }
+    It 'does not start a reference VM when AKS fails after the image completes' {
+        Mock Wait-LocalBoxResource { throw 'AKS provisioning Failed' }
+        { & $prepareWorkloads -Confirm:$false } | Should -Throw '*AKS provisioning Failed*'
+        Should -Invoke Sync-LocalBoxImage -Times 1 -Exactly
+        Should -Invoke Sync-LocalBoxReferenceVm -Times 0
+        Should -Invoke Sync-LocalBoxMetalLb -Times 0
+    }
+    It 'does not import the image when asynchronous submission fails' {
+        Mock Invoke-LocalBoxAz { throw 'AKS submission failed' } -ParameterFilter { $Arguments -contains '--no-wait' }
+        { & $prepareWorkloads -Confirm:$false } | Should -Throw '*AKS submission failed*'
+        Should -Invoke Sync-LocalBoxImage -Times 0
+        Should -Invoke Sync-LocalBoxReferenceVm -Times 0
+    }
+    It 'does not import the image or submit AKS after failed AKS validation' {
+        Mock Invoke-LocalBoxAz { throw 'AKS validation failed' } -ParameterFilter { $Arguments -contains '--validate' }
+        { & $prepareWorkloads -Confirm:$false } | Should -Throw '*AKS validation failed*'
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments -contains '--no-wait' }
+        Should -Invoke Sync-LocalBoxImage -Times 0
+    }
+    It 'preserves verification-before-image ordering when AKS already exists' {
+        Mock Invoke-LocalBoxAz {
+            if ($Arguments[0] -eq 'resource') { @{ id = "$scope/providers/Microsoft.Kubernetes/connectedClusters/localbox-aks" } }
+            elseif ($Arguments[0] -eq 'provider') { @{ registrationState = 'Registered' } }
+        }
+        & $prepareWorkloads -Confirm:$false
+        $events -join ',' | Should -Be 'network:localbox-vm-lnet-vlan200,network:localbox-aks-lnet-vlan110,proxy,metallb,image,reference'
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments[0] -eq 'aksarc' }
+    }
+    It 'does not submit asynchronous operations during WhatIf' {
+        & $prepareWorkloads -WhatIf
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments[0] -eq 'aksarc' }
+        Should -Invoke Wait-LocalBoxResource -Times 0
+        Should -Invoke Sync-LocalBoxImage -Times 1 -Exactly
     }
     It 'preserves the explicit SkipAks behavior while keeping the VM stages last' {
         $Settings.SkipAks = $true
@@ -2256,9 +2308,11 @@ exit 0
         $source = ${function:Invoke-LocalBoxPreparation}.ToString()
         $source | Should -Match 'Invoke-LocalBoxAz \(\$arguments \+ @\(''--validate''\)\) -TimeoutSeconds \$timeout -NoOutput'
         $source | Should -Match 'Invoke-LocalBoxAz \$arguments -TimeoutSeconds \$timeout -NoOutput'
-        $source | Should -Match 'Wait-LocalBoxResource \$instanceId'
-        $source | Should -Match 'Assert-LocalBoxProperties \$instance \$aksExpected'
-        $source | Should -Match 'Assert-LocalBoxProperties \$connected'
+        $source | Should -Match 'Invoke-LocalBoxAz \(\$arguments \+ @\(''--no-wait''\)\) -TimeoutSeconds \$timeout -NoOutput'
+        $completion = ${function:Complete-LocalBoxAksPreparation}.ToString()
+        $completion | Should -Match 'Wait-LocalBoxResource \$instanceId'
+        $completion | Should -Match 'Assert-LocalBoxProperties \$instance \$Expected'
+        $completion | Should -Match 'Assert-LocalBoxProperties \$connected'
     }
 }
 

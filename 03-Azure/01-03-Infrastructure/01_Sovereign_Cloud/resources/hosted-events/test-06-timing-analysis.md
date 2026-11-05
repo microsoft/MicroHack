@@ -171,6 +171,13 @@ These are recommendations, **not implemented runtime changes or promised
 savings**. Preserve the final readiness gate and compare equivalent cold runs
 before declaring an improvement.
 
+**2026-11-05 implementation update:** Fresh AKS creation now uses the CLI's
+`--no-wait` option before importing the VM image, and joins AKS/Arc/MetalLB
+readiness afterwards. This implements the overlap in candidate 1 without
+concurrent local CLI sessions. Existing-AKS retries remain serial, and manual
+preparation offers `-SequentialProvisioning` as a fallback. The estimates below
+remain historical estimates, not measured savings from this implementation.
+
 | Priority | Candidate | Potential benefit from this run | Constraints / verification |
 |---|---|---|---|
 | 1 | Start image import alongside AKS after shared storage/network prerequisites are ready | With unchanged operation durations, overlapping the 71-minute AKS deployment with the 179-minute image import could remove roughly **71 minutes** of serial waiting | Both use the same nested environment. Storage, CPU or network contention could reduce or eliminate the saving. Use controlled concurrency, isolated CLI state, explicit error handling, and wait for both branches before full readiness |

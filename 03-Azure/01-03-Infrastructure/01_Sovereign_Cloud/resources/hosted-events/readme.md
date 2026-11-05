@@ -165,6 +165,24 @@ The [orchestrator](../../labautomation/localbox-automation.ps1) implements:
    also installs its bundled `kubelogin` dependency there. Only the runner and its
    child health process receive the private tools PATH; existing installations
    and the machine PATH are not changed. Retries validate and reuse this client.
+   For a **new AKS cluster**, preparation validates AKS synchronously, then uses
+   [`az aksarc create --no-wait`](https://learn.microsoft.com/cli/azure/aksarc#az-aksarc-create)
+   to let Azure provision it while the Windows VM image imports. Storage and
+   logical networks are prepared first. CLI commands remain serial with the
+   existing isolated authentication profile; no competing CLI workers or shared
+   token-cache writers are introduced. After image completion, preparation
+   requires AKS provisioning success, the expected configuration, Arc connectivity,
+   proxy access and MetalLB before creating the reference VM. The final Full
+   readiness gate is unchanged.
+
+   Existing AKS deployments retain verification-before-image ordering on retries.
+   Manual preparation supports `-SequentialProvisioning` to restore serial
+   provisioning if contention is suspected. `-SkipAks` and `-WhatIf` retain their
+   existing behavior. If preparation fails after asynchronous submission, AKS may
+   continue provisioning in Azure; the error is propagated and nothing is rolled
+   back. Inspect both resource states before retrying rather than deleting the
+   environment. The parent guest timeout still applies. Compare equivalent cold
+   deployments before treating the potential ~71-minute saving as measured.
 5. Wait for the reference VM to be Running, Arc Connected and MDE installation
    Succeeded. Request an Update Manager assessment and require a successful,
    timestamped result. This assesses updates; it does **not** install patches.

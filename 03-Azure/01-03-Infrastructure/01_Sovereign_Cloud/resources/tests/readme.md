@@ -202,9 +202,17 @@ malformed/unavailable catalogs, discovery before deletion, unchanged reuse of
 working images, and verification of the actual imported version. The resolver was
 also run read-only against the live cluster catalog on 2026-10-21; it selected
 `26100.33438.260905`, while Azure Compute exposed the newer `26100.33650.261013`.
-It executes the preparation workload sequence
-with mocked Azure calls to verify that networks, AKS and MetalLB precede image
-import and the optional reference VM, including when image import fails.
+It executes the preparation workload sequence with mocked Azure calls to verify
+that shared storage and networks precede workload provisioning. Fresh AKS creation
+uses `--no-wait` after synchronous validation, overlaps the image import, and then
+joins AKS readiness/Arc connectivity/MetalLB before creating the reference VM.
+Tests cover submission, validation, image and AKS failures; existing-AKS reuse;
+`-SkipAks`; `-WhatIf`; and the explicit `-SequentialProvisioning` fallback.
+Image import still uses the existing version, placement and failed-image recovery
+guards. A cold live deployment is needed to measure actual overlap and contention;
+mocked ordering is not a performance benchmark.
+Read-only verification on traininglab-02 confirmed that the installed `aksarc`
+extension advertises `create --no-wait`; no provisioning was invoked by that check.
 
 Storage tests verify no repeated disk/partition mutations on a completed rerun,
 resumption of an interrupted partition expansion, and detection of unallocated

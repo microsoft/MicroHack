@@ -97,7 +97,11 @@ function Get-LocalBoxStartupProgress {
     if (-not $Tracking.Checked) {
         $vm = Invoke-LocalBoxAutomationRequest -Path "$vmId`?api-version=2024-07-01"
         $Tracking.Checked = $true
-        if (-not $vm.tags.'microhack-startup-version' -and -not $vm.tags.'microhack-startup-id') { return }
+        if (-not $vm.tags.'microhack-startup-version' -and -not $vm.tags.'microhack-startup-id') {
+            $existing = Invoke-LocalBoxAutomationRequest -Path "$uri&`$expand=instanceView" -AllowNotFound
+            if ($existing) { throw 'The Client startup identity tags are missing but a startup monitor exists. Organizer review is required; do not rerun bootstrap or assume this is an unprotected legacy VM.' }
+            return
+        }
         $id = [guid]::Empty
         if ($vm.tags.'microhack-startup-version' -ne '1' -or
             -not [guid]::TryParse([string]$vm.tags.'microhack-startup-id', [ref]$id) -or $id -eq [guid]::Empty) {

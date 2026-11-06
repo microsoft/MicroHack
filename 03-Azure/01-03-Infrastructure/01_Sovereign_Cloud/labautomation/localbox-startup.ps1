@@ -101,9 +101,60 @@ function Test-LocalBoxBaseImage {
     return (Get-FileHash -LiteralPath $Image -Algorithm SHA256 -ErrorAction Stop).Hash -eq $expected
 }
 
+function Resolve-LocalBoxAzCopy {
+    param([string]$LocalAppData = $env:LOCALAPPDATA, [string]$ProgramFiles = $env:ProgramFiles)
+    $client = @(Get-Command azcopy -CommandType Application -ErrorAction SilentlyContinue)
+    if ($client.Count) { return $client[0].Path }
+    $links = @(
+        if ($LocalAppData) { Join-Path $LocalAppData 'Microsoft/WinGet/Links/azcopy.exe' }
+        if ($ProgramFiles) {
+            Join-Path $ProgramFiles 'WinGet/Links/azcopy.exe'
+            Join-Path $ProgramFiles 'AzCopy/azcopy.exe'
+        }
+    )
+    foreach ($path in $links) {
+        if (Test-Path -LiteralPath $path -PathType Leaf -ErrorAction Stop) { return $path }
+    }
+    if ($LocalAppData) {
+        $pattern = Join-Path $LocalAppData 'Microsoft/WinGet/Packages/Microsoft.Azure.AZCopy.10_*/azcopy_windows_*/azcopy.exe'
+        if (Test-Path -Path $pattern -PathType Leaf -ErrorAction Stop) {
+            $candidates = @(Get-ChildItem -Path $pattern -File -ErrorAction Stop)
+            if ($candidates.Count -ne 1) { throw 'Multiple unlinked AzCopy installations exist for the startup user; repair the WinGet link before retrying.' }
+            return $candidates[0].FullName
+        }
+    }
+    throw 'AzCopy is unavailable after prerequisite installation. Inspect the WinGet provisioning log and the startup user WinGet installation; no image transfer was attempted.'
+}
+
+function Wait-LocalBoxStartupPrerequisites {
+    param([hashtable]$Status, [string]$StatusPath, [ValidateRange(1, 3600)][int]$TimeoutSeconds = 3600)
+    $ErrorActionPreference = 'Stop'
+    $deadline = (Get-Date).ToUniversalTime().AddSeconds($TimeoutSeconds)
+    $Status.Phase = 'Prerequisites'
+    $Status.Message = 'Waiting for WinGetLogonScript to finish before initializing storage or downloading images.'
+    Save-LocalBoxStartupStatus $Status $StatusPath
+    Write-Host $Status.Message
+    do {
+        $tasks = @(Get-ScheduledTask -ErrorAction Stop | Where-Object { $_.TaskName -eq 'WinGetLogonScript' -and $_.TaskPath -eq '\' })
+        if ($tasks.Count -gt 1) { throw 'Ambiguous WinGet prerequisite task state.' }
+        if (-not $tasks.Count) { break }
+        if ($tasks[0].State -eq 'Disabled') { throw 'WinGetLogonScript is disabled; prerequisite installation cannot be verified.' }
+        if ((Get-Date).ToUniversalTime() -ge $deadline) {
+            throw 'WinGetLogonScript did not complete within the one-hour prerequisite budget. Inspect its provisioning log; storage initialization was not started.'
+        }
+        Start-Sleep -Seconds 15
+    } while ($true)
+    $env:PATH = (@($env:PATH, [Environment]::GetEnvironmentVariable('PATH', 'Machine'),
+        [Environment]::GetEnvironmentVariable('PATH', 'User')) | Where-Object { $_ } | Select-Object -Unique) -join [IO.Path]::PathSeparator
+    $null = Resolve-LocalBoxAzCopy
+    $Status.Phase = 'Startup'
+    $Status.Message = 'WinGet prerequisites completed and AzCopy resolved; upstream initialization may proceed.'
+    Save-LocalBoxStartupStatus $Status $StatusPath
+}
+
 function Invoke-LocalBoxBaseImageTransfer {
     param([string]$Uri, [string]$Destination, [string]$LogDirectory, [int]$TimeoutSeconds)
-    $client = Get-Command azcopy -CommandType Application -ErrorAction Stop
+    $client = Resolve-LocalBoxAzCopy
     $stdout = Join-Path $LogDirectory 'stdout.log'
     $stderr = Join-Path $LogDirectory 'stderr.log'
     $oldLogs = $env:AZCOPY_LOG_LOCATION
@@ -112,7 +163,7 @@ function Invoke-LocalBoxBaseImageTransfer {
     try {
         $env:AZCOPY_LOG_LOCATION = $LogDirectory
         $env:AZCOPY_JOB_PLAN_LOCATION = $LogDirectory
-        $process = Start-Process -FilePath $client.Path -ArgumentList @('copy', "`"$Uri`"", "`"$Destination`"",
+        $process = Start-Process -FilePath $client -ArgumentList @('copy', "`"$Uri`"", "`"$Destination`"",
             '--recursive=true', '--check-length=false', '--log-level=ERROR') -PassThru -NoNewWindow `
             -RedirectStandardOutput $stdout -RedirectStandardError $stderr -ErrorAction Stop
         if (-not $process.WaitForExit($TimeoutSeconds * 1000)) {
@@ -248,6 +299,7 @@ function Invoke-LocalBoxGuardedStartup {
             StartedAt = [datetime]::UtcNow.ToString('o')
         }
         Save-LocalBoxStartupStatus $status $statusPath
+        Wait-LocalBoxStartupPrerequisites -Status $status -StatusPath $statusPath
         Set-LocalBoxBaseImageGuard -Path "$Root/New-LocalBoxCluster.ps1" -PlanPath "$Root/SovereignStartup/images.json" -Id $Id
         & "$Root/LocalBoxLogonScript.ps1"
         if (-not $?) { throw 'Upstream LocalBox startup returned unsuccessfully.' }
@@ -265,8 +317,14 @@ function Invoke-LocalBoxGuardedStartup {
                 $latest = Get-Content -LiteralPath $statusPath -Raw | ConvertFrom-Json -AsHashtable -ErrorAction Stop
                 if ($latest.State -ne 'Failed') {
                     $latest.State = 'Failed'
-                    $latest.Code = 'StartupFailed'
-                    $latest.Message = 'Upstream LocalBox startup failed. Inspect LocalBoxLogonScript.log and New-LocalBoxCluster.log; do not blindly rerun storage initialization.'
+                    if ($latest.Phase -eq 'Prerequisites') {
+                        $latest.Code = 'StartupPrerequisitesFailed'
+                        $latest.Message = 'WinGet prerequisite readiness or AzCopy discovery failed before storage initialization. Inspect WinGet-provisioning logs and WinGetLogonScript task state.'
+                    }
+                    else {
+                        $latest.Code = 'StartupFailed'
+                        $latest.Message = 'Upstream LocalBox startup failed. Inspect LocalBoxLogonScript.log and New-LocalBoxCluster.log; do not blindly rerun storage initialization.'
+                    }
                     Save-LocalBoxStartupStatus $latest $statusPath
                 }
             }

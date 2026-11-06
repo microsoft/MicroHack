@@ -11,7 +11,7 @@ function Get-LocalBoxStartupReport {
     catch { throw 'The upstream startup report could not be read or parsed.' }
     if ($status.BootstrapId -ne $Id -or $status.SubscriptionId -ne $Subscription -or $status.ResourceGroupName -ne $Group -or
         $status.State -notin @('Running', 'Succeeded', 'Failed') -or
-        $status.Phase -notin @('Startup', 'BaseImages', 'NestedDeployment', 'Complete')) {
+        $status.Phase -notin @('Prerequisites', 'Startup', 'BaseImages', 'NestedDeployment', 'Complete')) {
         throw 'The upstream startup report does not match this VM or has invalid state metadata.'
     }
     @{

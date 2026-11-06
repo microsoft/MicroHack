@@ -354,6 +354,13 @@ try {
         Write-Host 'Using correlated startup protection with bounded base-image downloads. Existing VM custom data is never replaced.'
     }
     else {
+        $existingMonitors = @(Invoke-AzJson -Arguments @(
+            'vm', 'run-command', 'list', '--subscription', $SubscriptionId,
+            '--resource-group', $ResourceGroupName, '--vm-name', 'LocalBox-Client'
+        ) | Where-Object name -eq 'sovereign-localbox-startup-watch')
+        if ($existingMonitors.Count) {
+            throw 'The existing Client has a startup monitor but no startup identity tags. Organizer review is required; no bootstrap migration was attempted.'
+        }
         Write-Warning 'This existing Client predates startup protection. Its bootstrap is left unchanged; use a new VM to enable guarded startup.'
     }
 
@@ -389,6 +396,14 @@ try {
         '--resource-group', $ResourceGroupName, '--name', $deploymentName,
         '--template-file', $templateFile, '--parameters', "@$parametersFile"
     ) | Out-Null
+
+    if ($startupId -ne [guid]::Empty) {
+        # Upstream progress updates replace VM tags with the resource group's tags.
+        Invoke-AzJson -Arguments @(
+            'group', 'update', '--subscription', $SubscriptionId, '--name', $ResourceGroupName,
+            '--set', 'tags.microhack-startup-version=1', "tags.microhack-startup-id=$startupId"
+        ) | Out-Null
+    }
 
     Write-Host "Starting LocalBox deployment '$deploymentName'..." -ForegroundColor Cyan
     $deploymentArguments = @(

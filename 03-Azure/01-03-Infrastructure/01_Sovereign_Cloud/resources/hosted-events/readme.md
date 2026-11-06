@@ -312,6 +312,22 @@ New Client VMs receive a deployment-specific startup guard through immutable VM
 custom data. Existing unprotected VMs are **not migrated or repaired**; existing
 guarded VMs keep their original payload and startup identity.
 
+Before entering upstream storage initialization, the guard waits for
+`WinGetLogonScript` to finish and unregister itself (at most **one hour**).
+The upstream WinGet and LocalBox tasks can both start at logon; starting downloads
+while WinGet is still installing AzCopy is not safe. After installation, the
+guard refreshes its process PATH and resolves AzCopy from PATH, the current
+startup user's WinGet link/package, or known machine installation paths. It does
+not search other users' profiles, install a replacement binary, or blindly pick
+between multiple unlinked package versions. Prerequisite failure is reported as
+`Prerequisites` / `StartupPrerequisitesFailed`, before storage initialization.
+
+The startup identity is also merged into the resource-group tags before deployment:
+upstream progress updates replace VM tags with the resource-group tags. If an
+existing Client has a startup monitor but has lost its identity tags, deployment
+and monitoring stop for organizer review rather than silently treating it as a
+legacy VM. No automatic repair of old guarded instances is performed.
+
 The guard replaces the recognized upstream base-VHD download/checksum block:
 
 - Each base image gets at most **three attempts**, with **60 seconds** between
@@ -342,6 +358,14 @@ connectivity and Full health checks remain required. Monitoring uses the remaini
 nested-readiness budget. Offline tests and compilation against the real upstream
 templates/scripts validate this integration; a fresh Windows/Console deployment
 is still required to verify the complete new-VM path.
+
+TEST10 on traininglab-17 demonstrated the early failure path: Console stopped
+after **25m25s**, reporting missing AzCopy. The stored monitor report ended at
+**20:59:09 UTC on 5 November 2026**; the WinGet AzCopy link was installed at
+**21:00:18 UTC**, and WinGet finished at **21:03:59 UTC**. This exposed the
+installation race addressed by the prerequisite gate; it was not another HTTP
+401 failure. Read-only inspection also confirmed the upstream tag replacement.
+Neither bootstrap nor storage initialization was replayed during diagnosis.
 
 #### Automatic Azure Local validation recovery
 

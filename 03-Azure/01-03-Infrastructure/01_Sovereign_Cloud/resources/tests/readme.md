@@ -70,6 +70,19 @@ deployment is still required to verify custom-data delivery, scheduled-task
 execution and end-to-end Console reporting together; existing failed instances
 are deliberately not retrofitted.
 
+The startup suite also covers WinGet-before-storage ordering, the one-hour
+prerequisite timeout, stale-PATH AzCopy resolution using only the current user's
+known WinGet paths, ambiguous/missing installations, and reporting the new
+prerequisite phase. Deployment checks verify that startup identity tags are
+merged into the resource group so upstream progress updates preserve them.
+An existing monitor with missing VM identity tags fails explicitly without
+restarting or overwriting anything.
+On traininglab-17, a read-only Windows probe ran the actual resolver with AzCopy
+absent from the process PATH. It resolved the startup user's existing WinGet
+link and successfully ran `azcopy --version`; no image was downloaded and no
+deployment was resumed. The prerequisite race and tag-retention fixes still
+require a fresh end-to-end Console deployment.
+
 Run `Invoke-Pester ./localbox-failure-summary.tests.ps1,./localbox-automation.tests.ps1 -Output Detailed`
 for Console failure reporting. Tests cover run/content/group/scope correlation,
 real NUnit failure counts and messages, missing/malformed reports, prohibited XML

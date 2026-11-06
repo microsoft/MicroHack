@@ -57,6 +57,8 @@ Describe 'LocalBox deployment entry points' {
             Bastions = @()
             Networks = @()
             Clients = @()
+            Monitors = @()
+            StartupTagUpdate = @()
             QueriesFail = $false
             ValidationFails = $false
             Submitted = 0
@@ -109,6 +111,12 @@ var settings = {
                 }
                 '^network vnet list' { ConvertTo-Json -InputObject @($deploymentTestState.Networks) -Depth 10; break }
                 '^resource list' { ConvertTo-Json -InputObject @($deploymentTestState.Clients) -Depth 10; break }
+                '^vm run-command list' { ConvertTo-Json -InputObject @($deploymentTestState.Monitors) -Depth 10; break }
+                '^group update' {
+                    if ($args -contains 'tags.microhack-startup-version=1') { $deploymentTestState.StartupTagUpdate = @($args) }
+                    '{"name":"rg-localbox-test","location":"spaincentral"}'
+                    break
+                }
                 '^group (create|show|update)' { '{"name":"rg-localbox-test","location":"spaincentral"}'; break }
                 '^bicep build' {
                     $deploymentTestState.Builds++
@@ -134,6 +142,13 @@ var settings = {
         & "$fixture/labautomation/deploy-localbox.ps1" @arguments
         $deploymentTestState.HostSource | Should -Not -Match 'customData|SovereignStartup'
         $deploymentTestState.Parameters.tags.value.PSObject.Properties.Name | Should -Not -Contain 'microhack-startup-id'
+        $deploymentTestState.StartupTagUpdate.Count | Should -Be 0
+    }
+    It 'does not redeploy a guarded VM whose progress update removed identity tags' {
+        $deploymentTestState.Clients = @(@{ name = 'LocalBox-Client'; tags = @{} })
+        $deploymentTestState.Monitors = @(@{ name = 'sovereign-localbox-startup-watch' })
+        { & "$fixture/labautomation/deploy-localbox.ps1" @arguments } | Should -Throw '*startup monitor but no startup identity tags*'
+        $deploymentTestState.Submitted | Should -Be 0
     }
     It 'retains the immutable startup identity on a guarded existing VM' {
         $deploymentTestState.Clients = @(@{ name = 'LocalBox-Client'; tags = @{
@@ -159,6 +174,10 @@ var settings = {
         $deploymentTestState.Parameters.tags.value.'microhack-startup-version' | Should -Be '1'
         $deploymentTestState.Parameters.tags.value.'microhack-startup-id' | Should -Match '^[a-f0-9-]{36}$'
         $deploymentTestState.HostSource | Should -Match 'customData:'
+        $deploymentTestState.StartupTagUpdate | Should -Contain 'tags.microhack-startup-version=1'
+        $deploymentTestState.StartupTagUpdate | Should -Contain "tags.microhack-startup-id=$($deploymentTestState.Parameters.tags.value.'microhack-startup-id')"
+        $deploymentTestState.StartupTagUpdate | Should -Contain '--set'
+        $deploymentTestState.StartupTagUpdate | Should -Not -Contain '--tags'
         $deploymentTestState.NetworkSource | Should -Be (Get-Content "$root/labautomation/localbox-network.bicep" -Raw)
         $deploymentTestState.Downloads.Count | Should -Be 5
         @($deploymentTestState.Downloads | Where-Object { $_ -like '*/network/network.bicep' }).Count | Should -Be 0

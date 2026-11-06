@@ -194,6 +194,7 @@ Describe 'Guarded startup replay protection' {
             New-Item -ItemType Directory -Path "$startupRoot/SovereignStartup" -Force | Out-Null
             $stateFile = "$startupRoot/SovereignStartup/state.json"
             Mock Set-LocalBoxBaseImageGuard {}
+            Mock Wait-LocalBoxStartupPrerequisites {}
         }
         It 'does not repeat completed initialization' {
             @{ BootstrapId = $id; State = 'Succeeded' } | ConvertTo-Json | Set-Content $stateFile
@@ -224,6 +225,16 @@ Describe 'Guarded startup replay protection' {
             (Get-Content $stateFile -Raw | ConvertFrom-Json).Code | Should -Be 'StartupFailed'
             { Invoke-LocalBoxGuardedStartup $id $startupRoot } | Should -Throw '*Automatic replay*disabled*'
             Should -Invoke Set-LocalBoxBaseImageGuard -Times 1 -Exactly
+        }
+        It 'does not enter storage initialization when prerequisites fail' {
+            Mock Wait-LocalBoxStartupPrerequisites {
+                $Status.Phase = 'Prerequisites'
+                Save-LocalBoxStartupStatus $Status $StatusPath
+                throw 'fixture-prerequisites-incomplete'
+            }
+            { Invoke-LocalBoxGuardedStartup $id $startupRoot } | Should -Throw '*fixture-prerequisites-incomplete*'
+            (Get-Content $stateFile -Raw | ConvertFrom-Json).Code | Should -Be 'StartupPrerequisitesFailed'
+            Should -Invoke Set-LocalBoxBaseImageGuard -Times 0
         }
         It 'records successful script completion without claiming infrastructure readiness' {
             Set-Content "$startupRoot/LocalBoxLogonScript.ps1" 'Write-Output "fixture-script-completed"'
@@ -301,8 +312,14 @@ Describe 'Guarded startup replay protection' {
         }
         It 'does not create a startup monitor for a legacy VM' {
             $monitorState.Vm.tags = @{}
+            $monitorState.Command = $null
             Get-LocalBoxStartupProgress $tracking $subscription group 100
-            Should -Invoke Invoke-LocalBoxAutomationRequest -Times 0 -ParameterFilter { $Method -eq 'PUT' -or $Path -match '/runCommands/' }
+            Should -Invoke Invoke-LocalBoxAutomationRequest -Times 0 -ParameterFilter { $Method -eq 'PUT' }
+        }
+        It 'fails explicitly if startup identity was lost after a monitor was created' {
+            $monitorState.Vm.tags = @{}
+            { Get-LocalBoxStartupProgress $tracking $subscription group 100 } | Should -Throw '*identity tags are missing*'
+            Should -Invoke Invoke-LocalBoxAutomationRequest -Times 0 -ParameterFilter { $Method -eq 'PUT' }
         }
         It 'surfaces the correlated download failure immediately' {
             { Get-LocalBoxStartupProgress $tracking $subscription group 100 } | Should -Throw '*BaseImages*BaseImageDownloadFailed*HTTP 401*'
@@ -332,11 +349,107 @@ Describe 'Guarded startup replay protection' {
         }
     }
 Describe 'Startup report validation' {
+    It 'accepts the prerequisite phase while WinGet is still installing' {
+        $path = "$TestDrive/state.json"
+        @{ BootstrapId = $id; SubscriptionId = $subscription; ResourceGroupName = 'group'; State = 'Running'; Phase = 'Prerequisites'; Code = ''; Message = 'Waiting for WinGet' } |
+            ConvertTo-Json | Set-Content $path
+        (Get-LocalBoxStartupReport $path $id $subscription group).Phase | Should -Be 'Prerequisites'
+    }
     It 'rejects reports for another bootstrap or subscription' {
         $path = "$TestDrive/state.json"
         @{ BootstrapId = 'foreign'; SubscriptionId = $subscription; ResourceGroupName = 'group'; State = 'Failed'; Phase = 'BaseImages' } |
             ConvertTo-Json | Set-Content $path
         { Get-LocalBoxStartupReport $path $id $subscription group } | Should -Throw '*does not match*'
+    }
+
+    Describe 'WinGet startup prerequisite ordering' {
+        BeforeEach {
+            $prerequisiteClock = @{ Now = [datetime]'2026-11-06T00:00:00Z'; Sleeps = 0 }
+            $originalPath = $env:PATH
+            $prerequisiteStatus = @{ BootstrapId = $id; State = 'Running'; Phase = 'Startup' }
+            $prerequisitePath = "$TestDrive/prerequisites.json"
+            Mock Get-Date { $prerequisiteClock.Now }
+            Mock Get-ScheduledTask { @() }
+            Mock Start-Sleep {
+                $prerequisiteClock.Sleeps++
+                $prerequisiteClock.Now = $prerequisiteClock.Now.AddSeconds(15)
+            }
+            Mock Resolve-LocalBoxAzCopy { 'fixture-azcopy.exe' }
+        }
+        AfterEach { $env:PATH = $originalPath }
+        It 'waits for installer completion before resolving tools or initializing storage' {
+            Mock Get-ScheduledTask {
+                if ($prerequisiteClock.Sleeps -lt 2) { @{ TaskName = 'WinGetLogonScript'; TaskPath = '\'; State = 'Running' } }
+            }
+            Mock Resolve-LocalBoxAzCopy {
+                $prerequisiteClock.Sleeps | Should -Be 2
+                'fixture-azcopy.exe'
+            }
+            Wait-LocalBoxStartupPrerequisites $prerequisiteStatus $prerequisitePath
+            Should -Invoke Start-Sleep -Times 2 -Exactly
+            Should -Invoke Resolve-LocalBoxAzCopy -Times 1 -Exactly
+            $prerequisiteStatus.Phase | Should -Be 'Startup'
+        }
+        It 'also waits for a registered task that has not started yet' {
+            Mock Get-ScheduledTask {
+                if ($prerequisiteClock.Sleeps -eq 0) { @{ TaskName = 'WinGetLogonScript'; TaskPath = '\'; State = 'Ready' } }
+            }
+            Wait-LocalBoxStartupPrerequisites $prerequisiteStatus $prerequisitePath
+            Should -Invoke Start-Sleep -Times 1 -Exactly
+        }
+        It 'stops at the one-hour installation budget without attempting a download' {
+            Mock Get-ScheduledTask { @{ TaskName = 'WinGetLogonScript'; TaskPath = '\'; State = 'Running' } }
+            Mock Start-Sleep { $prerequisiteClock.Now = $prerequisiteClock.Now.AddHours(1) }
+            { Wait-LocalBoxStartupPrerequisites $prerequisiteStatus $prerequisitePath } | Should -Throw '*one-hour prerequisite budget*'
+            ($prerequisiteClock.Now - [datetime]'2026-11-06T00:00:00Z').TotalSeconds | Should -Be 3600
+            Should -Invoke Resolve-LocalBoxAzCopy -Times 0
+        }
+        It 'does not treat an installation/discovery failure as ready' {
+            Mock Resolve-LocalBoxAzCopy { throw 'fixture-missing-azcopy' }
+            { Wait-LocalBoxStartupPrerequisites $prerequisiteStatus $prerequisitePath } | Should -Throw '*fixture-missing-azcopy*'
+            $prerequisiteStatus.Phase | Should -Be 'Prerequisites'
+        }
+        It 'surfaces task query errors rather than assuming WinGet completed' {
+            Mock Get-ScheduledTask { throw 'fixture-scheduler-unavailable' }
+            { Wait-LocalBoxStartupPrerequisites $prerequisiteStatus $prerequisitePath } | Should -Throw '*fixture-scheduler-unavailable*'
+            Should -Invoke Resolve-LocalBoxAzCopy -Times 0
+        }
+    }
+
+    Describe 'AzCopy resolution with a stale process PATH' {
+        BeforeEach {
+            Mock Get-Command { @() } -ParameterFilter { $Name -eq 'azcopy' }
+            $localData = Join-Path $TestDrive ([guid]::NewGuid().ToString())
+            $programRoot = Join-Path $TestDrive ([guid]::NewGuid().ToString())
+            $resolveArguments = @{ LocalAppData = $localData; ProgramFiles = $programRoot }
+        }
+        It 'preserves an existing native PATH resolution' {
+            Mock Get-Command { @{ Path = 'native-azcopy.exe' } } -ParameterFilter { $Name -eq 'azcopy' }
+            Resolve-LocalBoxAzCopy @resolveArguments | Should -Be 'native-azcopy.exe'
+        }
+        It 'finds the current startup user WinGet link without searching other profiles' {
+            $directory = Join-Path $localData 'Microsoft/WinGet/Links'
+            New-Item -ItemType Directory -Path $directory -Force | Out-Null
+            Set-Content "$directory/azcopy.exe" 'fixture'
+            Resolve-LocalBoxAzCopy @resolveArguments | Should -Be "$directory/azcopy.exe"
+        }
+        It 'finds the exact installed package when its WinGet link is absent' {
+            $directory = Join-Path $localData 'Microsoft/WinGet/Packages/Microsoft.Azure.AZCopy.10_fixture/azcopy_windows_amd64_10.34.1'
+            New-Item -ItemType Directory -Path $directory -Force | Out-Null
+            Set-Content "$directory/azcopy.exe" 'fixture'
+            Resolve-LocalBoxAzCopy @resolveArguments | Should -Be "$directory/azcopy.exe"
+        }
+        It 'fails explicitly instead of choosing between multiple unlinked versions' {
+            foreach ($version in @('10.34.0','10.34.1')) {
+                $directory = Join-Path $localData "Microsoft/WinGet/Packages/Microsoft.Azure.AZCopy.10_fixture/azcopy_windows_amd64_$version"
+                New-Item -ItemType Directory -Path $directory -Force | Out-Null
+                Set-Content "$directory/azcopy.exe" 'fixture'
+            }
+            { Resolve-LocalBoxAzCopy @resolveArguments } | Should -Throw '*Multiple unlinked AzCopy*'
+        }
+        It 'reports an actionable error when installation did not provide AzCopy' {
+            { Resolve-LocalBoxAzCopy @resolveArguments } | Should -Throw '*Inspect the WinGet provisioning log*'
+        }
     }
     It 'rejects corrupt JSON and invalid states' {
         $path = "$TestDrive/state.json"

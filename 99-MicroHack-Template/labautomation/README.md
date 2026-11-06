@@ -546,6 +546,17 @@ Rules:
   `Resource Group Name`, `Entra ID *`, `Portal URL *`) and emits them itself.
   Attempts to emit a reserved name are silently dropped.
 
+#### Using emitted credentials in Markdown content
+
+Emitted credentials can also be used when rendering Markdown content.
+All `challenge*.md` and `solution*.md` pages support:
+
+- Secret rendering from the console: `<secret group="groupname" name="secretname" show="true|false|alwayshidden|always" />`
+- GitHub flavoured Markdown
+- Math rendering via KaTeX
+- Mermaid diagrams
+- Syntax highlighting of code blocks
+
 #### Passwords and re-runs
 
 A credential is stored the moment you emit it, and the participant may already

@@ -13,7 +13,7 @@
     "Quality": {
       "type": "string",
       "enum": ["Testing", "Preview", "GA"],
-      "description": "Optional quality (maturity) label of the content pack. When set, importing or refreshing the content pack in the platform updates its quality label to this value; an invalid value is reported as a warning and ignored. When absent, the quality label is left as it is."
+      "description": "Optional quality (maturity) label of the content pack. When set, importing or refreshing the content pack in the platform updates its quality label to this value; an invalid value is reported as a warning and ignored. When absent, the quality label is left as it is. Only honored for content imported from the main branch of microsoft/MicroHack (or the master branch of microsoft/WhatTheHack): other repositories and branches are always labelled Testing, and custom repository imports never set the label automatically."
     },
     "groups": {
       "type": "array",
@@ -50,6 +50,120 @@
       "type": "number",
       "minimum": 0,
       "description": "Estimated daily cost in USD of the event-wide resources global-event-deploy.ps1 creates. That hook runs once per event (before shared-deploy-lab.ps1), so this is added once per day of the event, whatever the lab or subscription count. Required for the hook to run: global-event-deploy.ps1 is skipped with a warning unless its param block is ([string]$SubscriptionId, [string[]]$PreferredLocation, [string[]]$AllowedEntraUserIds) and this is greater than 5; at 5 or less no cost is estimated either. Re-import the content pack after enabling it."
+    },
+    "contentPreparation": {
+      "type": "object",
+      "description": "Optional. How the platform prepares this hack on import and re-import. Every property is optional: an absent property keeps the platform default (microhack-variants.json / whatthehack-variants.json in the platform), a present one replaces that default as a whole and an empty list or object clears it. Paths are literal and case-sensitive, use '/' as separator and stay inside their folder: wildcards, '..', absolute paths and links are rejected. An invalid section fails the import of this hack before anything is published.",
+      "properties": {
+        "variants": {
+          "type": "array",
+          "maxItems": 50,
+          "uniqueItems": true,
+          "items": { "$ref": "#/definitions/variantName" },
+          "description": "Variants offered in the import dialog. An empty list offers none."
+        },
+        "defaultVariant": {
+          "description": "Variant used when none is chosen. Must be one of the variants; defaults to the first one.",
+          "allOf": [{ "$ref": "#/definitions/variantName" }]
+        },
+        "alwaysRemove": {
+          "type": "object",
+          "description": "Files or folders removed whatever the variant, per folder.",
+          "properties": {
+            "challenges": { "$ref": "#/definitions/pathList" },
+            "solutions": { "$ref": "#/definitions/pathList" }
+          },
+          "additionalProperties": false
+        },
+        "variantRemovals": {
+          "type": "object",
+          "description": "Markdown files (.md) removed from challenges and solutions when a variant is chosen. Key = variant. Folders and other file types are not allowed: use alwaysRemove for those.",
+          "propertyNames": { "$ref": "#/definitions/variantName" },
+          "additionalProperties": { "$ref": "#/definitions/markdownPathList" }
+        },
+        "variantRenames": {
+          "type": "object",
+          "description": "Markdown files renamed in challenges and solutions when a variant is chosen. Key = variant, value = { \"source .md path\": \"new .md file name\" }; a file is renamed within its own folder.",
+          "propertyNames": { "$ref": "#/definitions/variantName" },
+          "additionalProperties": {
+            "type": "object",
+            "maxProperties": 1000,
+            "propertyNames": { "$ref": "#/definitions/markdownPath" },
+            "additionalProperties": { "$ref": "#/definitions/markdownName" }
+          }
+        },
+        "studentZipExclusions": {
+          "description": "Paths left out of download-Student.zip, as they appear inside the ZIP (a bare name is a top-level entry).",
+          "allOf": [{ "$ref": "#/definitions/pathList" }]
+        },
+        "coachZipExclusions": {
+          "description": "Paths left out of download-Coach.zip, as they appear inside the ZIP (a bare name is a top-level entry).",
+          "allOf": [{ "$ref": "#/definitions/pathList" }]
+        },
+        "banners": {
+          "type": "object",
+          "description": "Banners injected below the title of the first challenge and the first solution.",
+          "properties": {
+            "challenges": { "$ref": "#/definitions/bannerSide" },
+            "solutions": { "$ref": "#/definitions/bannerSide" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "definitions": {
+    "variantName": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9 ._-]{0,62}[A-Za-z0-9])?$",
+      "description": "Letters, digits, space, '.', '_' or '-', starting and ending with a letter or digit, at most 64 characters. Case-sensitive."
+    },
+    "literalPath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 260,
+      "pattern": "^(?!\\s)(?!.*\\s$)(?!.*[. ](?:/|$))[^/\\\\*?<>\"|:\\[\\]\\u0000-\\u001F\\u007F-\\u009F]+(?:/[^/\\\\*?<>\"|:\\[\\]\\u0000-\\u001F\\u007F-\\u009F]+)*$",
+      "description": "Literal relative path, '/'-separated and case-sensitive. A bare name matches the shallowest entry with that exact name; a path with '/' matches exactly. No wildcards or pattern characters (* ? < > \" | : [ ]), no '\\', no '.' or '..', no leading '/', no name ending in '.' or a space."
+    },
+    "literalName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 260,
+      "pattern": "^(?!\\s)(?!.*\\s$)(?!.*[. ]$)[^/\\\\*?<>\"|:\\[\\]\\u0000-\\u001F\\u007F-\\u009F]+$",
+      "description": "Literal file name without '/', same rules as a path."
+    },
+    "pathList": {
+      "type": "array",
+      "maxItems": 1000,
+      "items": { "$ref": "#/definitions/literalPath" }
+    },
+    "markdownPath": {
+      "description": "Literal path (see literalPath) to a Markdown file: the last name ends in '.md' (any case).",
+      "allOf": [{ "$ref": "#/definitions/literalPath" }, { "pattern": "[^/]\\.[Mm][Dd]$" }]
+    },
+    "markdownName": {
+      "description": "Literal Markdown file name (see literalName) ending in '.md' (any case).",
+      "allOf": [{ "$ref": "#/definitions/literalName" }, { "pattern": "^.+\\.[Mm][Dd]$" }]
+    },
+    "markdownPathList": {
+      "type": "array",
+      "maxItems": 1000,
+      "items": { "$ref": "#/definitions/markdownPath" }
+    },
+    "bannerSide": {
+      "type": "object",
+      "properties": {
+        "download": {
+          "type": "boolean",
+          "description": "[!IMPORTANT] banner linking the download ZIP. Default: true."
+        },
+        "parentReadme": {
+          "type": "boolean",
+          "description": "[!TIP] banner pointing to the Readme of the challenges or solutions folder. Default: true for MicroHack-style hacks, false for WhatTheHack."
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false

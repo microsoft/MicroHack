@@ -89,6 +89,7 @@ Key points for integration:
   - [`lab-defaults.json`](#lab-defaultsjson)
     - [Fields](#fields)
     - [Cost forecasting formula](#cost-forecasting-formula)
+    - [`contentPreparation`: how your content is prepared](#contentpreparation-how-your-content-is-prepared)
     - [`groups`: supported values](#groups-supported-values)
     - [`deploymentType`: what each value means for your script](#deploymenttype-what-each-value-means-for-your-script)
   - [`deploy-lab.ps1`](#deploy-labps1)
@@ -176,6 +177,7 @@ Only include fields you want to set; missing fields fall back to platform defaul
 | `estimatedSharedDeploymentDailyCostsUsd` | `number` (≥ 0) | Estimated daily cost in USD of resources created once per subscription by `shared-deploy-lab.ps1`. Cost forecasting multiplies this value by the subscription count: labs divided by `labsPerSubscription`, rounded up, for resource-group deployments; one subscription per lab for `subscription` deployments. Defaults to `0` when absent. |
 | `estimatedGlobalDeploymentDailyCostsUsd` | `number` (≥ 0) | Estimated daily cost in USD of resources created once per event by `global-event-deploy.ps1`, not multiplied by subscription count. Must be **greater than 5**, with a matching hook signature, to enable global deployment. |
 | `Quality` | `"Testing"` \| `"Preview"` \| `"GA"` | **Optional** maturity label of the MicroHack.<ul><li><strong>Testing</strong>: in development and not intended for use.</li><li><strong>Preview</strong>: available for use by early adopters who accept potential issues.</li><li><strong>GA</strong>: generally available for public use.</li></ul> |
+| `contentPreparation` | `object` | **Optional.** Controls how the platform prepares your content on import and re-import: variants, removed or renamed files, download ZIP contents and banners. See [details](#contentpreparation-how-your-content-is-prepared). |
 
 ### Cost forecasting formula
 
@@ -207,6 +209,178 @@ and $\sum \text{groupSurcharge}$ represents the license costs for `groups` per l
 Per-lab costs and group surcharges are multiplied by `labs`; shared deployment costs are multiplied by `subs`
 because `shared-deploy-lab.ps1` runs once per subscription.
 Enabled global deployment costs are added once per day for the whole event.
+
+### `contentPreparation`: how your content is prepared
+
+When someone imports or re-imports your MicroHack, the platform prepares it before
+publishing. It applies the selected variant, removes files or folders, renames Markdown
+files, builds `download-Student.zip` and `download-Coach.zip`, and adds banners to the
+first challenge and the first solution. The optional `contentPreparation` object puts
+you in control of each step:
+
+```json
+{
+  "contentPreparation": {
+    "variants": ["Standard", "Accelerated"],
+    "defaultVariant": "Standard",
+    "alwaysRemove": {
+      "challenges": [],
+      "solutions": []
+    },
+    "variantRemovals": {
+      "Accelerated": ["Challenge-02.md", "Solution-02.md"]
+    },
+    "variantRenames": {},
+    "studentZipExclusions": ["img"],
+    "coachZipExclusions": ["img"],
+    "banners": {
+      "challenges": {
+        "download": true,
+        "parentReadme": false
+      },
+      "solutions": {
+        "download": true,
+        "parentReadme": true
+      }
+    }
+  }
+}
+```
+
+- **Start small:** this example shows every option. Each is optional; add only the ones
+  you need. A supplied option replaces that option's platform default. An empty list or
+  object clears the default.
+- **Defaults:** most MicroHacks have no variants, removals, renames or ZIP exclusions;
+  all four banners are on.
+- **Location:** for the platform to read `contentPreparation`, put `lab-defaults.json`
+  next to `deploy-lab.ps1`.
+
+#### Options
+
+| Option | Type | What it does |
+| --- | --- | --- |
+| `variants` | `string[]` | Variants offered during import, for example a full and an accelerated version. Use letters, digits, spaces, `.`, `_` and `-`. |
+| `defaultVariant` | `string` | Variant preselected on import. Must be one of `variants`. Without it, the platform default is used if offered; otherwise the first variant. |
+| `alwaysRemove` | `{ "challenges": [], "solutions": [] }` | Files of any type or folders, removed on every import, whatever the variant: `challenges` from the student side, `solutions` from the coach side. No other keys. |
+| `variantRemovals` | `{ "<variant>": [] }` | Markdown files (`.md`) removed from both sides when that variant is imported. Folders are not matched. |
+| `variantRenames` | `{ "<variant>": { "<file>.md": "<new name>.md" } }` | Markdown files renamed to another `.md` name on both sides when that variant is imported. See [Renames](#renames). |
+| `studentZipExclusions` | `string[]` | Left out of `download-Student.zip`. See [Download ZIPs](#download-zips). |
+| `coachZipExclusions` | `string[]` | Left out of `download-Coach.zip`. |
+| `banners` | `object` | Turns each of the four banners on or off. See [Banners](#banners). |
+
+Variants used as keys in `variantRemovals` and `variantRenames` must be listed in
+`variants`, spelled exactly the same. A re-import keeps the variant picked at import as
+long as it is still listed; otherwise it uses `defaultVariant`.
+
+Use `alwaysRemove` for images, scripts or folders; variant-specific removals and renames
+are for Markdown files only.
+
+#### Where paths start
+
+Every path starts at your MicroHack folder, the one that contains `challenges/` and
+`walkthrough/`. The examples below use this layout:
+
+```text
+01-My-MicroHack/                  ← paths start here
+├── Readme.md
+├── img/
+├── challenges/Challenge-02.md
+├── challenges/img/
+├── walkthrough/Solution-02.md
+└── labautomation/
+```
+
+The platform prepares two copies of this folder:
+
+- **Student side**, published as the challenges: your folder **without** `walkthrough/`.
+- **Coach side**, published as the solutions: your folder **without** `challenges/`.
+
+Shared entries such as `Readme.md` and `img/` are on both sides. `labautomation/` and
+its files are on neither.
+
+#### How a value finds its target
+
+A value is either a **name** (no `/`) or a **path** (with `/`):
+
+| You write | Removals and renames | ZIP exclusions |
+| --- | --- | --- |
+| Name: `Challenge-02.md` | The first entry with exactly this name, searched from the top down, level by level, on each side. Only that one entry. | The entry with this name at the top of the ZIP. No search. |
+| Path: `challenges/Challenge-02.md` | Exactly this path from your MicroHack folder. | Exactly this path from the top of the ZIP. |
+
+Matching is always exact and case-sensitive: no "ends with", no partial names, no
+wildcards. `challenge-02.md` does not match `Challenge-02.md`. The `.md` extension
+check itself ignores case, but the file name must still match exactly.
+
+Applied to the layout above:
+
+| Option | Value | Hits |
+| --- | --- | --- |
+| `variantRemovals` | `Challenge-02.md` | `challenges/Challenge-02.md`. Nothing on the coach side. |
+| `variantRemovals` | `Solution-02.md` | `walkthrough/Solution-02.md`. Nothing on the student side. |
+| `studentZipExclusions` | `img` | The top-level `img/`. `challenges/img/` stays in the ZIP. |
+| `studentZipExclusions` | `challenges/img` | `challenges/img/` only. |
+
+**Rule of thumb:** a path with `/` means the same thing in every option and never hits
+the wrong entry. Use a bare name only when it is unique.
+
+#### Renames
+
+`variantRenames` renames a file for one variant:
+
+- The key finds the source file the same way a removal finds it (name or path).
+- The value is the new file name only, without `/`; the file stays in its folder.
+- An existing file with that name is replaced.
+- Renames run after removals. When renames depend on each other, such as `03 → 02` and
+  `04 → 03`, the platform runs them in the right order, whatever their order in the file.
+- Links to the old name in your Markdown are not updated.
+
+Example: the `Accelerated` variant skips challenge 2 and moves challenge 3 into its place,
+so the numbering has no gap:
+
+```json
+"variantRemovals": {
+  "Accelerated": ["challenges/Challenge-02.md", "walkthrough/Solution-02.md"]
+},
+"variantRenames": {
+  "Accelerated": {
+    "challenges/Challenge-03.md": "Challenge-02.md",
+    "walkthrough/Solution-03.md": "Solution-02.md"
+  }
+}
+```
+
+#### Download ZIPs
+
+The ZIP root is your MicroHack folder. The Student ZIP omits `.md` files in
+`challenges/`; the Coach ZIP omits `.md` files in `walkthrough/`. Top-level files such
+as `Readme.md` are not included. Removals and renames only change published pages; use
+`studentZipExclusions` and `coachZipExclusions` to change ZIP contents.
+
+#### Banners
+
+| Setting | Added to | Banner |
+| --- | --- | --- |
+| `challenges.download` | First challenge | `[!IMPORTANT]` box asking to download `download-Student.zip`, with a link. |
+| `challenges.parentReadme` | First challenge | `[!TIP]` box pointing to the `Readme.md` of your MicroHack. |
+| `solutions.download` | First solution | `[!IMPORTANT]` box asking to download `download-Coach.zip`, with a link. |
+| `solutions.parentReadme` | First solution | `[!TIP]` box pointing to the `Readme.md` of your MicroHack. |
+
+All four default to `true`; leave one out to keep its default. Banners go right below the
+title. A `parentReadme` banner needs a `Readme.md` in your MicroHack folder. Nothing worth
+downloading on one side? Turn its `download` banner off.
+
+#### Path rules and errors
+
+Every value must be a plain relative path:
+
+- Use `/` between folders. Paths are literal: no wildcards, absolute paths or `..`.
+- Paths stay inside the content folder and cannot traverse symbolic links.
+
+What happens when something is off:
+
+- **A value finds nothing:** it is skipped.
+- **An invalid value, unknown option or wrong type:** the import fails with an error.
+  The already published version stays online.
 
 ### `groups`: supported values
 

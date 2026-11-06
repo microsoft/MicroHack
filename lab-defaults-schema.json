@@ -17,8 +17,9 @@
     },
     "groups": {
       "type": "array",
-      "items": { "type": "string" },
-      "description": "Group-based feature activation names (e.g. [\"GHCPUsers\", \"M365-E5-Users\"]). Each group provisions a feature for the created Entra ID users."
+      "uniqueItems": true,
+      "items": { "type": "string", "enum": ["", "GHCPUsers", "M365-E5-Users"] },
+      "description": "Group-based feature activation names. Each group provisions a feature for the created Entra ID users: GHCPUsers = GitHub Copilot license, M365-E5-Users = Microsoft 365 E5 license. Names are case-sensitive. An empty string (the template placeholder) is ignored."
     },
     "deploymentType": {
       "type": "string",

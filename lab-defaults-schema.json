@@ -13,7 +13,7 @@
     "Quality": {
       "type": "string",
       "enum": ["Testing", "Preview", "GA"],
-      "description": "Optional quality (maturity) label of the content pack. When set, importing or refreshing the content pack in the platform updates its quality label to this value; an invalid value is reported as a warning and ignored. When absent, the quality label is left as it is."
+      "description": "Optional quality (maturity) label of the content pack. When set, importing or refreshing the content pack in the platform updates its quality label to this value; an invalid value is reported as a warning and ignored. When absent, the quality label is left as it is. Only honored for content imported from the main branch of microsoft/MicroHack (or the master branch of microsoft/WhatTheHack): other repositories and branches are always labelled Testing, and custom repository imports never set the label automatically."
     },
     "groups": {
       "type": "array",

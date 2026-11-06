@@ -367,6 +367,28 @@ installation race addressed by the prerequisite gate; it was not another HTTP
 401 failure. Read-only inspection also confirmed the upstream tag replacement.
 Neither bootstrap nor storage initialization was replayed during diagnosis.
 
+TEST11 on traininglab-05 progressed through WinGet, verified base-image downloads
+and creation of all three nested VMs, then stopped at cluster-build step 9 after
+approximately **1h18m**. Upstream looked up `ImageCustomizationScheduledTask`,
+which was absent on both nodes, although both module directories checked by
+`Wait-AzureEdgeBootstrap` were already present. The guard's inherited
+`ErrorActionPreference=Stop` incorrectly promoted that upstream non-terminating
+lookup error into a fatal exception.
+
+The guard now preserves upstream's `Continue` error semantics **only while
+invoking the upstream logon script**. Non-terminating errors remain visible;
+explicit throws, explicit `-ErrorAction Stop` and upstream readiness timeouts
+still fail. Guard operations, prerequisite checks and image transfers remain
+strict, and all final deployment/health gates are unchanged. This does not bypass
+node readiness or create a replacement customization task.
+
+New startup payloads embed the existing shared diagnostic formatter. A terminating
+startup failure now includes its bounded, credential-redacted underlying message
+in the correlated report instead of only a generic instruction to inspect logs.
+Existing VMs retain their original immutable payload; a fresh deployment is
+required to exercise these changes. TEST11 was inspected without replaying
+storage initialization or resuming cluster deployment.
+
 #### Automatic Azure Local validation recovery
 
 The Console can perform **one automatic validation retry**, after a **two-minute

@@ -21,6 +21,20 @@ function Set-LocalBoxStartupTemplate {
         if ([regex]::Matches($text, 'osProfile: \{').Count -ne 1) { throw 'Cannot uniquely locate the upstream VM osProfile.' }
         $source = (Get-Content -LiteralPath $StartupSource -Raw -ErrorAction Stop).Replace('__LOCALBOX_BOOTSTRAP_ID__', $Id.ToString())
         if ([Text.Encoding]::UTF8.GetByteCount($source) -gt 65535) { throw 'LocalBox startup protection exceeds the VM custom-data limit.' }
+        $diagnosticsPath = Join-Path $PSScriptRoot 'localbox-automation.ps1'
+        $parseErrors = $null
+        $diagnostics = [Management.Automation.Language.Parser]::ParseFile($diagnosticsPath, [ref]$null, [ref]$parseErrors)
+        if ($parseErrors.Count) { throw 'Cannot parse the shared LocalBox diagnostic formatter for startup packaging.' }
+        $formatter = $diagnostics.FindAll({
+            param($node)
+            $node -is [Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -eq 'ConvertTo-LocalBoxDiagnosticText'
+        }, $true)
+        $sourceAst = [Management.Automation.Language.Parser]::ParseInput($source, [ref]$null, [ref]$parseErrors)
+        if ($parseErrors.Count -or $formatter.Count -ne 1 -or -not $sourceAst.ParamBlock) {
+            throw 'Cannot embed the shared diagnostic formatter in the startup payload.'
+        }
+        $source = $source.Insert($sourceAst.ParamBlock.Extent.EndOffset, "`n`n" + $formatter[0].Extent.Text)
+        if ([Text.Encoding]::UTF8.GetByteCount($source) -gt 65535) { throw 'LocalBox startup protection exceeds the VM custom-data limit.' }
         $destination = Join-Path (Split-Path -Parent $HostTemplate) 'localbox-startup.ps1'
         Set-Content -LiteralPath $destination -Value $source -Encoding utf8NoBOM -NoNewline -ErrorAction Stop
         $text = $text.Replace('osProfile: {', "osProfile: {`n      customData: base64(loadTextContent('localbox-startup.ps1'))")
@@ -274,6 +288,14 @@ function Sync-LocalBoxBaseImages {
     Save-LocalBoxStartupStatus $Status $StatusPath
 }
 
+function Invoke-LocalBoxUpstreamStartup {
+    param([string]$Path)
+    # Preserve upstream non-terminating errors; the guard's own operations remain strict.
+    $ErrorActionPreference = 'Continue'
+    & $Path
+    if (-not $?) { throw 'Upstream LocalBox startup returned unsuccessfully.' }
+}
+
 function Invoke-LocalBoxGuardedStartup {
     param([string]$Id, [string]$Root = 'C:\LocalBox')
     $ErrorActionPreference = 'Stop'
@@ -301,8 +323,7 @@ function Invoke-LocalBoxGuardedStartup {
         Save-LocalBoxStartupStatus $status $statusPath
         Wait-LocalBoxStartupPrerequisites -Status $status -StatusPath $statusPath
         Set-LocalBoxBaseImageGuard -Path "$Root/New-LocalBoxCluster.ps1" -PlanPath "$Root/SovereignStartup/images.json" -Id $Id
-        & "$Root/LocalBoxLogonScript.ps1"
-        if (-not $?) { throw 'Upstream LocalBox startup returned unsuccessfully.' }
+        Invoke-LocalBoxUpstreamStartup -Path "$Root/LocalBoxLogonScript.ps1"
         $status = Get-Content -LiteralPath $statusPath -Raw | ConvertFrom-Json -AsHashtable -ErrorAction Stop
         if ($status.State -eq 'Failed') { throw 'Upstream startup returned after a reported base-image failure.' }
         $status.State = 'Succeeded'
@@ -325,6 +346,7 @@ function Invoke-LocalBoxGuardedStartup {
                         $latest.Code = 'StartupFailed'
                         $latest.Message = 'Upstream LocalBox startup failed. Inspect LocalBoxLogonScript.log and New-LocalBoxCluster.log; do not blindly rerun storage initialization.'
                     }
+                    $latest.Message = "$(ConvertTo-LocalBoxDiagnosticText $failure.Exception.Message 600) $($latest.Message)"
                     Save-LocalBoxStartupStatus $latest $statusPath
                 }
             }

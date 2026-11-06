@@ -10,6 +10,7 @@ BeforeAll {
     New-Item -ItemType Directory -Path "$fixture/labautomation", "$fixture/resources/manual-setup/localbox" -Force | Out-Null
     Copy-Item "$root/labautomation/deploy-localbox.ps1" "$fixture/labautomation"
     Copy-Item "$root/labautomation/localbox-startup.ps1" "$fixture/labautomation"
+    Copy-Item "$root/labautomation/localbox-automation.ps1" "$fixture/labautomation"
     Copy-Item "$root/resources/manual-setup/localbox/deploy-localbox.ps1" "$fixture/resources/manual-setup/localbox"
     function az {}
 }

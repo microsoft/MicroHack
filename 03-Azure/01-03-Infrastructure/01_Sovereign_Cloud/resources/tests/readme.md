@@ -83,6 +83,21 @@ link and successfully ran `azcopy --version`; no image was downloaded and no
 deployment was resumed. The prerequisite race and tag-retention fixes still
 require a fresh end-to-end Console deployment.
 
+Error-boundary regressions cover a non-terminating upstream task lookup followed
+by its readiness gate, a subsequent terminating readiness failure, explicit
+`-ErrorAction Stop`, and bounded/redacted underlying startup errors. Packaging
+checks verify that the embedded diagnostic formatter is identical to the shared
+host formatter, rather than a separate redaction implementation. The guard's own
+strict download/checksum failures and the final readiness gates remain covered.
+Read-only TEST11 diagnostics confirmed the missing customization task and both
+required bootstrap-module directories on each node; the full resumed deployment
+was not executed.
+A PowerShell 7 probe on the same Client also reproduced the lookup failure under
+the old strict boundary, then used the actual corrected boundary to reach and
+pass those checks on both nodes. Both lookup errors remained visible and the
+parent preference stayed strict. The probe only queried tasks and paths; it did
+not start tasks, replay initialization or resume deployment.
+
 Run `Invoke-Pester ./localbox-failure-summary.tests.ps1,./localbox-automation.tests.ps1 -Output Detailed`
 for Console failure reporting. Tests cover run/content/group/scope correlation,
 real NUnit failure counts and messages, missing/malformed reports, prohibited XML

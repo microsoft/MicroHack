@@ -43,6 +43,12 @@ var command = {
         $text | Should -Match '&& powershell.exe.*-Install && powershell.exe.*-adminPassword opaque'
         Get-Content "$TestDrive/localbox-startup.ps1" -Raw | Should -Match $id
         Get-Content "$TestDrive/localbox-startup.ps1" -Raw | Should -Not -Match '__LOCALBOX_BOOTSTRAP_ID__'
+        $embeddedAst = [Management.Automation.Language.Parser]::ParseFile("$TestDrive/localbox-startup.ps1", [ref]$null, [ref]$null)
+        $embeddedFormatter = $embeddedAst.Find({
+            param($node)
+            $node -is [Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -eq 'ConvertTo-LocalBoxDiagnosticText'
+        }, $true)
+        $embeddedFormatter.Body.Extent.Text | Should -Be ('{' + (Get-Command ConvertTo-LocalBoxDiagnosticText).Definition + '}')
     }
     It 'does not replace immutable custom data for an already guarded VM' {
         Set-LocalBoxStartupTemplate $hostPath "$root/labautomation/localbox-startup.ps1" $id
@@ -223,6 +229,7 @@ Describe 'Guarded startup replay protection' {
             Set-Content "$startupRoot/LocalBoxLogonScript.ps1" 'throw "fixture-upstream-failed"'
             { Invoke-LocalBoxGuardedStartup $id $startupRoot } | Should -Throw '*fixture-upstream-failed*'
             (Get-Content $stateFile -Raw | ConvertFrom-Json).Code | Should -Be 'StartupFailed'
+            (Get-Content $stateFile -Raw | ConvertFrom-Json).Message | Should -Match 'fixture-upstream-failed'
             { Invoke-LocalBoxGuardedStartup $id $startupRoot } | Should -Throw '*Automatic replay*disabled*'
             Should -Invoke Set-LocalBoxBaseImageGuard -Times 1 -Exactly
         }
@@ -242,6 +249,37 @@ Describe 'Guarded startup replay protection' {
             $saved = Get-Content $stateFile -Raw | ConvertFrom-Json
             $saved.State | Should -Be 'Succeeded'
             $saved.Message | Should -Match 'Full health gates are still required'
+        }
+        It 'preserves a non-terminating upstream lookup error and still runs its next readiness gate' {
+            @'
+Write-Error "No MSFT_ScheduledTask objects found for ImageCustomizationScheduledTask"
+Set-Content "$PSScriptRoot/readiness-checked" 'yes'
+'@ | Set-Content "$startupRoot/LocalBoxLogonScript.ps1"
+            $result = @(Invoke-LocalBoxGuardedStartup $id $startupRoot 2>&1)
+            ($result | Out-String) | Should -Match 'ImageCustomizationScheduledTask'
+            Get-Content "$startupRoot/readiness-checked" | Should -Be 'yes'
+            (Get-Content $stateFile -Raw | ConvertFrom-Json).State | Should -Be 'Succeeded'
+        }
+        It 'still fails when upstream readiness throws after a non-terminating lookup' {
+            @'
+Write-Error "ImageCustomizationScheduledTask is absent"
+throw 'Timeout waiting for required bootstrap paths'
+'@ | Set-Content "$startupRoot/LocalBoxLogonScript.ps1"
+            { Invoke-LocalBoxGuardedStartup $id $startupRoot 2>$null } | Should -Throw '*required bootstrap paths*'
+            (Get-Content $stateFile -Raw | ConvertFrom-Json).State | Should -Be 'Failed'
+        }
+        It 'keeps an explicit upstream ErrorAction Stop terminating' {
+            Set-Content "$startupRoot/LocalBoxLogonScript.ps1" 'Write-Error "fixture-required-operation-failed" -ErrorAction Stop'
+            { Invoke-LocalBoxGuardedStartup $id $startupRoot } | Should -Throw '*fixture-required-operation-failed*'
+            (Get-Content $stateFile -Raw | ConvertFrom-Json).State | Should -Be 'Failed'
+        }
+        It 'records a bounded redacted error rather than only a generic failure' {
+            Set-Content "$startupRoot/LocalBoxLogonScript.ps1" 'throw (''Missing task; password=fixture-sensitive token=fixture-token '' + (''x'' * 1000))'
+            { Invoke-LocalBoxGuardedStartup $id $startupRoot } | Should -Throw
+            $saved = Get-Content $stateFile -Raw | ConvertFrom-Json
+            $saved.Message | Should -Match 'Missing task'
+            $saved.Message | Should -Not -Match 'fixture-sensitive|fixture-token'
+            $saved.Message.Length | Should -BeLessOrEqual 1000
         }
     }
 

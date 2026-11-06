@@ -29,7 +29,7 @@ The Console deployer applies the approved training RG tags `SecurityControl=Igno
 ## Option 1: Hackbox Console
 
 1. Import this Hack's complete `labautomation` folder, including its `bicep` subtree and both JSON files. Review [deployment-settings.json](../labautomation/deployment-settings.json) before importing; the configured source must contain the matching Bootstrap and guest artifacts.
-2. Select **resourcegroup-with-subscriptionowner** deployment, overriding the supplied `resourcegroup` default. This keeps one lab RG per learner while granting both RG Owner and subscription Owner; plain `resourcegroup` grants only subscription Reader and does not meet this Hack's access requirement. Defaults are two labs per subscription in `swedencentral`; adjust the event settings and quota as needed.
+2. Keep the default **resourcegroup-with-subscriptionowner** deployment. This keeps one lab RG per learner while granting both RG Owner and subscription Owner; plain `resourcegroup` grants only subscription Reader and does not meet this Hack's access requirement. Defaults are five labs per subscription in `swedencentral`; adjust the event settings and quota as needed.
 3. Run predeployment. [shared-deploy-lab.ps1](../labautomation/shared-deploy-lab.ps1) registers baseline providers once per subscription; [deploy-lab.ps1](../labautomation/deploy-lab.ps1) deploys and verifies each lab. Learners can register additional providers as required by later exercises.
 4. Confirm each learner has subscription Owner, then hand out the Console's connection and credential fields only after verification succeeds. Learners then follow [Solution 1](../walkthrough/challenge-01/solution-01.md).
 

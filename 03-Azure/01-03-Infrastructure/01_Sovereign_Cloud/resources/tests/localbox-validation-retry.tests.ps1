@@ -14,6 +14,21 @@ BeforeAll {
     }
 }
 
+Describe 'Run Command Azure CLI environment' {
+    BeforeEach { $previousPath = $env:PATH }
+    AfterEach { $env:PATH = $previousPath }
+    It 'keeps the existing PATH and adds persisted machine and user installations' {
+        $env:PATH = 'existing-bin'
+        Update-LocalBoxValidationRetryPath -MachinePath 'machine-cli-bin' -UserPath 'user-bin'
+        $env:PATH | Should -Be (@('existing-bin', 'machine-cli-bin', 'user-bin') -join [IO.Path]::PathSeparator)
+    }
+    It 'ignores absent persisted paths and repeated identical values' {
+        $env:PATH = 'existing-bin'
+        Update-LocalBoxValidationRetryPath -MachinePath '' -UserPath 'existing-bin'
+        $env:PATH | Should -Be 'existing-bin'
+    }
+}
+
 Describe 'Validation failure classification' {
     It 'recognizes the reported content-download timeout, including nested ARM errors' {
         Test-LocalBoxValidationDownloadTimeout $downloadError | Should -BeTrue
@@ -147,6 +162,16 @@ Describe 'Bounded Console validation recovery' {
         { Wait-LocalBoxNestedDeployment -SubscriptionId $testSubscription -ResourceGroupName $testGroup } | Should -Throw '*Automatic validation retry failed*'
         $recoveryTest.Submitted | Should -Be 0
     }
+    It 'reports bounded redacted recovery errors without allowing another retry' {
+        $command = @{ properties = @{ provisioningState = 'Succeeded'; parameters = $retryParameters
+            instanceView = @{ executionState = 'Failed'; exitCode = 1; startTime = [datetime]::UtcNow.ToString('o')
+                error = "Azure CLI unavailable; token=fixture-secret " + ('x' * 2000) } } }
+        $failure = { Get-LocalBoxValidationRetryState $command $testSubscription $testGroup } |
+            Should -Throw '*Azure CLI unavailable*' -PassThru
+        $failure.Exception.Message | Should -Not -Match 'fixture-secret'
+        $failure.Exception.Message | Should -Match 'No further automatic retry'
+        $failure.Exception.Message.Length | Should -BeLessThan 1100
+    }
     It 'rejects a second failed validation after successful recovery execution rather than looping' {
         $recoveryTest.Existing = @{ properties = @{ provisioningState = 'Succeeded'; parameters = $retryParameters } }
         Mock Invoke-LocalBoxAutomationAz {
@@ -185,6 +210,7 @@ Describe 'Validation recovery on LocalBox-Client' {
         @{ parameters = @{ deploymentMode = @{ allowedValues = @('Validate', 'Deploy') } } } |
             ConvertTo-Json -Depth 10 | Set-Content "$templateDir/azlocal.json"
         Mock Start-Sleep {}
+        Mock Update-LocalBoxValidationRetryPath {}
         Mock Invoke-LocalBoxValidationRetryAz {
             $guestRetryTest.Profile = $env:AZURE_CONFIG_DIR
             switch ($Arguments[2]) {
@@ -218,6 +244,7 @@ Describe 'Validation recovery on LocalBox-Client' {
         $before = (Get-FileHash "$templateDir/azlocal.parameters.json").Hash
         $previousProfile = $env:AZURE_CONFIG_DIR
         Invoke-LocalBoxValidationRetry @guestArguments
+        Should -Invoke Update-LocalBoxValidationRetryPath -Times 1 -Exactly
         Should -Invoke Start-Sleep -Times 1 -Exactly -ParameterFilter { $Seconds -eq 120 }
         $guestRetryTest.Creates.Count | Should -Be 2
         $guestRetryTest.Creates[0] | Should -Contain 'deploymentMode=Validate'
@@ -272,6 +299,13 @@ Describe 'Validation recovery on LocalBox-Client' {
     It 'fails explicitly on missing local deployment files' {
         Remove-Item "$templateDir/azlocal.parameters.json"
         { Invoke-LocalBoxValidationRetry @guestArguments } | Should -Throw '*file is missing*'
+        Should -Invoke Invoke-LocalBoxValidationRetryAz -Times 0
+    }
+    It 'fails before waiting or submitting anything when CLI remains unavailable' {
+        Mock Get-Command { throw 'Azure CLI is unavailable after PATH refresh' } -ParameterFilter { $Name -eq 'az' }
+        { Invoke-LocalBoxValidationRetry @guestArguments } | Should -Throw '*CLI is unavailable*'
+        Should -Invoke Update-LocalBoxValidationRetryPath -Times 1 -Exactly
+        Should -Invoke Start-Sleep -Times 0
         Should -Invoke Invoke-LocalBoxValidationRetryAz -Times 0
     }
 }

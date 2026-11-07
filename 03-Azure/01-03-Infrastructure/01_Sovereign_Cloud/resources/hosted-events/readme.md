@@ -322,6 +322,36 @@ not search other users' profiles, install a replacement binary, or blindly pick
 between multiple unlinked package versions. Prerequisite failure is reported as
 `Prerequisites` / `StartupPrerequisitesFailed`, before storage initialization.
 
+WinGet provisioning is also guarded. Its CLI is repaired to the installed
+`Microsoft.WinGet.Client` module version, with at most three attempts and
+30-second retry delays; version matching and a real `Get-WinGetPackage` COM
+enumeration must succeed before package configuration. Both configuration calls
+check their native exit codes, retain private stdout/stderr logs and allow at
+most three attempts, each capped at 15 minutes. A failed WinGet task is reported
+without waiting for the entire prerequisite grace period.
+
+The recognized upstream `Microsoft.AzureDataStudio` configuration entry is
+removed explicitly: [Azure Data Studio retired in February 2026](https://learn.microsoft.com/en-us/sql/tools/whats-happening-azure-data-studio)
+and its WinGet package is no longer available. This workshop does not depend on
+it. VS Code, SSMS and all other configured packages remain required; their errors
+are not ignored. Unrecognized configuration changes stop deployment for review.
+
+TEST12 exposed why checking only whether the WinGet task disappeared was
+insufficient. Both upstream manager repairs received HTTP 504, leaving CLI
+1.11.510 with Client/DSC modules 1.29.380. Subsequent DSC calls failed with
+`0x800706BA` (RPC server unavailable); see
+[microsoft/winget-cli#6560](https://github.com/microsoft/winget-cli/issues/6560).
+Live recovery on the existing traininglab-17 VM repaired the CLI to 1.29.380,
+verified COM enumeration, and found the additional retired-package failure.
+After removing only that entry, package configuration returned zero and AzCopy
+passed its executable version check. Startup was resumed only after verifying
+that no storage pools or nested VMs existed and archiving the original failed
+startup report. The resumed startup began at **18:10:38 UTC on 6 November 2026**
+and verified both base-image SHA256 checksums at **18:15:09 UTC** (4m31s after
+resume), then entered nested deployment with a healthy storage pool. This is
+authorized recovery evidence, not a claim that the complete resumed deployment
+or a new cold deployment has passed.
+
 The startup identity is also merged into the resource-group tags before deployment:
 upstream progress updates replace VM tags with the resource-group tags. If an
 existing Client has a startup monitor but has lost its identity tags, deployment
@@ -376,11 +406,35 @@ which was absent on both nodes, although both module directories checked by
 lookup error into a fatal exception.
 
 The guard now preserves upstream's `Continue` error semantics **only while
-invoking the upstream logon script**. Non-terminating errors remain visible;
+invoking the upstream logon script**, including the global preference used by
+imported modules, and restores the previous global preference in `finally`.
+Non-terminating errors remain visible;
 explicit throws, explicit `-ErrorAction Stop` and upstream readiness timeouts
 still fail. Guard operations, prerequisite checks and image transfers remain
 strict, and all final deployment/health gates are unchanged. This does not bypass
 node readiness or create a replacement customization task.
+
+TEST12's authorized resume exposed an additional scope issue at **18:55:57 UTC
+on 6 November 2026**, 45m19s after resume: setting `Continue` only in the calling
+function did not affect the imported LocalBox module, which still resolved the
+global `Stop` preference. The earlier script-level probe did not exercise that
+module boundary. Regression tests now import a real fixture module, covering
+non-terminating errors, explicit failures and preference restoration. A read-only
+probe on the current Client reproduced the old module-scoped failure, then
+verified both nodes with the corrected boundary at **19:03:55 UTC**; both lookup
+errors remained visible and no tasks were started. Authorized recovery resumed
+at **19:10:24 UTC** from cluster-build step 9 only, preserving the healthy storage
+pool and all three running nested VMs. It uses a separate protected helper;
+the original read-only startup payload remains unchanged. Full end-to-end
+readiness remains unverified.
+
+By **19:20:50 UTC**, the continuation had reached step 10, reported successful
+Arc bootstrap on AzLHOST2, and verified all mandatory resource providers as
+registered. The upstream ten-minute registration-propagation wait still applies
+before validation submission. An operator-monitor token expired at 19:19:07;
+the guest task kept running. Monitoring was resumed without replaying any guest
+stage, using refresh deadlines derived from the actual token expirations.
+Reaching step 10 is not a successful validation or Full health result.
 
 New startup payloads embed the existing shared diagnostic formatter. A terminating
 startup failure now includes its bounded, credential-redacted underlying message
@@ -401,7 +455,15 @@ failures, unreadable diagnostics and ambiguous state still stop the job.
 The host submits the asynchronous Managed Run Command
 `sovereign-localbox-validation-retry` on LocalBox-Client. Keep
 [localbox-validation-retry.ps1](../../labautomation/localbox-validation-retry.ps1)
-in the imported `labautomation` directory. The recovery:
+in the imported `labautomation` directory.
+
+Before using Azure CLI, the standalone Run Command refreshes its process PATH
+from the persisted machine/user paths, retaining existing entries. The VM agent
+can otherwise retain a PATH from before WinGet installed Azure CLI. Missing CLI
+still fails before any validation is submitted. Terminal retry errors include a
+bounded, redacted underlying diagnostic in Console.
+
+The recovery:
 
 1. Rechecks the original failed validation correlation after the delay.
 2. Uses the Client's managed identity and existing `C:\LocalBox\azlocal.json` and
@@ -429,6 +491,33 @@ readiness checks can proceed without rerunning that historical recovery.
 Do not manually re-trigger validation/deployment while automatic recovery is
 running. Cancellation or forced guest termination may prevent CLI-profile
 cleanup; inspect the Client before resetting recovery state.
+
+TEST12's first validation failed with the recognized content-download timeout at
+**21:40:51 UTC on 6 November 2026**. Its automatic retry stopped before the delay
+or any validation submission because the agent's stale PATH could not resolve
+`az`. A live SYSTEM-context probe reproduced the missing command, then verified
+the actual PATH-refresh/CLI helpers, Azure CLI 2.92.0, managed-identity ARM access
+and matching existing template/parameter contracts without submitting validation.
+The authorized repair replaced only that failed preflight execution; retry 1/1
+started at **21:47:59 UTC**, retaining the original remaining timeout and failed
+validation correlation. ARM confirmed a new validation execution in `Running`
+state at **21:50:11 UTC**, after the required backoff. Validation succeeded at
+**22:25:07 UTC** (34m56s after submission), and recovery submitted cluster
+deployment and exited successfully at **22:25:32 UTC**. `localcluster-deploy`
+succeeded at **00:48:09 UTC on 7 November 2026**; the nested connectivity gate
+subsequently passed. No bootstrap, storage or VM stage was replayed. A later
+operator-only token-resource lookup failure interrupted the handoff to guest
+preparation, not the completed Azure Local deployment; monitoring/preparation
+was resumed without infrastructure replay. AKS/image preparation, the reference
+VM and Full health verification remain required.
+
+The operator's Contributor role also prevented the normal container-scoped Blob
+role assignments. After explicit authorization, the Client managed identity
+created and verified only the two required **Storage Blob Data Contributor**
+grants on the private automation container at **05:43:10 UTC on 7 November**.
+Operator Blob data access was verified before continuing guest preparation.
+No broader roles were granted. These observed times include operator repair and
+authorization pauses; they are not an uninterrupted cold-deployment benchmark.
 
 If an older run failed with `Could not find a part of the path
 '/content/.../resources/prepare-localbox.ps1'`, it reached ARM completion but

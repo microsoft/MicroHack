@@ -7,6 +7,7 @@ BeforeAll {
     $subscription = '20000000-0000-0000-0000-000000000001'
     function Update-MhhToken {}
     function Get-ScheduledTask { param($TaskName) }
+    function Get-ScheduledTaskInfo { param([Parameter(ValueFromPipeline)]$InputObject) }
     $imageScript = @'
 Write-Host 'before'
 # Download LocalBox VHDs
@@ -273,6 +274,43 @@ throw 'Timeout waiting for required bootstrap paths'
             { Invoke-LocalBoxGuardedStartup $id $startupRoot } | Should -Throw '*fixture-required-operation-failed*'
             (Get-Content $stateFile -Raw | ConvertFrom-Json).State | Should -Be 'Failed'
         }
+        It 'preserves module error semantics and restores global preference for <Outcome>' -TestCases @(
+            @{ Outcome = 'Continue'; Ending = 'Set-Content "$PSScriptRoot/module-readiness-checked" yes' }
+            @{ Outcome = 'Throw'; Ending = 'throw "fixture-module-readiness-failed"' }
+            @{ Outcome = 'ExplicitStop'; Ending = 'Write-Error "fixture-module-required-operation-failed" -ErrorAction Stop' }
+        ) {
+            param($Outcome, $Ending)
+            $moduleName = 'FixtureLocalBoxBootstrap'
+            @'
+function Invoke-FixtureBootstrap {
+    Write-Error 'ImageCustomizationScheduledTask is absent'
+    __ENDING__
+}
+'@.Replace('__ENDING__', $Ending) | Set-Content "$startupRoot/$moduleName.psm1"
+            @'
+Import-Module "$PSScriptRoot/FixtureLocalBoxBootstrap.psm1" -Force
+Invoke-FixtureBootstrap
+'@ | Set-Content "$startupRoot/LocalBoxLogonScript.ps1"
+            $previousGlobalPreference = $global:ErrorActionPreference
+            try {
+                $global:ErrorActionPreference = 'Stop'
+                if ($Outcome -eq 'Continue') {
+                    $result = @(Invoke-LocalBoxGuardedStartup $id $startupRoot 2>&1)
+                    ($result | Out-String) | Should -Match 'ImageCustomizationScheduledTask'
+                    Get-Content "$startupRoot/module-readiness-checked" | Should -Be 'yes'
+                    (Get-Content $stateFile -Raw | ConvertFrom-Json).State | Should -Be 'Succeeded'
+                }
+                else {
+                    { Invoke-LocalBoxGuardedStartup $id $startupRoot 2>$null } | Should -Throw '*fixture-module-*'
+                    (Get-Content $stateFile -Raw | ConvertFrom-Json).State | Should -Be 'Failed'
+                }
+                $global:ErrorActionPreference | Should -Be 'Stop'
+            }
+            finally {
+                $global:ErrorActionPreference = $previousGlobalPreference
+                Remove-Module $moduleName -ErrorAction Stop
+            }
+        }
         It 'records a bounded redacted error rather than only a generic failure' {
             Set-Content "$startupRoot/LocalBoxLogonScript.ps1" 'throw (''Missing task; password=fixture-sensitive token=fixture-token '' + (''x'' * 1000))'
             { Invoke-LocalBoxGuardedStartup $id $startupRoot } | Should -Throw
@@ -408,6 +446,7 @@ Describe 'Startup report validation' {
             $prerequisitePath = "$TestDrive/prerequisites.json"
             Mock Get-Date { $prerequisiteClock.Now }
             Mock Get-ScheduledTask { @() }
+            Mock Get-ScheduledTaskInfo { @{ LastRunTime = [datetime]'1999-01-01'; LastTaskResult = 267011 } }
             Mock Start-Sleep {
                 $prerequisiteClock.Sleeps++
                 $prerequisiteClock.Now = $prerequisiteClock.Now.AddSeconds(15)
@@ -450,6 +489,13 @@ Describe 'Startup report validation' {
         It 'surfaces task query errors rather than assuming WinGet completed' {
             Mock Get-ScheduledTask { throw 'fixture-scheduler-unavailable' }
             { Wait-LocalBoxStartupPrerequisites $prerequisiteStatus $prerequisitePath } | Should -Throw '*fixture-scheduler-unavailable*'
+            Should -Invoke Resolve-LocalBoxAzCopy -Times 0
+        }
+        It 'fails promptly when WinGet exited unsuccessfully instead of waiting an hour' {
+            Mock Get-ScheduledTask { @{ TaskName = 'WinGetLogonScript'; TaskPath = '\'; State = 'Ready' } }
+            Mock Get-ScheduledTaskInfo { @{ LastRunTime = [datetime]'2026-11-06T00:00:00Z'; LastTaskResult = 1 } }
+            { Wait-LocalBoxStartupPrerequisites $prerequisiteStatus $prerequisitePath } | Should -Throw '*task result 1*'
+            Should -Invoke Start-Sleep -Times 0
             Should -Invoke Resolve-LocalBoxAzCopy -Times 0
         }
     }

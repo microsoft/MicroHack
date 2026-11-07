@@ -80,7 +80,7 @@ function Get-LocalBoxValidationRetryState {
             Detail = 'Waiting for validation retry 1/1 to start; ignoring stale instanceView.' }
     }
     if ($state.executionState -in @('Failed', 'Canceled', 'TimedOut')) {
-        throw 'Automatic validation retry failed or timed out. No further automatic retry will be submitted; inspect sovereign-localbox-validation-retry and localcluster-validate.'
+        throw "Automatic validation retry failed or timed out. $(ConvertTo-LocalBoxDiagnosticText $state.error 800) No further automatic retry will be submitted; inspect sovereign-localbox-validation-retry and localcluster-validate."
     }
     if ($state.executionState -eq 'Succeeded') {
         if ($null -eq $state.exitCode -or $state.exitCode -ne 0) { throw 'Validation recovery did not exit successfully.' }

@@ -58,6 +58,26 @@ required to validate regional service availability and effective inherited polic
 
 ## Global event LocalBox checks
 
+Run `Invoke-Pester ./localbox-winget.tests.ps1,./localbox-startup.tests.ps1,./localbox-deployment.tests.ps1 -Output Detailed`
+for WinGet provisioning failures. These checks cover bounded HTTP 504 retries,
+CLI/module version mismatch, COM activation failure, nonzero/missing native exit
+codes, process timeout cleanup, prerequisite-task failure propagation, exact
+upstream transformations and removal of only the retired Azure Data Studio
+resource. Real upstream Bootstrap/WinGet scripts and the package configuration
+are also transformed and syntax/compilation checked offline.
+
+The combined WinGet, startup, deployment, automation, validation-retry, global
+LocalBox and failure-summary suites passed **267 tests** after these changes.
+The real upstream Bicep compiled with the 30,679-byte guarded payload, and
+existing-VM custom-data preservation was verified.
+
+Live TEST12 repair verified matching CLI/Client 1.29.380, successful COM
+enumeration, zero-exit package configuration after the retired-entry removal,
+and executable AzCopy. After safe resume, both base-image SHA256 checksums
+passed at 18:15:09 UTC on 6 November 2026. The current instance is being used for the remaining
+nested deployment and Full health gates; these prerequisite checks alone do not
+establish end-to-end readiness.
+
 Run `Invoke-Pester ./localbox-startup.tests.ps1,./localbox-deployment.tests.ps1 -Output Detailed`
 for future-only startup protection. Offline checks cover new/existing VM
 custom-data handling, immutable identity retention, strict upstream source
@@ -92,11 +112,18 @@ strict download/checksum failures and the final readiness gates remain covered.
 Read-only TEST11 diagnostics confirmed the missing customization task and both
 required bootstrap-module directories on each node; the full resumed deployment
 was not executed.
-A PowerShell 7 probe on the same Client also reproduced the lookup failure under
-the old strict boundary, then used the actual corrected boundary to reach and
-pass those checks on both nodes. Both lookup errors remained visible and the
-parent preference stayed strict. The probe only queried tasks and paths; it did
-not start tasks, replay initialization or resume deployment.
+A PowerShell 7 probe on that Client reproduced the lookup failure under the old
+strict boundary and passed both node checks with function-local `Continue`.
+However, it did not model imported-module preference resolution: TEST12 still
+failed because the module resolved global `Stop`. The corrected boundary now
+temporarily sets global `Continue` too and restores it in `finally`. Three
+regressions exercise a real imported module, including explicit `Stop` and
+terminating readiness failures. A new read-only TEST12 probe reproduced the
+module-scoped failure and verified the corrected boundary against both nodes and
+the installed module's readiness helper. Both lookup errors remained visible and
+the global preference was restored. Neither probe started tasks or replayed
+initialization; the separate authorized step-9 continuation is still subject to
+all deployment and Full health gates.
 
 Run `Invoke-Pester ./localbox-failure-summary.tests.ps1,./localbox-automation.tests.ps1 -Output Detailed`
 for Console failure reporting. Tests cover run/content/group/scope correlation,
@@ -114,12 +141,21 @@ the later passing MetalLB repair reports were not used as the failure fixture.
 Run `Invoke-Pester ./localbox-validation-retry.tests.ps1 -Output Detailed` for
 the bounded Azure Local validation recovery. These mocked tests cover the exact
 content-download timeout classifier, the unchanged nested wait budget, one
-asynchronous recovery, Console restart/resume, stale execution state, error
+asynchronous recovery, Console restart/resume, stale execution state, persisted
+PATH refresh, missing-CLI failure before submission, bounded/redacted error
 propagation, existing local-file/correlation checks, managed-identity CLI-profile
 cleanup, and validation-before-deploy ordering. They never submit Azure
 deployments. The reported traininglab-58 failure could not be read with the
-available operator permissions; real retry and subsequent cluster deployment
-remain a fresh-Console integration check.
+available operator permissions. TEST12 later exercised the real timeout path,
+but its retry initially failed before submission because the VM agent retained
+a PATH from before Azure CLI installation. A read-only live SYSTEM probe
+verified the actual repaired helpers, native CLI, managed-identity access and
+matching existing template/parameter contract. The repaired bounded retry
+successfully validated that instance at 22:25:07 UTC on 6 November 2026 and
+submitted deployment. ARM deployment succeeded at 00:48:09 UTC on 7 November,
+and the nested connectivity gate passed. Guest preparation and Full health
+verification remain pending; this is resumed-instance evidence, not proof of a
+successful fresh Console deployment.
 
 Run `Invoke-Pester ./localbox-deployment.tests.ps1 -Output Detailed` for the
 LocalBox Developer Bastion deployment contract. These tests require Azure CLI

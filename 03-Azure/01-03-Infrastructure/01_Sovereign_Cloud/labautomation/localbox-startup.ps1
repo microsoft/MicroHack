@@ -54,9 +54,118 @@ $guardRoot = Join-Path $LocalBoxPath 'SovereignStartup'
 New-Item -ItemType Directory -Path $guardRoot -Force -ErrorAction Stop | Out-Null
 Set-Acl -LiteralPath $guardRoot -AclObject (Get-Acl -LiteralPath 'C:\AzureData' -ErrorAction Stop) -ErrorAction Stop
 Copy-Item -LiteralPath 'C:\AzureData\CustomData.bin' -Destination "$guardRoot\startup.ps1" -Force -ErrorAction Stop
+. "$guardRoot\startup.ps1"
+Set-LocalBoxWinGetGuard -Path "$LocalBoxPath\WinGet.ps1"
+Set-LocalBoxPackageConfiguration -Path "$LocalBoxPath\DSC\packages.dsc.yml"
 $Action = New-ScheduledTaskAction -Execute $ScheduledTaskExecutable -Argument "$guardRoot\startup.ps1"
 '@
     Set-Content -LiteralPath $Path -Value $text.Replace($action, $replacement) -Encoding utf8 -ErrorAction Stop
+}
+
+function Set-LocalBoxWinGetGuard {
+    param([string]$Path)
+    $text = Get-Content -LiteralPath $Path -Raw -ErrorAction Stop
+    $preference = '$ErrorActionPreference = $env:ErrorActionPreference'
+    $repair = 'Repair-WinGetPackageManager -AllUsers -Force -Latest -Verbose'
+    $packageCommand = '& $winget configure --file "$($Env:LocalBoxDir)\DSC\packages.dsc.yml" --accept-configuration-agreements --disable-interactivity'
+    $hostCommand = '& $winget configure --file "$($Env:LocalBoxDir)\DSC\hyper-v.dsc.yml" --accept-configuration-agreements --disable-interactivity'
+    foreach ($line in @($preference, $packageCommand, $hostCommand)) {
+        if ([regex]::Matches($text, [regex]::Escape($line)).Count -ne 1) { throw 'Unsupported upstream WinGet script; prerequisite protection was not installed.' }
+    }
+    if ([regex]::Matches($text, [regex]::Escape($repair)).Count -ne 2) { throw 'Unsupported upstream WinGet repair sequence.' }
+    $text = $text.Replace($preference, '$ErrorActionPreference = ''Stop''')
+    $first = $text.IndexOf($repair)
+    $text = $text.Remove($first, $repair.Length).Insert($first, '. "$Env:LocalBoxDir\SovereignStartup\startup.ps1"' + "`n" + 'Initialize-LocalBoxWinGet')
+    $text = $text.Replace($repair, '')
+    $text = $text.Replace($packageCommand, 'Invoke-LocalBoxWinGetConfiguration -Path "$Env:LocalBoxDir\DSC\packages.dsc.yml"')
+    $text = $text.Replace($hostCommand, 'Invoke-LocalBoxWinGetConfiguration -Path "$Env:LocalBoxDir\DSC\hyper-v.dsc.yml"')
+    Set-Content -LiteralPath $Path -Value $text -Encoding utf8 -ErrorAction Stop
+}
+
+function Set-LocalBoxPackageConfiguration {
+    param([string]$Path)
+    $text = (Get-Content -LiteralPath $Path -Raw -ErrorAction Stop).Replace("`r`n", "`n")
+    $block = @'
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: Microsoft.AzureDataStudio
+      directives:
+        description: Install Microsoft Azure Data Studio
+      settings:
+        id: Microsoft.AzureDataStudio
+        source: winget
+'@
+    $pattern = '(?m)^' + [regex]::Escape($block) + '[ \t]*(?:\n|$)'
+    $matches = [regex]::Matches($text, $pattern)
+    if ($matches.Count -eq 0 -and $text -notmatch 'AzureDataStudio') { return }
+    if ($matches.Count -ne 1 -or [regex]::Replace($text, $pattern, '') -match 'AzureDataStudio') {
+        throw 'Unrecognized retired Azure Data Studio package configuration; no package entries were changed.'
+    }
+    Write-Host 'Removing the retired Azure Data Studio package from LocalBox prerequisites; all remaining package results must still succeed.'
+    Set-Content -LiteralPath $Path -Value ([regex]::Replace($text, $pattern, '')) -Encoding utf8 -ErrorAction Stop
+}
+
+function Initialize-LocalBoxWinGet {
+    param([ValidateRange(1, 3)][int]$Attempts = 3)
+    $ErrorActionPreference = 'Stop'
+    $module = Get-Module -ListAvailable Microsoft.WinGet.Client | Sort-Object Version -Descending | Select-Object -First 1
+    if (-not $module) { throw 'Microsoft.WinGet.Client is not installed; package configuration was not started.' }
+    $version = $module.Version.ToString()
+    Import-Module Microsoft.WinGet.Client -RequiredVersion $version -ErrorAction Stop
+    for ($attempt = 1; $attempt -le $Attempts; $attempt++) {
+        try {
+            Repair-WinGetPackageManager -Version $version -AllUsers -Force -ErrorAction Stop
+            $actual = [string](Get-WinGetVersion -ErrorAction Stop)
+            if ($actual.TrimStart('v') -ne $version) { throw "WinGet CLI '$actual' does not match installed client module '$version'." }
+            $null = @(Get-WinGetPackage -ErrorAction Stop)
+            Write-Host "WinGet CLI/client $version compatibility and package enumeration verified."
+            return
+        }
+        catch {
+            if ($attempt -eq $Attempts) { throw }
+            Write-Warning "WinGet manager repair attempt $attempt/$Attempts failed: $(ConvertTo-LocalBoxDiagnosticText $_.Exception.Message 400). Retrying in 30 seconds."
+            Start-Sleep -Seconds 30
+        }
+    }
+}
+
+function Invoke-LocalBoxWinGetConfiguration {
+    param([string]$Path, [string]$LogDirectory = 'C:\LocalBox\SovereignStartup',
+        [ValidateRange(1, 3)][int]$Attempts = 3, [ValidateRange(1, 900)][int]$AttemptTimeoutSeconds = 900)
+    $ErrorActionPreference = 'Stop'
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { throw 'The WinGet configuration file is missing.' }
+    $winget = Join-Path $env:LOCALAPPDATA 'Microsoft/WindowsApps/winget.exe'
+    if (-not (Test-Path -LiteralPath $winget -PathType Leaf)) { throw 'WinGet is unavailable in the startup user profile.' }
+    for ($attempt = 1; $attempt -le $Attempts; $attempt++) {
+        $process = $null
+        $log = Join-Path $LogDirectory ("winget-{0}-{1}-{2}" -f [IO.Path]::GetFileNameWithoutExtension($Path), $PID, $attempt)
+        try {
+            $process = Start-Process -FilePath $winget -ArgumentList @('configure', '--file', "`"$Path`"",
+                '--accept-configuration-agreements', '--disable-interactivity') -NoNewWindow -PassThru `
+                -RedirectStandardOutput "$log.stdout.log" -RedirectStandardError "$log.stderr.log" -ErrorAction Stop
+            if (-not $process.WaitForExit($AttemptTimeoutSeconds * 1000)) { throw "WinGet configuration exceeded its $AttemptTimeoutSeconds-second attempt budget." }
+            $process.WaitForExit()
+            if ($null -eq $process.ExitCode -or $process.ExitCode -ne 0) {
+                throw "WinGet configuration failed with exit code '$($process.ExitCode)'. Inspect the private $log logs."
+            }
+            return
+        }
+        catch {
+            if ($attempt -eq $Attempts) { throw }
+            Write-Warning "WinGet configuration attempt $attempt/$Attempts failed: $(ConvertTo-LocalBoxDiagnosticText $_.Exception.Message 400). Retrying in 30 seconds."
+        }
+        finally {
+            if ($process) {
+                try {
+                    if (-not $process.HasExited) {
+                        $process.Kill($true)
+                        if (-not $process.WaitForExit(10000)) { throw 'WinGet process did not stop after its timeout.' }
+                    }
+                }
+                finally { $process.Dispose() }
+            }
+        }
+        Start-Sleep -Seconds 30
+    }
 }
 
 function Save-LocalBoxStartupStatus {
@@ -153,6 +262,12 @@ function Wait-LocalBoxStartupPrerequisites {
         if ($tasks.Count -gt 1) { throw 'Ambiguous WinGet prerequisite task state.' }
         if (-not $tasks.Count) { break }
         if ($tasks[0].State -eq 'Disabled') { throw 'WinGetLogonScript is disabled; prerequisite installation cannot be verified.' }
+        if ($tasks[0].State -eq 'Ready') {
+            $info = $tasks[0] | Get-ScheduledTaskInfo -ErrorAction Stop
+            if ($info.LastRunTime -gt [datetime]'2000-01-01' -and $info.LastTaskResult -ne 0) {
+                throw "WinGetLogonScript stopped with task result $($info.LastTaskResult). Inspect its provisioning and private WinGet logs; storage initialization was not started."
+            }
+        }
         if ((Get-Date).ToUniversalTime() -ge $deadline) {
             throw 'WinGetLogonScript did not complete within the one-hour prerequisite budget. Inspect its provisioning log; storage initialization was not started.'
         }
@@ -290,10 +405,15 @@ function Sync-LocalBoxBaseImages {
 
 function Invoke-LocalBoxUpstreamStartup {
     param([string]$Path)
-    # Preserve upstream non-terminating errors; the guard's own operations remain strict.
+    # Modules resolve preferences through global scope, not the calling function.
     $ErrorActionPreference = 'Continue'
-    & $Path
-    if (-not $?) { throw 'Upstream LocalBox startup returned unsuccessfully.' }
+    $previousGlobalPreference = $global:ErrorActionPreference
+    try {
+        $global:ErrorActionPreference = 'Continue'
+        & $Path
+        if (-not $?) { throw 'Upstream LocalBox startup returned unsuccessfully.' }
+    }
+    finally { $global:ErrorActionPreference = $previousGlobalPreference }
 }
 
 function Invoke-LocalBoxGuardedStartup {

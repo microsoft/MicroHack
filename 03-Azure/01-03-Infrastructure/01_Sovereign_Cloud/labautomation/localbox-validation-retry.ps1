@@ -6,6 +6,15 @@ param(
     [string]$RecoveryVersion
 )
 
+function Update-LocalBoxValidationRetryPath {
+    param(
+        [string]$MachinePath = [Environment]::GetEnvironmentVariable('PATH', 'Machine'),
+        [string]$UserPath = [Environment]::GetEnvironmentVariable('PATH', 'User')
+    )
+    $env:PATH = (@($env:PATH, $MachinePath, $UserPath) |
+        Where-Object { $_ } | Select-Object -Unique) -join [IO.Path]::PathSeparator
+}
+
 function Invoke-LocalBoxValidationRetryAz {
     param([string[]]$Arguments, [switch]$NoOutput)
     $PSNativeCommandUseErrorActionPreference = $false
@@ -38,6 +47,7 @@ function Invoke-LocalBoxValidationRetry {
     foreach ($path in @($template, $parameters)) {
         if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "Required existing LocalBox deployment file is missing: $path" }
     }
+    Update-LocalBoxValidationRetryPath
     Get-Command az -ErrorAction Stop | Out-Null
     Write-Host "[LocalBox] Automatic validation retry 1/1: waiting $RetryDelaySeconds seconds before rechecking the failed deployment."
     Start-Sleep -Seconds $RetryDelaySeconds

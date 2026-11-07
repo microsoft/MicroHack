@@ -571,6 +571,13 @@ alone is therefore insufficient evidence of write readiness during propagation.
 The upload now shares the bounded retry gate; persistent failure still blocks
 preparation and Full readiness. No additional permissions are granted.
 
+The authorized TEST13 recovery started a new guest run at **19:33 UTC** using
+the tested package. It passed the initial Blob upload and reached CLI prerequisite
+installation. Azure Local was not rebuilt, startup was not replayed, and role
+assignments were unchanged. The published five-file download was independently
+checksum-verified against the resumed package. Full health remains unverified;
+this guest-only recovery does not resume the failed Console's downstream stages.
+
 Each run has a separate prefix containing `status.json`, `automation.log`,
 `upstream.xml`, `health.xml` and `health.json` when those phases produced them.
 Status is updated at phase boundaries. Failures retain available diagnostics and

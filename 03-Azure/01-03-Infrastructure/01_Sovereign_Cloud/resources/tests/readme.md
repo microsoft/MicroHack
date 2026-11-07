@@ -298,6 +298,8 @@ Existing accepted deployments can overlap image import without another create,
 while completed/legacy deployments retain their prior ordering. The actual
 receipt helper was verified read-only against the still-running TEST12
 deployment; this does not establish final AKS or Full health readiness.
+The focused preparation and automation suites passed **501 tests** after the
+complete five-file guest source pin was synchronized with this change.
 
 Storage tests verify no repeated disk/partition mutations on a completed rerun,
 resumption of an interrupted partition expansion, and detection of unallocated

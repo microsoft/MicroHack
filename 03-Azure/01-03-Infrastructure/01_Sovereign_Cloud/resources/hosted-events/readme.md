@@ -178,7 +178,7 @@ The [orchestrator](../../labautomation/localbox-automation.ps1) implements:
    Completed or legacy existing AKS deployments retain verification-before-image
    ordering on retries. A matching accepted/running `pciDeployment-<cluster>`
    is instead reused while the image imports; AKS creation is not repeated.
-   `aksarc` 2.7.1 can return `ResourceNotFound` after submitting this deployment
+   `aksarc` 1.5.117 can return `ResourceNotFound` after submitting this deployment
    because it immediately reads resources that ARM has not created yet. Only
    that cluster-specific error can be reconciled, and only against a new
    correlation with matching cluster, custom location and region in an
@@ -197,8 +197,12 @@ The [orchestrator](../../labautomation/localbox-automation.ps1) implements:
    and created the connected-cluster parent at **05:51:34 UTC**. The child
    provisioning operation continued in Azure. A read-only live probe verified
    the new submission-reconciliation helper against that same running deployment
-   at **06:01:19 UTC**, without issuing another create. Full health remained
-   unverified; the failed guest report was not reclassified as successful.
+   at **06:01:19 UTC**, without issuing another create. The replacement preparation
+   run reused that deployment and reached image import at **06:06:03 UTC**.
+   The installed extension version comes from `az extension show`; recursively
+   inspecting the first Python `METADATA` file can instead report a dependency's
+   version. Full health remained unverified; the failed guest report was not
+   reclassified as successful.
 5. Wait for the reference VM to be Running, Arc Connected and MDE installation
    Succeeded. Request an Update Manager assessment and require a successful,
    timestamped result. This assesses updates; it does **not** install patches.

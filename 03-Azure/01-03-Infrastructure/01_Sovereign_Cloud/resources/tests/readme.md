@@ -289,7 +289,7 @@ guards. A cold live deployment is needed to measure actual overlap and contentio
 mocked ordering is not a performance benchmark.
 Read-only verification on traininglab-02 confirmed that the installed `aksarc`
 extension advertises `create --no-wait`; no provisioning was invoked by that check.
-TEST12 subsequently exposed an actual `aksarc` 2.7.1 race: the command submitted
+TEST12 subsequently exposed an actual `aksarc` 1.5.117 race: the command submitted
 ARM deployment, then immediately read the not-yet-created cluster and returned
 `ResourceNotFound`. New tests require a new, scoped ARM correlation before
 reconciling this specific submission error; stale/missing receipts, mismatched

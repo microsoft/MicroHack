@@ -1177,7 +1177,7 @@ function Invoke-LocalBoxPreparation {
                             $failure.Exception.Message -notmatch [regex]::Escape("Microsoft.Kubernetes/connectedClusters/$($Settings.AksClusterName)")) {
                             throw
                         }
-                        # aksarc 2.7.1 reads the child immediately after submitting a no-wait ARM deployment.
+                        # aksarc can read the child before its no-wait ARM deployment creates it.
                         $submitted = Get-LocalBoxAksDeployment @aksDeploymentArguments
                         if (-not $submitted -or ($previousDeployment -and
                             $submitted.properties.correlationId -eq $previousDeployment.properties.correlationId)) { throw $failure }

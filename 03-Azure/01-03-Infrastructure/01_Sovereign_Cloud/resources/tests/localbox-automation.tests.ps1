@@ -704,7 +704,9 @@ Describe 'Temporary AKS API routing for hosted health checks' {
 Describe 'Guest default preparation and health orchestration' {
     BeforeAll {
         function Invoke-LocalBoxAz { param($Arguments, $TimeoutSeconds, [switch]$NoOutput) }
-        function Wait-SovereignCheck { param($TimeoutSeconds, $Check) }
+        . "$resourceRoot/test-sovereign-cloud.ps1"
+        $realWaitSovereignCheck = ${function:Wait-SovereignCheck}
+        $realWriteAutomationStatus = ${function:Write-LocalBoxAutomationStatus}
         function Get-LocalBoxReferenceVmReadiness { param($MachineId) }
         function Invoke-TestPreparation { param($SubscriptionId, $ResourceGroupName, $AksAdminGroupObjectId) }
         $guestFixture = Join-Path $TestDrive 'guest'
@@ -782,6 +784,66 @@ Invoke-TestPreparation -SubscriptionId $SubscriptionId -ResourceGroupName $Resou
         $status.UpdateAssessment.Status | Should -Be 'Succeeded'
         $status.DefenderCloudReporting | Should -Be 'NotVerified'
         $env:AZURE_CONFIG_DIR | Should -Be 'caller-profile'
+    }
+    Context 'Blob read and write readiness' {
+        BeforeEach {
+            $script:blobWriteAttempts = 0
+            $script:blobRetrySleeps = 0
+            Mock Start-Sleep {
+                $script:blobRetrySleeps++
+                if ($script:blobRetrySleeps -gt 3) { throw 'Unexpected additional Blob readiness retries in test.' }
+            }
+            Mock Wait-SovereignCheck { & $realWaitSovereignCheck -TimeoutSeconds $TimeoutSeconds -Check $Check }
+            Mock Write-LocalBoxAutomationStatus { & $realWriteAutomationStatus $Configuration $Directory $Status }
+        }
+        It 'waits for the initial status upload even after listing succeeds' {
+            Mock Invoke-LocalBoxAz {
+                $script:blobWriteAttempts++
+                if ($script:blobWriteAttempts -le 3) {
+                    Should -Invoke Invoke-TestPreparation -Times 0
+                }
+                if ($script:blobWriteAttempts -le 2) {
+                    throw 'Azure CLI storage blob failed: You do not have the required permissions needed to perform this operation.'
+                }
+            } -ParameterFilter { $Arguments[0..2] -join ' ' -eq 'storage blob upload' }
+
+            Invoke-LocalBoxGuestAutomation $guestConfig $guestDirectory $guestFixture 'input.json' -ManifestPath $manifestFile
+
+            Should -Invoke Invoke-TestPreparation -Times 1 -Exactly
+            Should -Invoke Start-Sleep -Times 2 -Exactly -ParameterFilter { $Seconds -eq 15 }
+            Should -Invoke Wait-SovereignCheck -Times 1 -Exactly -ParameterFilter { $TimeoutSeconds -eq 600 }
+            Should -Invoke Invoke-LocalBoxAz -Times 3 -Exactly -ParameterFilter {
+                $Arguments[0..2] -join ' ' -eq 'storage blob list'
+            }
+            (Get-Content "$guestDirectory/status.json" -Raw | ConvertFrom-Json).State | Should -Be 'Succeeded'
+        }
+        It 'does not provision or run health tests when Blob writes never become ready' {
+            Mock Wait-SovereignCheck { & $realWaitSovereignCheck -TimeoutSeconds 0 -Check $Check }
+            Mock Invoke-LocalBoxAz { throw 'Blob upload permissions are not ready' } -ParameterFilter {
+                $Arguments[0..2] -join ' ' -eq 'storage blob upload'
+            }
+
+            { Invoke-LocalBoxGuestAutomation $guestConfig $guestDirectory $guestFixture 'input.json' -ManifestPath $manifestFile } |
+                Should -Throw '*Blob upload permissions are not ready*'
+
+            Should -Invoke Wait-SovereignCheck -Times 1 -Exactly -ParameterFilter { $TimeoutSeconds -eq 600 }
+            Should -Invoke Invoke-TestPreparation -Times 0
+            Should -Invoke Invoke-LocalBoxAutomationHealthProcess -Times 0
+            $status = Get-Content "$guestDirectory/status.json" -Raw | ConvertFrom-Json
+            $status.State | Should -Be 'Failed'
+            $status.Error | Should -Be 'Blob upload permissions are not ready'
+        }
+        It 'retains fail-fast handling for explicit authorization errors' {
+            Mock Invoke-LocalBoxAz { throw 'AuthorizationFailed: access denied' } -ParameterFilter {
+                $Arguments[0..2] -join ' ' -eq 'storage blob upload'
+            }
+
+            { Invoke-LocalBoxGuestAutomation $guestConfig $guestDirectory $guestFixture 'input.json' -ManifestPath $manifestFile } |
+                Should -Throw '*AuthorizationFailed*'
+
+            Should -Invoke Start-Sleep -Times 0
+            Should -Invoke Invoke-TestPreparation -Times 0
+        }
     }
     It 'captures prerequisite failures locally even before Azure authentication' {
         Mock Initialize-LocalBoxAutomationEnvironment { throw 'Get-VM unavailable' }

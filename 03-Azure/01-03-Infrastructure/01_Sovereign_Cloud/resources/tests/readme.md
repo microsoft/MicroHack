@@ -181,6 +181,13 @@ update-assessment failure, credential-file cleanup and diagnostic-upload failure
 They do not exercise Windows SYSTEM, real managed Run Command, Blob RBAC propagation,
 AKS admin credentials, or a multi-hour Console token rotation; those are live gates.
 
+Blob readiness regression cases use the real retry loop and status writer with
+mocked Azure CLI calls: listing succeeds while the first two uploads fail,
+preparation starts only after a successful upload, exhausted write readiness
+blocks preparation and health tests, and explicit authorization errors remain
+fatal. These cover the TEST13 read-before-write permission-propagation failure
+without treating mocked retries as proof of live Blob access.
+
 Packaging tests also emulate the Console's `labautomation`-only mount, with no
 sibling `resources` directory. They verify immutable source pins and SHA256
 checks, reject missing/mutable/corrupt sources, prevent mixing partial local

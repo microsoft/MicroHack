@@ -563,6 +563,14 @@ staging storage account. The Console identity and Client identity receive
 keys or participant data-plane grants are created. Storage firewall rules are
 not changed. The Console logs the authenticated result URL and run ID.
 
+The guest's existing ten-minute Blob readiness gate verifies both listing and
+the initial `status.json` upload before starting workload preparation. TEST13
+on 7 November 2026 passed listing after retries but failed that first upload
+at 11:06 UTC, despite the correct container-scoped role assignment. Read access
+alone is therefore insufficient evidence of write readiness during propagation.
+The upload now shares the bounded retry gate; persistent failure still blocks
+preparation and Full readiness. No additional permissions are granted.
+
 Each run has a separate prefix containing `status.json`, `automation.log`,
 `upstream.xml`, `health.xml` and `health.json` when those phases produced them.
 Status is updated at phase boundaries. Failures retain available diagnostics and

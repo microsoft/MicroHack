@@ -333,13 +333,13 @@ function Invoke-LocalBoxGuestAutomation {
         Invoke-LocalBoxAz @('login', '--identity') | Out-Null
         Invoke-LocalBoxAz @('account', 'set', '--subscription', $Configuration.SubscriptionId) | Out-Null
         $azureReady = $true
-        # Blob role assignments may still be propagating when the guest starts.
+        # Listing can succeed before uploads while Blob role assignments propagate.
+        $status.Phase = 'Preparation'
         Wait-SovereignCheck -TimeoutSeconds 600 -Check {
             Invoke-LocalBoxAz @('storage', 'blob', 'list', '--account-name', $Configuration.StorageAccountName,
                 '--container-name', $Configuration.Container, '--auth-mode', 'login', '--num-results', '1') | Out-Null
+            Write-LocalBoxAutomationStatus $Configuration $Directory $status
         }
-        $status.Phase = 'Preparation'
-        Write-LocalBoxAutomationStatus $Configuration $Directory $status
         & "$ResourceRoot/prepare-localbox.ps1" -SubscriptionId $Configuration.SubscriptionId -ResourceGroupName $Configuration.ResourceGroupName `
             -AksAdminGroupObjectId $group.ToString() -ManifestPath $ManifestPath -Confirm:$false
         if (-not $?) { throw 'LocalBox preparation failed.' }

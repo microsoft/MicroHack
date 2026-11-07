@@ -187,6 +187,8 @@ preparation starts only after a successful upload, exhausted write readiness
 blocks preparation and health tests, and explicit authorization errors remain
 fatal. These cover the TEST13 read-before-write permission-propagation failure
 without treating mocked retries as proof of live Blob access.
+The TEST13 fix passed all **529 tests** across the automation, preparation and
+global LocalBox suites, including synchronized guest-source checksum checks.
 
 Packaging tests also emulate the Console's `labautomation`-only mount, with no
 sibling `resources` directory. They verify immutable source pins and SHA256

@@ -1,9 +1,9 @@
 {
   "repository": "janegilring/MicroHack",
-  "commit": "4fdcfe25d5713b459e88c5765fff6ac66156cd79",
+  "commit": "238925b6c989de13f1f957ba7aacbca5b9536039",
   "files": {
     "prepare-localbox.ps1": "62934e83e421df476a133e127c7ef3285dd62da8ef0fe04921800f89e5e03c69",
-    "invoke-localbox-automation.ps1": "cbcb8dbee2523497a3d6b8c0586154c01e579bce3183de9aeb10d4e3ccb7c425",
+    "invoke-localbox-automation.ps1": "e2aad00c6750f1b18c85aa8ff2d40d1f77b9645f50a9eb3c1273e08abe762bc0",
     "test-sovereign-cloud.ps1": "e23583ac0a3747261d57469a7ae3e31438c0cb70beb9bf1c751a6244e4ea5117",
     "tests/localbox.health.tests.ps1": "92f922dff75b1bcecc7c3e9a523c613930bd1a538ef8bb0fd50dd2ee1267b4d9",
     "tests/sovereign-lab.health.tests.ps1": "2916dd41ea0e53b4599bfb72a8f21ac6d152a476aff72593bd33e075fdde7ada"

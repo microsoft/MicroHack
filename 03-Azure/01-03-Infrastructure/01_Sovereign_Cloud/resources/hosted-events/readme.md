@@ -539,6 +539,16 @@ Operator Blob data access was verified before continuing guest preparation.
 No broader roles were granted. These observed times include operator repair and
 authorization pauses; they are not an uninterrupted cold-deployment benchmark.
 
+**TEST12 close-out:** the organizer subsequently confirmed that the original
+resources were torn down. Monitoring lost access at 19:00 UTC on 7 November;
+the teardown's exact time was not established. Azure Local validation, deployment
+and nested connectivity were verified, but no successful Full health report was
+verified before teardown. The last direct workload checks showed the existing
+AKS deployment running and the VM image downloading concurrently. Recovery of
+this instance has stopped; replacement resources are not assumed to be the same
+deployment. Published fixes and offline tests are not proof of a successful
+fresh end-to-end deployment.
+
 If an older run failed with `Could not find a part of the path
 '/content/.../resources/prepare-localbox.ps1'`, it reached ARM completion but
 could not package guest automation. Re-import the corrected branch (including

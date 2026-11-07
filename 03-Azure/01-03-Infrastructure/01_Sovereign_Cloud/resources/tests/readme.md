@@ -157,6 +157,12 @@ and the nested connectivity gate passed. Guest preparation and Full health
 verification remain pending; this is resumed-instance evidence, not proof of a
 successful fresh Console deployment.
 
+TEST12 was subsequently torn down, as confirmed by the organizer. Recovery has
+stopped. No successful Full health report was verified before teardown; the
+verified intermediate stages and offline test results must not be interpreted
+as an end-to-end pass. A separately authorized deployment is required to finish
+that integration verification.
+
 Run `Invoke-Pester ./localbox-deployment.tests.ps1 -Output Detailed` for the
 LocalBox Developer Bastion deployment contract. These tests require Azure CLI
 with Bicep available: they compile the network module locally, then mock Azure

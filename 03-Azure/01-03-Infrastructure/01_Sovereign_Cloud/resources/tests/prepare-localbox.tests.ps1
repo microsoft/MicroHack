@@ -2032,6 +2032,61 @@ Describe 'LocalBox failed image recovery' {
     }
 }
 
+Describe 'AKS ARM submission evidence' {
+    BeforeEach {
+        $arguments = @{ SubscriptionId = 'test'; ResourceGroupName = 'localbox'; ClusterName = 'localbox-aks'
+            CustomLocationId = 'custom'; Location = 'australiaeast' }
+        $deployment = @{ name = 'pciDeployment-localbox-aks'; properties = @{
+            provisioningState = 'Running'; correlationId = '10000000-0000-0000-0000-000000000001'
+            parameters = @{
+                clusterId = @{ value = '/subscriptions/test/resourceGroups/localbox/providers/Microsoft.Kubernetes/connectedClusters/localbox-aks' }
+                customLocation = @{ value = 'custom' }; provisionedClustersName = @{ value = 'localbox-aks' }
+                location = @{ value = 'australiaeast' }
+            }
+        } }
+        Mock Invoke-LocalBoxAz { $deployment }
+    }
+    It 'accepts only scoped correlated ARM submission states' -TestCases @(
+        @{ State = 'Accepted' }, @{ State = 'Running' }, @{ State = 'Succeeded' }
+    ) {
+        param($State)
+        $deployment.properties.provisioningState = $State
+        (Get-LocalBoxAksDeployment @arguments).properties.correlationId | Should -Be $deployment.properties.correlationId
+        Should -Invoke Invoke-LocalBoxAz -Times 1 -Exactly -ParameterFilter {
+            $Arguments[2] -eq 'show' -and $Arguments -contains '--subscription' -and $Arguments -contains 'test'
+        }
+    }
+    It 'does not invent submission evidence when no deployment exists' {
+        Mock Invoke-LocalBoxAz {}
+        Get-LocalBoxAksDeployment @arguments | Should -BeNullOrEmpty
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments[2] -eq 'show' }
+    }
+    It 'rejects failed canceled and unknown states' -TestCases @(
+        @{ State = 'Failed' }, @{ State = 'Canceled' }, @{ State = '' }
+    ) {
+        param($State)
+        $deployment.properties.provisioningState = $State
+        { Get-LocalBoxAksDeployment @arguments } | Should -Throw '*not accepted or successful*'
+    }
+    It 'rejects mismatched deployment parameters' -TestCases @(
+        @{ Field = 'clusterId' }, @{ Field = 'customLocation' }, @{ Field = 'provisionedClustersName' }, @{ Field = 'location' }
+    ) {
+        param($Field)
+        $deployment.properties.parameters[$Field].value = 'another-target'
+        { Get-LocalBoxAksDeployment @arguments } | Should -Throw '*does not match*'
+    }
+    It 'rejects missing correlation and ambiguous records' {
+        $deployment.properties.correlationId = ''
+        { Get-LocalBoxAksDeployment @arguments } | Should -Throw '*correlation contract*'
+        Mock Invoke-LocalBoxAz { $deployment; $deployment } -ParameterFilter { $Arguments[2] -eq 'list' }
+        { Get-LocalBoxAksDeployment @arguments } | Should -Throw '*Ambiguous*'
+    }
+    It 'propagates unreadable deployment evidence' {
+        Mock Invoke-LocalBoxAz { throw 'AuthorizationFailed' }
+        { Get-LocalBoxAksDeployment @arguments } | Should -Throw '*AuthorizationFailed*'
+    }
+}
+
 Describe 'LocalBox preparation dependency order' {
     BeforeAll {
         $source = ${function:Invoke-LocalBoxPreparation}.ToString()
@@ -2105,6 +2160,53 @@ Describe 'LocalBox preparation dependency order' {
         { & $prepareWorkloads -Confirm:$false } | Should -Throw '*AKS submission failed*'
         Should -Invoke Sync-LocalBoxImage -Times 0
         Should -Invoke Sync-LocalBoxReferenceVm -Times 0
+    }
+    It 'reconciles the observed no-wait 404 only against a new accepted deployment' {
+        $receipt = @{ Reads = 0 }
+        Mock Get-LocalBoxAksDeployment {
+            $receipt.Reads++
+            if ($receipt.Reads -gt 1) {
+                @{ name = 'pciDeployment-localbox-aks'; properties = @{ provisioningState = 'Running'; correlationId = 'new' } }
+            }
+        }
+        Mock Invoke-LocalBoxAz {
+            $events.Add('aks-create')
+            throw "(ResourceNotFound) The Resource 'Microsoft.Kubernetes/connectedClusters/localbox-aks' was not found."
+        } -ParameterFilter { $Arguments -contains '--no-wait' }
+        & $prepareWorkloads -Confirm:$false
+        $events -join ',' | Should -Be 'network:localbox-vm-lnet-vlan200,network:localbox-aks-lnet-vlan110,aks-validate,aks-create,image,proxy,metallb,reference'
+        Should -Invoke Invoke-LocalBoxAz -Times 1 -Exactly -ParameterFilter { $Arguments -contains '--no-wait' }
+        Should -Invoke Get-LocalBoxAksDeployment -Times 2 -Exactly
+    }
+    It 'does not treat missing or stale deployment evidence as an accepted submission' -TestCases @(
+        @{ Existing = $false }, @{ Existing = $true }
+    ) {
+        param($Existing)
+        Mock Get-LocalBoxAksDeployment {
+            if ($Existing) { @{ properties = @{ correlationId = 'unchanged' } } }
+        }
+        Mock Invoke-LocalBoxAz {
+            throw "(ResourceNotFound) The Resource 'Microsoft.Kubernetes/connectedClusters/localbox-aks' was not found."
+        } -ParameterFilter { $Arguments -contains '--no-wait' }
+        { & $prepareWorkloads -Confirm:$false } | Should -Throw '*ResourceNotFound*'
+        Should -Invoke Sync-LocalBoxImage -Times 0
+        Should -Invoke Invoke-LocalBoxAz -Times 1 -Exactly -ParameterFilter { $Arguments -contains '--no-wait' }
+    }
+    It 'does not reconcile a 404 for an unrelated resource' {
+        Mock Get-LocalBoxAksDeployment {}
+        Mock Invoke-LocalBoxAz { throw '(ResourceNotFound) Microsoft.AzureStackHCI/logicalNetworks/missing' } -ParameterFilter { $Arguments -contains '--no-wait' }
+        { & $prepareWorkloads -Confirm:$false } | Should -Throw '*logicalNetworks/missing*'
+        Should -Invoke Get-LocalBoxAksDeployment -Times 1 -Exactly
+        Should -Invoke Sync-LocalBoxImage -Times 0
+    }
+    It 'overlaps image import with an existing accepted AKS deployment without recreating it' {
+        Mock Invoke-LocalBoxAz {
+            @{ id = "$scope/providers/Microsoft.Kubernetes/connectedClusters/localbox-aks" }
+        } -ParameterFilter { $Arguments[0] -eq 'resource' }
+        Mock Get-LocalBoxAksDeployment { @{ name = 'pciDeployment-localbox-aks'; properties = @{ provisioningState = 'Running' } } }
+        & $prepareWorkloads -Confirm:$false
+        $events -join ',' | Should -Be 'network:localbox-vm-lnet-vlan200,network:localbox-aks-lnet-vlan110,image,proxy,metallb,reference'
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments[0] -eq 'aksarc' }
     }
     It 'does not import the image or submit AKS after failed AKS validation' {
         Mock Invoke-LocalBoxAz { throw 'AKS validation failed' } -ParameterFilter { $Arguments -contains '--validate' }

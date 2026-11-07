@@ -289,6 +289,15 @@ guards. A cold live deployment is needed to measure actual overlap and contentio
 mocked ordering is not a performance benchmark.
 Read-only verification on traininglab-02 confirmed that the installed `aksarc`
 extension advertises `create --no-wait`; no provisioning was invoked by that check.
+TEST12 subsequently exposed an actual `aksarc` 2.7.1 race: the command submitted
+ARM deployment, then immediately read the not-yet-created cluster and returned
+`ResourceNotFound`. New tests require a new, scoped ARM correlation before
+reconciling this specific submission error; stale/missing receipts, mismatched
+parameters, failed/canceled states, unrelated 404s and unreadable evidence fail.
+Existing accepted deployments can overlap image import without another create,
+while completed/legacy deployments retain their prior ordering. The actual
+receipt helper was verified read-only against the still-running TEST12
+deployment; this does not establish final AKS or Full health readiness.
 
 Storage tests verify no repeated disk/partition mutations on a completed rerun,
 resumption of an interrupted partition expansion, and detection of unallocated

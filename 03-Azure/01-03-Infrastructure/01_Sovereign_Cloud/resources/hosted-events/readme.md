@@ -175,7 +175,15 @@ The [orchestrator](../../labautomation/localbox-automation.ps1) implements:
    proxy access and MetalLB before creating the reference VM. The final Full
    readiness gate is unchanged.
 
-   Existing AKS deployments retain verification-before-image ordering on retries.
+   Completed or legacy existing AKS deployments retain verification-before-image
+   ordering on retries. A matching accepted/running `pciDeployment-<cluster>`
+   is instead reused while the image imports; AKS creation is not repeated.
+   `aksarc` 2.7.1 can return `ResourceNotFound` after submitting this deployment
+   because it immediately reads resources that ARM has not created yet. Only
+   that cluster-specific error can be reconciled, and only against a new
+   correlation with matching cluster, custom location and region in an
+   accepted/running/succeeded ARM deployment. Missing, stale, failed, conflicting
+   or unreadable evidence still fails; this confirms submission, not readiness.
    Manual preparation supports `-SequentialProvisioning` to restore serial
    provisioning if contention is suspected. `-SkipAks` and `-WhatIf` retain their
    existing behavior. If preparation fails after asynchronous submission, AKS may
@@ -183,6 +191,14 @@ The [orchestrator](../../labautomation/localbox-automation.ps1) implements:
    back. Inspect both resource states before retrying rather than deleting the
    environment. The parent guest timeout still applies. Compare equivalent cold
    deployments before treating the potential ~71-minute saving as measured.
+
+   TEST12 exercised this race on 7 November 2026: `aksarc` reported a missing
+   cluster at **05:51:31 UTC**, while its ARM deployment was already running
+   and created the connected-cluster parent at **05:51:34 UTC**. The child
+   provisioning operation continued in Azure. A read-only live probe verified
+   the new submission-reconciliation helper against that same running deployment
+   at **06:01:19 UTC**, without issuing another create. Full health remained
+   unverified; the failed guest report was not reclassified as successful.
 5. Wait for the reference VM to be Running, Arc Connected and MDE installation
    Succeeded. Request an Update Manager assessment and require a successful,
    timestamped result. This assesses updates; it does **not** install patches.

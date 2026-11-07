@@ -973,6 +973,30 @@ function Initialize-LocalBoxStorage {
     }
 }
 
+function Get-LocalBoxAksDeployment {
+    param([string]$SubscriptionId, [string]$ResourceGroupName, [string]$ClusterName,
+        [string]$CustomLocationId, [string]$Location)
+    $scope = @('--subscription', $SubscriptionId, '--resource-group', $ResourceGroupName)
+    $name = "pciDeployment-$ClusterName"
+    $existing = @((Invoke-LocalBoxAz (@('deployment', 'group', 'list') + $scope)) | Where-Object name -eq $name)
+    if (-not $existing.Count) { return }
+    if ($existing.Count -ne 1) { throw 'Ambiguous AKS ARM deployment records.' }
+    $deployment = Invoke-LocalBoxAz (@('deployment', 'group', 'show') + $scope + @('--name', $name))
+    $parameters = $deployment.properties.parameters
+    $clusterId = "/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Kubernetes/connectedClusters/$ClusterName"
+    $correlation = [guid]::Empty
+    if ($deployment.name -ne $name -or
+        $parameters.clusterId.value -ine $clusterId -or $parameters.customLocation.value -ine $CustomLocationId -or
+        $parameters.provisionedClustersName.value -ne $ClusterName -or $parameters.location.value -ine $Location -or
+        -not [guid]::TryParse([string]$deployment.properties.correlationId, [ref]$correlation) -or $correlation -eq [guid]::Empty) {
+        throw 'AKS ARM deployment does not match the requested cluster, location or correlation contract.'
+    }
+    if ($deployment.properties.provisioningState -notin @('Accepted', 'Running', 'Succeeded')) {
+        throw "AKS ARM deployment $name is not accepted or successful: $($deployment.properties.provisioningState). Inspect its deployment operations."
+    }
+    return $deployment
+}
+
 function Complete-LocalBoxAksPreparation {
     [CmdletBinding(SupportsShouldProcess)]
     param(
@@ -1119,7 +1143,18 @@ function Invoke-LocalBoxPreparation {
             agentPoolProfiles = @(@{ count = $Settings.NodeCount; vmSize = $Settings.NodeVmSize })
         } }
         if ($Settings.KubernetesVersion) { $aksExpected.properties.kubernetesVersion = $Settings.KubernetesVersion }
+        $aksDeploymentArguments = @{
+            SubscriptionId = $Settings.SubscriptionId; ResourceGroupName = $Settings.ResourceGroupName
+            ClusterName = $Settings.AksClusterName; CustomLocationId = $custom.id; Location = $location
+        }
         $existingAks = @((Invoke-LocalBoxAz @('resource', 'list', '--resource-group', $Settings.ResourceGroupName)) | Where-Object id -ieq $aksId)
+        if (-not $Settings.SkipAks -and $existingAks.Count -and -not $Settings.SequentialProvisioning -and -not $WhatIfPreference) {
+            $deployment = Get-LocalBoxAksDeployment @aksDeploymentArguments
+            if ($deployment -and $deployment.properties.provisioningState -in @('Accepted', 'Running')) {
+                $aksVerificationPending = $true
+                Write-Host "Resuming accepted AKS deployment $($deployment.name); VM image import can overlap it. No AKS create will be repeated."
+            }
+        }
         if (-not $Settings.SkipAks -and -not $existingAks.Count) {
             $arguments = @('aksarc', 'create') + $common + @('--name', $Settings.AksClusterName, '--vnet-ids', $networks[1].Id,
                 '--aad-admin-group-object-ids', $groupId, '--generate-ssh-keys', '--control-plane-ip', $config.AKSControlPlaneIP,
@@ -1132,7 +1167,22 @@ function Invoke-LocalBoxPreparation {
                 if (-not $Settings.SequentialProvisioning) {
                     # Azure provisions asynchronously; local CLI commands still run serially.
                     $aksVerificationPending = $true
-                    Invoke-LocalBoxAz ($arguments + @('--no-wait')) -TimeoutSeconds $timeout -NoOutput
+                    $previousDeployment = Get-LocalBoxAksDeployment @aksDeploymentArguments
+                    try {
+                        Invoke-LocalBoxAz ($arguments + @('--no-wait')) -TimeoutSeconds $timeout -NoOutput
+                    }
+                    catch {
+                        $failure = $_
+                        if ($failure.Exception.Message -notmatch '\(ResourceNotFound\)' -or
+                            $failure.Exception.Message -notmatch [regex]::Escape("Microsoft.Kubernetes/connectedClusters/$($Settings.AksClusterName)")) {
+                            throw
+                        }
+                        # aksarc 2.7.1 reads the child immediately after submitting a no-wait ARM deployment.
+                        $submitted = Get-LocalBoxAksDeployment @aksDeploymentArguments
+                        if (-not $submitted -or ($previousDeployment -and
+                            $submitted.properties.correlationId -eq $previousDeployment.properties.correlationId)) { throw $failure }
+                        Write-Warning "aksarc reported ResourceNotFound after submission, but a new matching ARM deployment $($submitted.name) is $($submitted.properties.provisioningState). No create is retried; full AKS readiness remains required."
+                    }
                     Write-Host "AKS creation submitted at $([datetime]::UtcNow.ToString('o')); provisioning will overlap VM image import. AKS readiness is not yet verified."
                 }
                 else {

@@ -578,6 +578,22 @@ assignments were unchanged. The published five-file download was independently
 checksum-verified against the resumed package. Full health remains unverified;
 this guest-only recovery does not resume the failed Console's downstream stages.
 
+**TEST13 completion:** the resumed guest finished at **23:48:40 UTC on
+7 November 2026**, after **4h 15m 5s**. A separate read-only guest probe verified
+the run/package/group/Azure-scope identity, report timestamps, Full health JSON,
+and both NUnit XML reports: **12/12 upstream and 14/14 Sovereign tests passed**,
+with zero failed, skipped or unrun tests. The reference VM update assessment
+succeeded at 23:41:22 UTC. These results cover AKS runtime health, the imported
+image, reference VM, Arc connectivity and MDE installation.
+
+The bounded MetalLB recovery was exercised successfully: attempt **1/1**
+reapplied the unchanged Azure-managed ARP pool at 23:45:55 UTC and verified
+the Kubernetes pool and L2 advertisement at 23:46:14 UTC, without deletion.
+The Full suite subsequently passed. This supersedes the pending LocalBox health
+checkpoint above, but is a **successful resumed LocalBox run**, not proof of an
+uninterrupted fresh Console event. Console downstream stages, real participant
+sign-in and Defender cloud reporting remain outside this verified result.
+
 Each run has a separate prefix containing `status.json`, `automation.log`,
 `upstream.xml`, `health.xml` and `health.json` when those phases produced them.
 Status is updated at phase boundaries. Failures retain available diagnostics and

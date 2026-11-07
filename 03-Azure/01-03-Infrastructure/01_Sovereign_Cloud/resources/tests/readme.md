@@ -189,6 +189,14 @@ fatal. These cover the TEST13 read-before-write permission-propagation failure
 without treating mocked retries as proof of live Blob access.
 The TEST13 fix passed all **529 tests** across the automation, preparation and
 global LocalBox suites, including synchronized guest-source checksum checks.
+The authorized live resume subsequently completed at 23:48:40 UTC on
+7 November 2026. A separate read-only probe used the repository's result/XML
+validators to verify the exact run, package, group and Azure scope, both XML
+reports, matching Full JSON counts and report timestamps: **12/12 upstream and
+14/14 Sovereign tests passed**, with none failed, skipped or unrun. The run also
+exercised successful bounded MetalLB recovery (one unchanged ARP-pool reapply).
+This establishes resumed shared LocalBox Full health, not the skipped Console
+downstream stages, participant sign-in or Defender cloud reporting.
 
 Packaging tests also emulate the Console's `labautomation`-only mount, with no
 sibling `resources` directory. They verify immutable source pins and SHA256

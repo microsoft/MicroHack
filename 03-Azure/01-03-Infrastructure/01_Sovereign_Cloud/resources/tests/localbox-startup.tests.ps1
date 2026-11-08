@@ -696,30 +696,100 @@ Describe 'Checked BGInfo invocation' {
     BeforeEach {
         $configuration = "$TestDrive/configuration with spaces.bgi"
         Set-Content $configuration fixture
-        $executable = "$TestDrive/bginfo fixture.ps1"
+        $executable = "$TestDrive/bginfo fixture.exe"
         Mock Resolve-LocalBoxBgInfo { $executable }
+        $log = "$TestDrive/bginfo diagnostics.log"
+        Mock Join-Path { $log } -ParameterFilter { $ChildPath -like 'localbox-bginfo-*.log' }
+        $processState = @{ Finished = $true; Killed = $false; Disposed = $false; Waits = [Collections.Generic.List[int]]::new() }
+        $fakeProcess = [pscustomobject]@{ HasExited = $true; ExitCode = 0 }
+        $fakeProcess | Add-Member ScriptMethod WaitForExit {
+            param($milliseconds)
+            if ($null -ne $milliseconds) {
+                $processState.Waits.Add($milliseconds)
+                return $processState.Finished
+            }
+        }
+        $fakeProcess | Add-Member ScriptMethod Kill {
+            $processState.Killed = $true
+            $processState.Finished = $true
+            $this.HasExited = $true
+        }
+        $fakeProcess | Add-Member ScriptMethod Dispose { $processState.Disposed = $true }
+        Mock Start-Process { $fakeProcess }
         $previousExitCode = $global:LASTEXITCODE
     }
     AfterEach { $global:LASTEXITCODE = $previousExitCode }
     It 'passes the exact configuration and noninteractive flags to the resolved executable' {
-        @'
-$args | ConvertTo-Json | Set-Content "$PSScriptRoot/bginfo-arguments.json"
-$global:LASTEXITCODE = 0
-'@ | Set-Content $executable
         Invoke-LocalBoxBgInfo $configuration
-        $arguments = Get-Content "$TestDrive/bginfo-arguments.json" -Raw | ConvertFrom-Json
-        $arguments.Count | Should -Be 3
-        $arguments[0] | Should -Be $configuration
-        $arguments[1] | Should -Be '/timer:0'
-        $arguments[2] | Should -Be '/NOLICPROMPT'
+        Should -Invoke Start-Process -Times 1 -Exactly -ParameterFilter {
+            $FilePath -eq $executable -and $PassThru -and $ErrorAction -eq 'Stop' -and
+            $ArgumentList.Count -eq 5 -and $ArgumentList[0] -eq "`"$configuration`"" -and
+            $ArgumentList[1] -eq '/timer:0' -and $ArgumentList[2] -eq '/NOLICPROMPT' -and
+            $ArgumentList[3] -eq '/silent' -and $ArgumentList[4] -eq "/log:`"$log`""
+        }
+        $processState.Waits | Should -Contain 60000
+        $processState.Killed | Should -BeFalse
+        $processState.Disposed | Should -BeTrue
     }
-    It 'fails on a nonzero exit code' {
-        '$global:LASTEXITCODE = 5' | Set-Content $executable
-        { Invoke-LocalBoxBgInfo $configuration } | Should -Throw '*BGInfo failed with exit code 5*'
+    It 'continues after a successful GUI process despite stale LASTEXITCODE <Seed>' -TestCases @(
+        @{ Seed = 1 }; @{ Seed = 5 }; @{ Seed = $null }
+    ) {
+        param($Seed)
+        $global:LASTEXITCODE = $Seed
+        Invoke-LocalBoxBgInfo $configuration
+        $global:LASTEXITCODE | Should -Be $Seed
+        $processState.Disposed | Should -BeTrue
+    }
+    It 'rejects actual unsuccessful or missing process exit code <Code>' -TestCases @(
+        @{ Code = 1 }; @{ Code = 5 }; @{ Code = $null }
+    ) {
+        param($Code)
+        $global:LASTEXITCODE = 0
+        $fakeProcess.ExitCode = $Code
+        { Invoke-LocalBoxBgInfo $configuration } | Should -Throw '*BGInfo failed with exit code*'
+        $processState.Disposed | Should -BeTrue
+    }
+    It 'propagates process launch failures' {
+        Mock Start-Process { throw 'fixture-launch-denied' }
+        { Invoke-LocalBoxBgInfo $configuration } | Should -Throw '*fixture-launch-denied*'
+        $processState.Disposed | Should -BeFalse
+    }
+    It 'kills only its own timed-out process and disposes the handle' {
+        $processState.Finished = $false
+        $fakeProcess.HasExited = $false
+        { Invoke-LocalBoxBgInfo $configuration -TimeoutSeconds 1 } | Should -Throw '*exceeded its 1-second budget*'
+        $processState.Waits | Should -Contain 1000
+        $processState.Waits | Should -Contain 10000
+        $processState.Killed | Should -BeTrue
+        $processState.Disposed | Should -BeTrue
+    }
+    It 'surfaces termination failure and still disposes the handle' {
+        $processState.Finished = $false
+        $fakeProcess.HasExited = $false
+        $fakeProcess | Add-Member ScriptMethod Kill { throw 'fixture-kill-denied' } -Force
+        { Invoke-LocalBoxBgInfo $configuration -TimeoutSeconds 1 } | Should -Throw '*fixture-kill-denied*'
+        $processState.Disposed | Should -BeTrue
+    }
+    It 'rejects an error log even when the process exits zero and redacts its diagnostic' {
+        Set-Content $log ('token=fixture-secret ' + ('x' * 800))
+        $failure = $null
+        try { Invoke-LocalBoxBgInfo $configuration } catch { $failure = $_ }
+        $failure | Should -Not -BeNullOrEmpty
+        $failure.Exception.Message | Should -Match 'BGInfo reported an error'
+        $failure.Exception.Message | Should -Not -Match 'fixture-secret'
+        $failure.Exception.Message.Length | Should -BeLessThan 650
+        Test-Path $log | Should -BeTrue
+        $processState.Disposed | Should -BeTrue
+    }
+    It 'removes an empty success log' {
+        Set-Content $log ''
+        Invoke-LocalBoxBgInfo $configuration
+        Test-Path $log | Should -BeFalse
     }
     It 'does not launch BGInfo without its configuration' {
         { Invoke-LocalBoxBgInfo "$TestDrive/missing.bgi" } | Should -Throw '*configuration is missing*'
         Should -Invoke Resolve-LocalBoxBgInfo -Times 0
+        Should -Invoke Start-Process -Times 0
     }
 }
 

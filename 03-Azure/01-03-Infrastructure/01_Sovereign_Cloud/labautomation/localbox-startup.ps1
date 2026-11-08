@@ -291,15 +291,44 @@ function Resolve-LocalBoxBgInfo {
 }
 
 function Invoke-LocalBoxBgInfo {
-    param([string]$ConfigurationPath)
+    param([string]$ConfigurationPath, [ValidateRange(1, 120)][int]$TimeoutSeconds = 60)
     $ErrorActionPreference = 'Stop'
     if (-not (Test-Path -LiteralPath $ConfigurationPath -PathType Leaf)) {
         throw 'The LocalBox BGInfo configuration is missing.'
     }
     $client = Resolve-LocalBoxBgInfo
-    $PSNativeCommandUseErrorActionPreference = $false
-    & $client $ConfigurationPath /timer:0 /NOLICPROMPT
-    if ($LASTEXITCODE -ne 0) { throw "BGInfo failed with exit code $LASTEXITCODE." }
+    $log = Join-Path ([IO.Path]::GetTempPath()) "localbox-bginfo-$([guid]::NewGuid()).log"
+    $process = $null
+    try {
+        # GUI applications can leave LASTEXITCODE unchanged; inspect the actual process.
+        $process = Start-Process -FilePath $client -ArgumentList @("`"$ConfigurationPath`"",
+            '/timer:0', '/NOLICPROMPT', '/silent', "/log:`"$log`"") -PassThru -ErrorAction Stop
+        if (-not $process.WaitForExit($TimeoutSeconds * 1000)) {
+            throw "BGInfo exceeded its $TimeoutSeconds-second budget. Inspect $log if present."
+        }
+        $process.WaitForExit()
+        if ($null -eq $process.ExitCode -or $process.ExitCode -ne 0) {
+            throw "BGInfo failed with exit code '$($process.ExitCode)'. Inspect $log if present."
+        }
+        if (Test-Path -LiteralPath $log -PathType Leaf) {
+            $message = ([string](Get-Content -LiteralPath $log -Raw -ErrorAction Stop)).Trim()
+            if ($message) {
+                throw "BGInfo reported an error: $(ConvertTo-LocalBoxDiagnosticText $message 400). Inspect $log."
+            }
+            Remove-Item -LiteralPath $log -ErrorAction Stop
+        }
+    }
+    finally {
+        if ($process) {
+            try {
+                if (-not $process.HasExited) {
+                    $process.Kill()
+                    if (-not $process.WaitForExit(10000)) { throw 'BGInfo process did not stop after its timeout.' }
+                }
+            }
+            finally { $process.Dispose() }
+        }
+    }
 }
 
 function Wait-LocalBoxStartupPrerequisites {

@@ -106,6 +106,27 @@ monitor and verified redacted failure details. It did not execute BGInfo, start
 startup tasks or change the current test runner. A fresh deployment must still
 verify the complete startup and subsequent-logon behavior.
 
+TEST15 isolated the remaining BGInfo failure to stale PowerShell `LASTEXITCODE`,
+not a failed BGInfo process. In the existing desktop session, direct GUI invocation
+preserved seeded exit codes of both 1 and 0, while an explicitly awaited process
+returned 0. The helper now uses `Start-Process -PassThru`, waits up to 60 seconds,
+checks the actual process exit code and rejects errors written by BGInfo's `/log`
+option. `/silent` prevents unattended error dialogs; it does not suppress failure
+reporting. A timed-out process is terminated by its own handle, and failure logs
+remain in the invoking user's temporary directory for diagnosis.
+
+The updated coupled suites passed **302 tests**. Tests cover stale caller exit
+codes, actual nonzero/missing exits, launch errors, timeout/termination cleanup,
+quoted paths, error-log redaction and successful log cleanup. Real BGInfo 4.34
+was then verified in the TEST15 desktop session under PowerShell 7.6.9 and Windows
+PowerShell 5.1: the original configuration succeeded despite a seeded exit code
+of 1, while an invalid configuration failed with the actual exit code 2.
+Temporary probe tasks/files were removed. The upstream Bicep and script transforms
+compiled with a **34,442-byte** startup payload. This is a future-deployment fix:
+the existing immutable startup payload and historical failure report were not
+rewritten, and storage initialization was not replayed. A fresh deployment remains
+the integration check for the original runner's subsequent-logon task registration.
+
 The combined WinGet, startup, deployment, automation, validation-retry, global
 LocalBox and failure-summary suites passed **267 tests** after these changes.
 The real upstream Bicep compiled with the 30,679-byte guarded payload, and

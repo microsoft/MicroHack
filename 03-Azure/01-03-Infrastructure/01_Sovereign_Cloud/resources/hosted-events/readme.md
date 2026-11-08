@@ -336,11 +336,21 @@ Before entering upstream storage initialization, the guard waits for
 `WinGetLogonScript` to finish and unregister itself (at most **one hour**).
 The upstream WinGet and LocalBox tasks can both start at logon; starting downloads
 while WinGet is still installing AzCopy is not safe. After installation, the
-guard refreshes its process PATH and resolves AzCopy from PATH, the current
+guard refreshes its process PATH and resolves AzCopy and BGInfo from PATH, the current
 startup user's WinGet link/package, or known machine installation paths. It does
 not search other users' profiles, install a replacement binary, or blindly pick
 between multiple unlinked package versions. Prerequisite failure is reported as
 `Prerequisites` / `StartupPrerequisitesFailed`, before storage initialization.
+
+TEST14 exposed an installed BGInfo executable that was not discoverable as
+`bginfo64.exe`. The upstream test runner failed at its desktop-status update,
+after running its tests but before registering its future-logon test task.
+For new deployments, the guard patches that exact
+invocation to resolve the installed binary explicitly and check its exit code.
+The retained runner uses the same helper on subsequent logons, not just during
+initial startup. Missing or ambiguous installations and upstream script drift
+still fail explicitly; the fix neither downloads another binary nor suppresses
+test failures. Existing immutable startup payloads are not changed.
 
 WinGet provisioning is also guarded. Its CLI is repaired to the installed
 `Microsoft.WinGet.Client` module version, with at most three attempts and
@@ -399,8 +409,14 @@ It verifies the startup identity and scope, then reports the failure phase, code
 and bounded diagnostic message (for example, `BaseImages`,
 `BaseImageDownloadFailed`, and `HTTP 401`) instead of waiting eight hours for a
 deployment that was never started. No startup report within **one hour** fails
-the gate; a Running report with a stopped task fails after a **two-minute
-monitoring grace period**. Inspect the protected
+the gate; after a **two-minute monitoring grace period**, a Running report must
+have a live owner of the guarded startup mutex. The upstream script deliberately
+unregisters its scheduled task before desktop setup and final tests, so task
+registration is not used as process-liveness evidence. After the lock is released,
+the monitor rereads the report to handle completion between observations; absence
+of a terminal report remains a failure. Lock ownership alone never establishes
+startup success. Monitor failures include bounded, redacted underlying diagnostics
+using the same formatter as Console. Inspect the protected
 `C:\LocalBox\SovereignStartup\state.json` and the LocalBox startup logs.
 
 Startup success is **not infrastructure readiness**. All existing ARM, cluster,

@@ -21,6 +21,25 @@ function Get-LocalBoxStartupReport {
     }
 }
 
+function Test-LocalBoxStartupActive {
+    param([string]$Name = 'Global\MicroHackLocalBoxStartup')
+    $mutex = $null
+    if (-not [Threading.Mutex]::TryOpenExisting($Name, [ref]$mutex)) { return $false }
+    $acquired = $false
+    try {
+        try { $acquired = $mutex.WaitOne(0) }
+        catch [Threading.AbandonedMutexException] {
+            # WaitOne grants ownership when the previous process died.
+            $acquired = $true
+        }
+        return -not $acquired
+    }
+    finally {
+        if ($acquired) { $mutex.ReleaseMutex() }
+        $mutex.Dispose()
+    }
+}
+
 function Wait-LocalBoxStartupReport {
     param([string]$Id, [string]$Subscription, [string]$Group, [int]$TimeoutSeconds)
     $ErrorActionPreference = 'Stop'
@@ -41,10 +60,11 @@ function Wait-LocalBoxStartupReport {
                 return $report
             }
             if ($status -and (Get-Date).ToUniversalTime() -ge $started.AddMinutes(2)) {
-                $task = Get-ScheduledTask -TaskName LocalBoxLogonScript -ErrorAction Stop
-                if ($task.State -ne 'Running') {
+                if (-not (Test-LocalBoxStartupActive)) {
+                    $status = Get-LocalBoxStartupReport -Path 'C:\LocalBox\SovereignStartup\state.json' -Id $Id -Subscription $Subscription -Group $Group
+                    if ($status -and $status.State -in @('Succeeded', 'Failed')) { return $status }
                     $report.Code = 'StartupExited'
-                    $report.Message = 'The startup task stopped without a successful report. Inspect LocalBox logs; do not repeat storage initialization blindly.'
+                    $report.Message = 'The guarded startup process is no longer active without a terminal report. Inspect LocalBox logs; do not repeat storage initialization blindly.'
                     return $report
                 }
             }
@@ -57,7 +77,7 @@ function Wait-LocalBoxStartupReport {
         } while ($true)
     }
     catch {
-        $report.Message = 'Startup monitoring failed to verify the local report or scheduled task. Inspect sovereign-localbox-startup-watch and LocalBox logs.'
+        $report.Message = "Startup monitoring failed: $(ConvertTo-LocalBoxDiagnosticText $_.Exception.Message 600) Inspect sovereign-localbox-startup-watch and LocalBox logs."
         return $report
     }
 }

@@ -57,6 +57,7 @@ Copy-Item -LiteralPath 'C:\AzureData\CustomData.bin' -Destination "$guardRoot\st
 . "$guardRoot\startup.ps1"
 Set-LocalBoxWinGetGuard -Path "$LocalBoxPath\WinGet.ps1"
 Set-LocalBoxPackageConfiguration -Path "$LocalBoxPath\DSC\packages.dsc.yml"
+Set-LocalBoxBgInfoGuard -Path "$($LocalBoxConfig.Paths.TestsDir)\Invoke-Test.ps1"
 $Action = New-ScheduledTaskAction -Execute $ScheduledTaskExecutable -Argument "$guardRoot\startup.ps1"
 '@
     Set-Content -LiteralPath $Path -Value $text.Replace($action, $replacement) -Encoding utf8 -ErrorAction Stop
@@ -224,29 +225,81 @@ function Test-LocalBoxBaseImage {
     return (Get-FileHash -LiteralPath $Image -Algorithm SHA256 -ErrorAction Stop).Hash -eq $expected
 }
 
-function Resolve-LocalBoxAzCopy {
-    param([string]$LocalAppData = $env:LOCALAPPDATA, [string]$ProgramFiles = $env:ProgramFiles)
-    $client = @(Get-Command azcopy -CommandType Application -ErrorAction SilentlyContinue)
+function Set-LocalBoxBgInfoGuard {
+    param([string]$Path)
+    $text = Get-Content -LiteralPath $Path -Raw -ErrorAction Stop
+    $command = 'bginfo64.exe $Env:LocalBoxTestsDir\localbox-bginfo.bgi /timer:0 /NOLICPROMPT'
+    $pattern = '(?m)^' + [regex]::Escape($command) + '\r?$'
+    if ([regex]::Matches($text, $pattern).Count -ne 1) {
+        throw 'Unsupported upstream BGInfo invocation; test-runner protection was not installed.'
+    }
+    $replacement = @'
+. "$Env:LocalBoxDir\SovereignStartup\startup.ps1"
+Invoke-LocalBoxBgInfo -ConfigurationPath "$Env:LocalBoxTestsDir\localbox-bginfo.bgi"
+'@
+    Set-Content -LiteralPath $Path -Value $text.Replace($command, $replacement) -Encoding utf8 -ErrorAction Stop
+}
+
+function Resolve-LocalBoxStartupTool {
+    param(
+        [ValidateSet('AzCopy', 'BGInfo')][string]$Tool,
+        [string]$LocalAppData, [string]$ProgramFiles
+    )
+    $command = if ($Tool -eq 'AzCopy') { 'azcopy' } else { 'bginfo64.exe' }
+    $executable = if ($Tool -eq 'AzCopy') { 'azcopy.exe' } else { 'Bginfo64.exe' }
+    $client = @(Get-Command $command -CommandType Application -ErrorAction SilentlyContinue)
     if ($client.Count) { return $client[0].Path }
     $links = @(
-        if ($LocalAppData) { Join-Path $LocalAppData 'Microsoft/WinGet/Links/azcopy.exe' }
+        if ($LocalAppData) { Join-Path $LocalAppData "Microsoft/WinGet/Links/$executable" }
         if ($ProgramFiles) {
-            Join-Path $ProgramFiles 'WinGet/Links/azcopy.exe'
-            Join-Path $ProgramFiles 'AzCopy/azcopy.exe'
+            Join-Path $ProgramFiles "WinGet/Links/$executable"
+            if ($Tool -eq 'AzCopy') { Join-Path $ProgramFiles 'AzCopy/azcopy.exe' }
         }
     )
     foreach ($path in $links) {
         if (Test-Path -LiteralPath $path -PathType Leaf -ErrorAction Stop) { return $path }
     }
-    if ($LocalAppData) {
-        $pattern = Join-Path $LocalAppData 'Microsoft/WinGet/Packages/Microsoft.Azure.AZCopy.10_*/azcopy_windows_*/azcopy.exe'
-        if (Test-Path -Path $pattern -PathType Leaf -ErrorAction Stop) {
-            $candidates = @(Get-ChildItem -Path $pattern -File -ErrorAction Stop)
-            if ($candidates.Count -ne 1) { throw 'Multiple unlinked AzCopy installations exist for the startup user; repair the WinGet link before retrying.' }
-            return $candidates[0].FullName
+    $patterns = @(
+        if ($LocalAppData) {
+            if ($Tool -eq 'AzCopy') {
+                Join-Path $LocalAppData 'Microsoft/WinGet/Packages/Microsoft.Azure.AZCopy.10_*/azcopy_windows_*/azcopy.exe'
+            }
+            else { Join-Path $LocalAppData 'Microsoft/WinGet/Packages/Microsoft.Sysinternals.BGInfo_*/Bginfo64.exe' }
         }
+        if ($Tool -eq 'BGInfo' -and $ProgramFiles) {
+            Join-Path $ProgramFiles 'WinGet/Packages/Microsoft.Sysinternals.BGInfo_*/Bginfo64.exe'
+        }
+    )
+    $candidates = @(foreach ($pattern in $patterns) {
+        if (Test-Path -Path $pattern -PathType Leaf -ErrorAction Stop) {
+            Get-ChildItem -Path $pattern -File -ErrorAction Stop
+        }
+    })
+    if ($candidates.Count -gt 1) { throw "Multiple unlinked $Tool installations exist; repair the WinGet link before retrying." }
+    if ($candidates.Count -eq 1) { return $candidates[0].FullName }
+    throw "$Tool is unavailable after prerequisite installation. Inspect the WinGet provisioning log and the startup user WinGet installation."
+}
+
+function Resolve-LocalBoxAzCopy {
+    param([string]$LocalAppData = $env:LOCALAPPDATA, [string]$ProgramFiles = $env:ProgramFiles)
+    Resolve-LocalBoxStartupTool -Tool AzCopy -LocalAppData $LocalAppData -ProgramFiles $ProgramFiles
+}
+
+function Resolve-LocalBoxBgInfo {
+    param([string]$LocalAppData = $env:LOCALAPPDATA, [string]$ProgramFiles = $env:ProgramFiles)
+    Resolve-LocalBoxStartupTool -Tool BGInfo -LocalAppData $LocalAppData -ProgramFiles $ProgramFiles
+}
+
+function Invoke-LocalBoxBgInfo {
+    param([string]$ConfigurationPath)
+    $ErrorActionPreference = 'Stop'
+    if (-not (Test-Path -LiteralPath $ConfigurationPath -PathType Leaf)) {
+        throw 'The LocalBox BGInfo configuration is missing.'
     }
-    throw 'AzCopy is unavailable after prerequisite installation. Inspect the WinGet provisioning log and the startup user WinGet installation; no image transfer was attempted.'
+    $client = Resolve-LocalBoxBgInfo
+    $PSNativeCommandUseErrorActionPreference = $false
+    & $client $ConfigurationPath /timer:0 /NOLICPROMPT
+    if ($LASTEXITCODE -ne 0) { throw "BGInfo failed with exit code $LASTEXITCODE." }
 }
 
 function Wait-LocalBoxStartupPrerequisites {
@@ -276,8 +329,9 @@ function Wait-LocalBoxStartupPrerequisites {
     $env:PATH = (@($env:PATH, [Environment]::GetEnvironmentVariable('PATH', 'Machine'),
         [Environment]::GetEnvironmentVariable('PATH', 'User')) | Where-Object { $_ } | Select-Object -Unique) -join [IO.Path]::PathSeparator
     $null = Resolve-LocalBoxAzCopy
+    $null = Resolve-LocalBoxBgInfo
     $Status.Phase = 'Startup'
-    $Status.Message = 'WinGet prerequisites completed and AzCopy resolved; upstream initialization may proceed.'
+    $Status.Message = 'WinGet prerequisites completed; AzCopy and BGInfo resolved. Upstream initialization may proceed.'
     Save-LocalBoxStartupStatus $Status $StatusPath
 }
 
@@ -460,7 +514,7 @@ function Invoke-LocalBoxGuardedStartup {
                     $latest.State = 'Failed'
                     if ($latest.Phase -eq 'Prerequisites') {
                         $latest.Code = 'StartupPrerequisitesFailed'
-                        $latest.Message = 'WinGet prerequisite readiness or AzCopy discovery failed before storage initialization. Inspect WinGet-provisioning logs and WinGetLogonScript task state.'
+                        $latest.Message = 'WinGet prerequisite readiness or AzCopy/BGInfo discovery failed before storage initialization. Inspect WinGet-provisioning logs and WinGetLogonScript task state.'
                     }
                     else {
                         $latest.Code = 'StartupFailed'

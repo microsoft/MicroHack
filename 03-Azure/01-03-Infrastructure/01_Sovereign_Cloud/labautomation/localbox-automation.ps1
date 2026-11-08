@@ -90,6 +90,15 @@ function Get-LocalBoxValidationRetryState {
         Detail = "Automatic validation retry 1/1: $($state.executionState). Deployment remains gated on successful validation." }
 }
 
+function New-LocalBoxStartupWatchScript {
+    $source = Get-Content (Join-Path $PSScriptRoot 'localbox-startup-watch.ps1') -Raw -ErrorAction Stop
+    $errors = $null
+    $ast = [Management.Automation.Language.Parser]::ParseInput($source, [ref]$null, [ref]$errors)
+    if ($errors.Count -or -not $ast.ParamBlock) { throw 'Cannot parse the LocalBox startup monitor for packaging.' }
+    $formatter = "function ConvertTo-LocalBoxDiagnosticText {`n$((Get-Command ConvertTo-LocalBoxDiagnosticText -CommandType Function).Definition)`n}"
+    $source.Insert($ast.ParamBlock.Extent.EndOffset, "`n`n$formatter")
+}
+
 function Get-LocalBoxStartupProgress {
     param([hashtable]$Tracking, [string]$SubscriptionId, [string]$ResourceGroupName, [int]$TimeoutSeconds)
     $vmId = "/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Compute/virtualMachines/LocalBox-Client"
@@ -115,7 +124,7 @@ function Get-LocalBoxStartupProgress {
             Invoke-LocalBoxAutomationRequest -Path $uri -Method PUT -Body @{
                 location = $vm.location
                 properties = @{
-                    source = @{ script = Get-Content (Join-Path $PSScriptRoot 'localbox-startup-watch.ps1') -Raw -ErrorAction Stop }
+                    source = @{ script = New-LocalBoxStartupWatchScript }
                     asyncExecution = $true; timeoutInSeconds = $TimeoutSeconds
                     parameters = @(
                         @{ name = 'BootstrapId'; value = $Tracking.Id }

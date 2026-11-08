@@ -70,6 +70,7 @@ var command = {
         $text = Get-Content "$TestDrive/Bootstrap.ps1" -Raw
         $text | Should -Match 'Set-Acl'
         $text | Should -Match '\$guardRoot\\startup.ps1'
+        $text | Should -Match 'Set-LocalBoxBgInfoGuard'
         { Install-LocalBoxStartupGuard "$TestDrive/Bootstrap.ps1" } | Should -Throw '*Unsupported*'
     }
 }
@@ -452,6 +453,7 @@ Describe 'Startup report validation' {
                 $prerequisiteClock.Now = $prerequisiteClock.Now.AddSeconds(15)
             }
             Mock Resolve-LocalBoxAzCopy { 'fixture-azcopy.exe' }
+            Mock Resolve-LocalBoxBgInfo { 'fixture-bginfo.exe' }
         }
         AfterEach { $env:PATH = $originalPath }
         It 'waits for installer completion before resolving tools or initializing storage' {
@@ -465,6 +467,7 @@ Describe 'Startup report validation' {
             Wait-LocalBoxStartupPrerequisites $prerequisiteStatus $prerequisitePath
             Should -Invoke Start-Sleep -Times 2 -Exactly
             Should -Invoke Resolve-LocalBoxAzCopy -Times 1 -Exactly
+            Should -Invoke Resolve-LocalBoxBgInfo -Times 1 -Exactly
             $prerequisiteStatus.Phase | Should -Be 'Startup'
         }
         It 'also waits for a registered task that has not started yet' {
@@ -484,6 +487,11 @@ Describe 'Startup report validation' {
         It 'does not treat an installation/discovery failure as ready' {
             Mock Resolve-LocalBoxAzCopy { throw 'fixture-missing-azcopy' }
             { Wait-LocalBoxStartupPrerequisites $prerequisiteStatus $prerequisitePath } | Should -Throw '*fixture-missing-azcopy*'
+            $prerequisiteStatus.Phase | Should -Be 'Prerequisites'
+        }
+        It 'requires BGInfo before storage initialization even when AzCopy is available' {
+            Mock Resolve-LocalBoxBgInfo { throw 'fixture-missing-bginfo' }
+            { Wait-LocalBoxStartupPrerequisites $prerequisiteStatus $prerequisitePath } | Should -Throw '*fixture-missing-bginfo*'
             $prerequisiteStatus.Phase | Should -Be 'Prerequisites'
         }
         It 'surfaces task query errors rather than assuming WinGet completed' {
@@ -552,6 +560,7 @@ Describe 'Startup report monitor thresholds' {
         Mock Start-Sleep { $clock.Now = $clock.Now.AddHours(1) }
         Mock Get-LocalBoxStartupReport { $null }
         Mock Get-ScheduledTask { @{ State = 'Ready' } }
+        Mock Test-LocalBoxStartupActive { $false }
     }
     It 'fails at the one-hour missing-report threshold instead of waiting eight hours' {
         $report = Wait-LocalBoxStartupReport $id $subscription group 28800
@@ -559,11 +568,12 @@ Describe 'Startup report monitor thresholds' {
         Should -Invoke Start-Sleep -Times 1 -Exactly
         ($clock.Now - [datetime]'2026-11-05T00:00:00Z').TotalSeconds | Should -Be 3600
     }
-    It 'detects a stopped startup task only after the two-minute startup grace' {
+    It 'detects an exited guarded process only after the two-minute startup grace' {
         Mock Get-LocalBoxStartupReport { @{ State = 'Running' } }
         Mock Start-Sleep { $clock.Now = $clock.Now.AddSeconds(120) }
         (Wait-LocalBoxStartupReport $id $subscription group 28800).Code | Should -Be 'StartupExited'
-        Should -Invoke Get-ScheduledTask -Times 1 -Exactly
+        Should -Invoke Test-LocalBoxStartupActive -Times 1 -Exactly
+        Should -Invoke Get-ScheduledTask -Times 0
         ($clock.Now - [datetime]'2026-11-05T00:00:00Z').TotalSeconds | Should -Be 120
     }
     It 'returns reported failure immediately without waiting or inspecting tasks' {
@@ -571,9 +581,189 @@ Describe 'Startup report monitor thresholds' {
         (Wait-LocalBoxStartupReport $id $subscription group 28800).Code | Should -Be 'BaseImageDownloadFailed'
         Should -Invoke Start-Sleep -Times 0
         Should -Invoke Get-ScheduledTask -Times 0
+        Should -Invoke Test-LocalBoxStartupActive -Times 0
     }
     It 'does not treat a monitoring exception as startup success' {
         Mock Get-LocalBoxStartupReport { throw 'Invalid metadata' }
-        (Wait-LocalBoxStartupReport $id $subscription group 28800).State | Should -Be 'Failed'
+        $report = Wait-LocalBoxStartupReport $id $subscription group 28800
+        $report.State | Should -Be 'Failed'
+        $report.Message | Should -Match 'Invalid metadata'
+    }
+    It 'continues observing a live startup after it unregisters its scheduled task' {
+        Mock Get-ScheduledTask { throw 'No scheduled task exists' }
+        Mock Start-Sleep { $clock.Now = $clock.Now.AddSeconds(120) }
+        Mock Test-LocalBoxStartupActive { $true }
+        Mock Get-LocalBoxStartupReport {
+            if ($clock.Now -ge [datetime]'2026-11-05T00:04:00Z') { return @{ State = 'Succeeded'; Phase = 'Complete' } }
+            @{ State = 'Running'; Phase = 'NestedDeployment' }
+        }
+        (Wait-LocalBoxStartupReport $id $subscription group 28800).State | Should -Be 'Succeeded'
+        Should -Invoke Test-LocalBoxStartupActive -Times 1 -Exactly
+        Should -Invoke Get-ScheduledTask -Times 0
+    }
+    It 'rereads the terminal report when the process releases its lock between observations' {
+        $reads = @{ Count = 0 }
+        Mock Start-Sleep { $clock.Now = $clock.Now.AddSeconds(120) }
+        Mock Get-LocalBoxStartupReport {
+            $reads.Count++
+            if ($reads.Count -eq 3) { return @{ State = 'Succeeded'; Phase = 'Complete' } }
+            @{ State = 'Running' }
+        }
+        (Wait-LocalBoxStartupReport $id $subscription group 28800).State | Should -Be 'Succeeded'
+        $reads.Count | Should -Be 3
+    }
+    It 'does not treat a held lock as success when the report remains incomplete' {
+        Mock Get-LocalBoxStartupReport { @{ State = 'Running' } }
+        Mock Test-LocalBoxStartupActive { $true }
+        $report = Wait-LocalBoxStartupReport $id $subscription group 3600
+        $report.State | Should -Be 'Failed'
+        $report.Code | Should -Be 'StartupTimedOut'
+    }
+    It 'preserves bounded redacted lock-inspection errors without hiding the failure' {
+        Mock Get-LocalBoxStartupReport { @{ State = 'Running' } }
+        Mock Test-LocalBoxStartupActive { throw ('Mutex access denied; password=fixture-password token=fixture-token ' + ('x' * 1000)) }
+        $report = Wait-LocalBoxStartupReport $id $subscription group 28800
+        $report.Code | Should -Be 'StartupMonitorFailed'
+        $report.State | Should -Be 'Failed'
+        $report.Message | Should -Match 'Mutex access denied'
+        $report.Message | Should -Not -Match 'fixture-password|fixture-token'
+        $report.Message.Length | Should -BeLessOrEqual 800
+    }
+}
+
+Describe 'BGInfo resolution and persistent test-runner protection' {
+    BeforeEach {
+        Mock Get-Command { @() } -ParameterFilter { $Name -eq 'bginfo64.exe' }
+        $localData = Join-Path $TestDrive ([guid]::NewGuid().ToString())
+        $programRoot = Join-Path $TestDrive ([guid]::NewGuid().ToString())
+        $resolveArguments = @{ LocalAppData = $localData; ProgramFiles = $programRoot }
+        $runner = "$TestDrive/Invoke-Test.ps1"
+        $bginfoLine = 'bginfo64.exe $Env:LocalBoxTestsDir\localbox-bginfo.bgi /timer:0 /NOLICPROMPT'
+    }
+    It 'preserves a native command already available on PATH' {
+        Mock Get-Command { @{ Path = 'native-bginfo.exe' } } -ParameterFilter { $Name -eq 'bginfo64.exe' }
+        Resolve-LocalBoxBgInfo @resolveArguments | Should -Be 'native-bginfo.exe'
+    }
+    It 'resolves a WinGet link or exact package without relying on process PATH: <Location>' -TestCases @(
+        @{ Location = 'UserLink'; Relative = 'Microsoft/WinGet/Links' }
+        @{ Location = 'MachineLink'; Relative = 'WinGet/Links' }
+        @{ Location = 'UserPackage'; Relative = 'Microsoft/WinGet/Packages/Microsoft.Sysinternals.BGInfo_fixture' }
+        @{ Location = 'MachinePackage'; Relative = 'WinGet/Packages/Microsoft.Sysinternals.BGInfo_fixture' }
+    ) {
+        param($Location, $Relative)
+        $base = if ($Location -like 'User*') { $localData } else { $programRoot }
+        $directory = Join-Path $base $Relative
+        New-Item -ItemType Directory -Path $directory -Force | Out-Null
+        Set-Content "$directory/Bginfo64.exe" fixture
+        Resolve-LocalBoxBgInfo @resolveArguments | Should -Be "$directory/Bginfo64.exe"
+    }
+    It 'rejects ambiguous unlinked packages instead of choosing a version' {
+        foreach ($version in @('one', 'two')) {
+            $directory = Join-Path $localData "Microsoft/WinGet/Packages/Microsoft.Sysinternals.BGInfo_$version"
+            New-Item -ItemType Directory -Path $directory -Force | Out-Null
+            Set-Content "$directory/Bginfo64.exe" fixture
+        }
+        { Resolve-LocalBoxBgInfo @resolveArguments } | Should -Throw '*Multiple unlinked BGInfo*'
+    }
+    It 'reports a missing installation rather than falling back to another user profile' {
+        { Resolve-LocalBoxBgInfo @resolveArguments } | Should -Throw '*BGInfo is unavailable*'
+    }
+    It 'patches the retained runner for startup and future logons: <Newline>' -TestCases @(
+        @{ Newline = "`n" }; @{ Newline = "`r`n" }
+    ) {
+        param($Newline)
+        "Write-Output before${Newline}$bginfoLine${Newline}Write-Output after" | Set-Content $runner
+        Set-LocalBoxBgInfoGuard $runner
+        $text = Get-Content $runner -Raw
+        $text | Should -Match '\. "\$Env:LocalBoxDir\\SovereignStartup\\startup.ps1"'
+        $text | Should -Match 'Invoke-LocalBoxBgInfo -ConfigurationPath "\$Env:LocalBoxTestsDir\\localbox-bginfo.bgi"'
+        $text | Should -Match 'Write-Output before'
+        $text | Should -Match 'Write-Output after'
+        $text | Should -Not -Match '(?m)^bginfo64.exe'
+    }
+    It 'rejects missing or duplicate upstream commands without modifying the runner' -TestCases @(
+        @{ Count = 0 }; @{ Count = 2 }
+    ) {
+        param($Count)
+        (@($bginfoLine) * $Count -join "`n") | Set-Content $runner
+        $before = Get-Content $runner -Raw
+        { Set-LocalBoxBgInfoGuard $runner } | Should -Throw '*Unsupported upstream BGInfo*'
+        Get-Content $runner -Raw | Should -Be $before
+    }
+}
+
+Describe 'Checked BGInfo invocation' {
+    BeforeEach {
+        $configuration = "$TestDrive/configuration with spaces.bgi"
+        Set-Content $configuration fixture
+        $executable = "$TestDrive/bginfo fixture.ps1"
+        Mock Resolve-LocalBoxBgInfo { $executable }
+        $previousExitCode = $global:LASTEXITCODE
+    }
+    AfterEach { $global:LASTEXITCODE = $previousExitCode }
+    It 'passes the exact configuration and noninteractive flags to the resolved executable' {
+        @'
+$args | ConvertTo-Json | Set-Content "$PSScriptRoot/bginfo-arguments.json"
+$global:LASTEXITCODE = 0
+'@ | Set-Content $executable
+        Invoke-LocalBoxBgInfo $configuration
+        $arguments = Get-Content "$TestDrive/bginfo-arguments.json" -Raw | ConvertFrom-Json
+        $arguments.Count | Should -Be 3
+        $arguments[0] | Should -Be $configuration
+        $arguments[1] | Should -Be '/timer:0'
+        $arguments[2] | Should -Be '/NOLICPROMPT'
+    }
+    It 'fails on a nonzero exit code' {
+        '$global:LASTEXITCODE = 5' | Set-Content $executable
+        { Invoke-LocalBoxBgInfo $configuration } | Should -Throw '*BGInfo failed with exit code 5*'
+    }
+    It 'does not launch BGInfo without its configuration' {
+        { Invoke-LocalBoxBgInfo "$TestDrive/missing.bgi" } | Should -Throw '*configuration is missing*'
+        Should -Invoke Resolve-LocalBoxBgInfo -Times 0
+    }
+}
+
+Describe 'Startup lock and standalone monitor packaging' {
+    It 'reports a nonexistent or unowned lock as inactive and releases acquired handles' {
+        $name = "MicroHackTest-$([guid]::NewGuid())"
+        Test-LocalBoxStartupActive $name | Should -BeFalse
+        $mutex = [Threading.Mutex]::new($false, $name)
+        try {
+            Test-LocalBoxStartupActive $name | Should -BeFalse
+            $mutex.WaitOne(0) | Should -BeTrue
+            $mutex.ReleaseMutex()
+        }
+        finally { $mutex.Dispose() }
+    }
+    It 'observes a lock held by another process without acquiring or releasing its ownership' {
+        $name = "MicroHackTest-$([guid]::NewGuid())"
+        $job = Start-Job -ArgumentList $name -ScriptBlock {
+            param($Name)
+            $mutex = [Threading.Mutex]::new($false, $Name)
+            if (-not $mutex.WaitOne(0)) { throw 'Fixture could not acquire its startup lock.' }
+            try { Write-Output 'held'; Start-Sleep -Seconds 30 }
+            finally { $mutex.ReleaseMutex(); $mutex.Dispose() }
+        }
+        try {
+            $deadline = [datetime]::UtcNow.AddSeconds(15)
+            while (-not $job.ChildJobs[0].Output.Count -and [datetime]::UtcNow -lt $deadline) { Start-Sleep -Milliseconds 50 }
+            Receive-Job $job -Keep -ErrorAction Stop | Should -Be 'held'
+            Test-LocalBoxStartupActive $name | Should -BeTrue
+            Test-LocalBoxStartupActive $name | Should -BeTrue
+        }
+        finally { Stop-Job $job; Remove-Job $job -Force }
+    }
+    It 'embeds the shared diagnostic formatter in the submitted standalone monitor' {
+        $source = New-LocalBoxStartupWatchScript
+        $errors = $null
+        $ast = [Management.Automation.Language.Parser]::ParseInput($source, [ref]$null, [ref]$errors)
+        $errors.Count | Should -Be 0
+        $formatter = $ast.FindAll({
+            param($node)
+            $node -is [Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -eq 'ConvertTo-LocalBoxDiagnosticText'
+        }, $true)
+        $formatter.Count | Should -Be 1
+        $formatter[0].Body.Extent.Text | Should -Be ('{' + "`n" + (Get-Command ConvertTo-LocalBoxDiagnosticText).Definition + "`n}")
+        $ast.ParamBlock.Parameters.Name.VariablePath.UserPath | Should -Contain 'BootstrapId'
     }
 }

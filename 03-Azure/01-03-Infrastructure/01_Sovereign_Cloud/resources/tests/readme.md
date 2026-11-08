@@ -66,6 +66,22 @@ upstream transformations and removal of only the retired Azure Data Studio
 resource. Real upstream Bootstrap/WinGet scripts and the package configuration
 are also transformed and syntax/compilation checked offline.
 
+TEST14 startup regressions cover native/user/machine BGInfo discovery, ambiguous
+and missing installations, checked invocation with a spaced configuration path,
+and exact persistent upstream test-runner patching. Monitor tests cover scheduled
+task removal while the guarded process remains active, missing/unowned and
+cross-process owned mutexes, terminal-report races, unchanged deadlines, and
+bounded redacted failures. The submitted standalone monitor embeds the shared
+formatter; no current deployment's immutable startup payload is rewritten.
+The coupled startup, WinGet, deployment, automation, validation-retry, global
+LocalBox and failure-summary suites passed **292 tests**. Current upstream Bicep
+and script transformations compiled with a **33,073-byte** startup payload.
+A read-only Windows PowerShell 5.1 probe resolved the actual installed BGInfo
+binary, verified cross-process mutex ownership, parsed the packaged standalone
+monitor and verified redacted failure details. It did not execute BGInfo, start
+startup tasks or change the current test runner. A fresh deployment must still
+verify the complete startup and subsequent-logon behavior.
+
 The combined WinGet, startup, deployment, automation, validation-retry, global
 LocalBox and failure-summary suites passed **267 tests** after these changes.
 The real upstream Bicep compiled with the 30,679-byte guarded payload, and

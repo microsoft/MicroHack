@@ -127,7 +127,7 @@ the interval can include download, storage processing, registration and
 provider/controller waits. It does not by itself prove a bandwidth bottleneck.
 Repeated image-write events during progress updates are not separate imports.
 
-The current [preparation script](../prepare-localbox.ps1) runs AKS creation,
+At the time of this run, the [preparation script](../prepare-localbox.ps1) ran AKS creation,
 proxy access/MetalLB, image import, then reference VM creation **serially**.
 That ordering is the clearest code-level optimization opportunity.
 
@@ -177,6 +177,11 @@ readiness afterwards. This implements the overlap in candidate 1 without
 concurrent local CLI sessions. Existing-AKS retries remain serial, and manual
 preparation offers `-SequentialProvisioning` as a fallback. The estimates below
 remain historical estimates, not measured savings from this implementation.
+
+**2026-11-08 measured update:** [TEST14](test-14-timing-analysis.md) verified
+1h00m26s of actual AKS/image overlap and a 3h46m10s successful guest run.
+Its validation retry nevertheless made the comparable initial-ARM-to-guest
+interval longer than TEST06; the new report separates those effects.
 
 | Priority | Candidate | Potential benefit from this run | Constraints / verification |
 |---|---|---|---|

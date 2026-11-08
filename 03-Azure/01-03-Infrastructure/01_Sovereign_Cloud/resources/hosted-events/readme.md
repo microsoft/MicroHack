@@ -314,6 +314,11 @@ allow time for both preparation and later assessments.
 
 For a full cold-run breakdown, see the
 [test-06 timing and optimization assessment](test-06-timing-analysis.md).
+The [TEST14 section comparison and final warning review](test-14-timing-analysis.md)
+records the 8 November Full pass: 3h46m10s of guest execution, approximately one
+hour of actual AKS/image overlap, and a failed validation attempt that offset
+the guest-stage savings. It distinguishes LocalBox completion from the
+unverified downstream Console outcome.
 The 4 November 2026 run took **10 hours 30 minutes 44 seconds** from Console
 start to finish, including **5 hours 24 minutes 9 seconds** of managed guest
 execution. All 26 guest tests passed, but Console result retrieval failed and

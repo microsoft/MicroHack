@@ -16,6 +16,30 @@ From this directory, run `Invoke-Pester ./visual-attestation.tests.ps1 -Output D
 
 A fresh Codespace smoke test is still required to validate the devcontainer build, Docker daemon, `confcom` policy generation and Azure deployment together; the mocked tests do not establish end-to-end Codespaces support.
 
+## Participant K3s installation checks
+
+Run `Invoke-Pester ./k3s-install.tests.ps1 -Output Detailed` on a host with Bash.
+These offline tests execute the actual Bicep-embedded installation script with
+mocked download, installer, service and Kubernetes commands. They cover successful
+installation, checksum/binary download failures, three-attempt exhaustion,
+20/40-second backoff, timeout propagation, stable-version selection across retries,
+installer cleanup, partial/existing installations, delayed node registration,
+API failures and node readiness failures. They do not download or install K3s.
+
+The extension retries each release lookup, installer download and installer
+execution at most three times. Lookup/download attempts have 60-second curl
+limits and 75-second process limits; each installer attempt has a 600-second
+process limit, followed by forced termination after a 15-second grace period if
+needed. The stable channel is resolved once successfully per extension execution,
+then the same version is used for all installer attempts. Upstream checksum
+verification remains enabled. Registration is checked up to 24 times, with
+5-second request limits and 5-second delays, followed by a bounded Ready check.
+Persistent failures remain extension failures. No retry deletes infrastructure.
+
+The observed failed VM was recovered by a separately authorized manual retry;
+that does not validate this new automatic retry in a fresh deployment. Event-lead
+testing should use the feature branch containing these changes, not `main`.
+
 ## MetalLB preparation checks
 
 Run `Invoke-Pester ./localbox-metallb-recovery.tests.ps1,./localbox-automation.tests.ps1 -Output Detailed`

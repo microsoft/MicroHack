@@ -2,6 +2,26 @@
 
 There are two kinds of tests: offline mocked script tests, and live health tests against explicitly selected Azure scopes. Live tests do not deploy attendee VMs, install agents, enable paid plans, apply patches or repair failures. They do not replace the [participant VM readiness exercise](../localbox/manual-preparation.md#step-6-test-the-environment).
 
+## Current validation and historical evidence
+
+Hosted Console automation invokes the upstream and Full LocalBox suites itself;
+manual delivery and deliberate diagnostics use the runner instructions below.
+The hosted wrapper additionally prepares resources, waits for reference-VM
+onboarding and requests an Update Manager assessment. Those operations are not
+side effects of the read-only health-test runner.
+
+The [9 November 2026 verified state](../hosted-events/readme.md#current-verified-state)
+records **26/26 LocalBox tests, 7/7 shared stages and 25/25 participant jobs**
+passing after targeted K3s recovery, with credential publication confirmed.
+It is a reuse/recovery result, not a clean first-attempt deployment benchmark.
+Participant sign-in, private/proxy application access, Defender cloud reporting
+and planned nested-VM capacity still require event-specific validation.
+
+The dated TEST observations below describe evidence available at each checkpoint.
+They retain original failures and outstanding checks; use the current summary
+for their later disposition. In particular, successful Full health does not
+resolve the historical startup watcher's missing successful terminal report.
+
 ## Tooling and authentication
 
 Use PowerShell 7, Pester 5.7.1 or later within major version 5, Azure CLI, and `kubectl` for Full checks. Offline tests were exercised with PowerShell 7.4.13 and Pester 5.7.1. Live Windows/Azure validation remains an integration gate; these versions are not a claim that all LocalBox versions were tested.
@@ -56,9 +76,14 @@ verification remains enabled. Registration is checked up to 24 times, with
 5-second request limits and 5-second delays, followed by a bounded Ready check.
 Persistent failures remain extension failures. No retry deletes infrastructure.
 
-The observed failed VM was recovered by a separately authorized manual retry;
-that does not validate this new automatic retry in a fresh deployment. Event-lead
-testing should use the feature branch containing these changes, not `main`.
+The 9 November event exercised the bounded installer, but three extensions still
+exhausted their attempts. An unchanged ARM redeployment surfaced the same old
+failure rather than executing the installer again. A separately authorized
+`forceUpdateTag` update triggered new executions; all three then installed on
+attempt 1/3, and service/Ready-node checks passed before the successful Console
+retry. This validates the [targeted recovery workflow](../hosted-events/readme.md#retry-a-failed-install-k3s-extension),
+not a guarantee that automatic retries overcome every download outage. Test
+with the reviewed content revision imported into Console.
 
 ## MetalLB preparation checks
 
@@ -73,7 +98,10 @@ Live verification on traininglab-02 confirmed that the recovery preflight perfor
 no PUT when the objects exist, followed by **14/14 Full health tests passing** and
 verified temporary-route cleanup. The missing-object/retry branches are tested
 with fixtures; no healthy live objects were removed to manufacture a failure.
-A fresh deployment exercising automatic recovery remains a separate live gate.
+At that checkpoint, live automatic recovery remained unverified. TEST13 later
+exercised one bounded unchanged-pool reapply during resume, and
+[TEST14](../hosted-events/test-14-timing-analysis.md) exercised recovery during
+its cold deployment. Those results do not turn the read-only tests into repair tools.
 
 MetalLB preparation tests are included in `prepare-localbox.tests.ps1`. Run
 `Invoke-Pester ./prepare-localbox.tests.ps1 -FullName 'LocalBox MetalLB preparation*','MetalLB health evidence*','CLI output streams*' -Output Detailed`
@@ -97,8 +125,9 @@ It verifies that both deployment entry points default registration to Australia 
 the global hook passes that region independently of host-region selection, and
 all four Challenge 1 policy parameter examples include the Australia East lab-only
 exception while retaining the four European regions. These checks make no
-Azure changes; a fresh Console deployment and participant VM creation remain
-required to validate regional service availability and effective inherited policies.
+Azure changes. The later hosted event verified LocalBox provisioning with this
+registration setting; participant VM creation in the assigned scope remains an
+event-specific check of service availability and effective inherited policies.
 
 ## Global event LocalBox checks
 
@@ -123,8 +152,9 @@ and script transformations compiled with a **33,073-byte** startup payload.
 A read-only Windows PowerShell 5.1 probe resolved the actual installed BGInfo
 binary, verified cross-process mutex ownership, parsed the packaged standalone
 monitor and verified redacted failure details. It did not execute BGInfo, start
-startup tasks or change the current test runner. A fresh deployment must still
-verify the complete startup and subsequent-logon behavior.
+startup tasks or change the current test runner. At this checkpoint, a fresh
+deployment was still needed to verify startup and subsequent-logon behavior.
+See the later BGInfo evidence below and the current validation summary.
 
 TEST15 isolated the remaining BGInfo failure to stale PowerShell `LASTEXITCODE`,
 not a failed BGInfo process. In the existing desktop session, direct GUI invocation
@@ -144,8 +174,11 @@ of 1, while an invalid configuration failed with the actual exit code 2.
 Temporary probe tasks/files were removed. The upstream Bicep and script transforms
 compiled with a **34,442-byte** startup payload. This is a future-deployment fix:
 the existing immutable startup payload and historical failure report were not
-rewritten, and storage initialization was not replayed. A fresh deployment remains
-the integration check for the original runner's subsequent-logon task registration.
+rewritten, and storage initialization was not replayed. The later event Client
+contained the fix, showed no BGInfo failure and had the subsequent-logon Pester
+task registered. Actual subsequent-logon execution is a separate check, and the
+historical `StartupExited` watcher report still lacks a successful terminal
+report; registration and passing Full health do not resolve that discrepancy.
 
 The combined WinGet, startup, deployment, automation, validation-retry, global
 LocalBox and failure-summary suites passed **267 tests** after these changes.
@@ -155,8 +188,9 @@ existing-VM custom-data preservation was verified.
 Live TEST12 repair verified matching CLI/Client 1.29.380, successful COM
 enumeration, zero-exit package configuration after the retired-entry removal,
 and executable AzCopy. After safe resume, both base-image SHA256 checksums
-passed at 18:15:09 UTC on 6 November 2026. The current instance is being used for the remaining
-nested deployment and Full health gates; these prerequisite checks alone do not
+passed at 18:15:09 UTC on 6 November 2026. That instance was then used for nested
+deployment checks but was later torn down without a verified Full health pass,
+as recorded in the TEST12 closeout below. These prerequisite checks alone do not
 establish end-to-end readiness.
 
 Run `Invoke-Pester ./localbox-startup.tests.ps1,./localbox-deployment.tests.ps1 -Output Detailed`
@@ -167,9 +201,10 @@ handling, cleanup, persistent replay prevention, Console report correlation and
 one-hour/two-minute monitoring thresholds. Mocked transfers never download VHDs
 or restart a live VM. The modified real upstream Bicep was compiled, and both
 upstream script transformations were syntax-checked offline. A new Windows
-deployment is still required to verify custom-data delivery, scheduled-task
-execution and end-to-end Console reporting together; existing failed instances
-are deliberately not retrofitted.
+deployment was required at that checkpoint to verify custom-data delivery,
+scheduled-task execution and Console reporting together. Later infrastructure
+success does not close the startup-monitor discrepancy described above;
+existing failed instances are deliberately not retrofitted.
 
 The startup suite also covers WinGet-before-storage ordering, the one-hour
 prerequisite timeout, stale-PATH AzCopy resolution using only the current user's
@@ -181,8 +216,9 @@ restarting or overwriting anything.
 On traininglab-17, a read-only Windows probe ran the actual resolver with AzCopy
 absent from the process PATH. It resolved the startup user's existing WinGet
 link and successfully ran `azcopy --version`; no image was downloaded and no
-deployment was resumed. The prerequisite race and tag-retention fixes still
-require a fresh end-to-end Console deployment.
+deployment was resumed. This isolated probe did not validate the prerequisite
+race or tag retention end to end; later deployment evidence is tracked separately
+in the current validation summary.
 
 Error-boundary regressions cover a non-terminating upstream task lookup followed
 by its readiness gate, a subsequent terminating readiness failure, explicit
@@ -477,7 +513,7 @@ The organizer also manually created a storage account in `rg-labuser-0011` and o
 
 Download [test-sovereign-cloud.ps1](../test-sovereign-cloud.ps1) from the same trusted ref as preparation. `-DownloadTests` defaults to `$true`: every run downloads the helpers and two suites to a temporary directory and prints the repository/ref being used. Internet access is required unless you pass `-DownloadTests:$false` with a complete local checkout. `-GitHubRef` must identify the **same reviewed ref** as the runner, preferably a commit SHA; it defaults to `main`. Downloaded scripts execute under your privileges, so review and pin them. Download failures stop the run rather than silently falling back to other code.
 
-For a fork, also specify `-GitHubRepository 'owner/MicroHack'`. For example, testing this branch uses `-GitHubRepository 'janegilring/MicroHack' -GitHubRef 'sov-cloud-localbox-post-automation'`. The default repository remains `microsoft/MicroHack`.
+For a fork, also specify `-GitHubRepository 'owner/MicroHack'`. For example, use `-GitHubRepository 'janegilring/MicroHack' -GitHubRef '<reviewed-full-commit-sha>'`, replacing the placeholder with the published commit containing both the runner and suites. Do not assume an old test branch or moving `main` contains the content imported into Console. The default repository remains `microsoft/MicroHack`. Hosted packaging has its own [immutable source-pin promotion contract](../hosted-events/readme.md#source-pins-and-upstream-promotion).
 
 ```powershell
 $ref = 'main'

@@ -2,6 +2,46 @@
 
 This runbook covers the FY27 EMEA Cloud & AI Hackathons program described in the Event Lead Guide. Confirm eligibility and access with your program lead; the Console is not a general entitlement for all Microsoft events or 1:1 customer engagements. Other delivery uses [manual setup](../manual-setup/readme.md).
 
+## Current verified state
+
+Hosted provisioning automates LocalBox deployment, nested readiness, preparation
+and infrastructure health before shared and participant stages. Event leads do
+not routinely log into LocalBox-Client or invoke preparation. This does **not**
+automate participant exercises or prove attendee access and cloud security reporting.
+
+On **9 November 2026**, the final Console retry for a 25-lab, seven-subscription
+event completed successfully:
+
+| Evidence | Verified outcome |
+| --- | --- |
+| Console job | Succeeded; 12:10:31-13:16:11 UTC, approximately **1h05m40s** |
+| Shared LocalBox | Reused existing infrastructure; a new guest run passed **12/12 upstream and 14/14 Sovereign tests**, with no failed, skipped or unrun tests |
+| Subscription shared stages | **7/7 succeeded** |
+| Participant deployments | **25/25 succeeded**, including 20 labs in Spain Central and five in West US 2 |
+| K3s recovery and credentials | Three failed extensions were explicitly force-rerun and independently verified healthy; the subsequent Console run completed, and the organizer confirmed their credentials were published |
+
+This is **reuse/recovery evidence**, not an uninterrupted first-attempt cold
+deployment or a new cold-provisioning time estimate. Earlier runs ended at 22/25.
+An unchanged ARM redeployment had reused the three failed extension results;
+the [targeted recovery procedure](#retry-a-failed-install-k3s-extension) caused new
+executions, each successful on installer attempt 1/3. The original download logs
+do not establish whether Azure networking or remote binary availability caused
+the failures.
+
+Actual participant sign-in, Bastion/proxy/application access and Defender cloud
+reporting remain unverified for this event; use the [remaining validation checklist](#remaining-event-validation).
+The successful cloud participant jobs also do **not** validate 25 simultaneous
+nested Challenge 6 Windows VMs; retain the [LocalBox capacity limits and rehearsal guidance](../localbox/readme.md#tested-participant-vm-capacity).
+
+The BGInfo fix was present and the subsequent-logon Pester task was registered
+on the event Client, but the historical startup watcher still reported
+`StartupExited` without a successful terminal report. This diagnostic discrepancy
+remains unresolved; do not equate it with a failed current infrastructure health
+run or claim that all startup-monitor behavior has been validated.
+
+Older TEST06/12/13/14 observations below are dated diagnostic history, not the
+current event status. Preserve their original failures and measurement boundaries.
+
 ## Configure the event
 
 1. Agree the Sovereign Cloud scenario with your GEO/program lead and request an Event Lead account through the program's access process.
@@ -319,8 +359,10 @@ For a full cold-run breakdown, see the
 The [TEST14 section comparison and final warning review](test-14-timing-analysis.md)
 records the 8 November Full pass: 3h46m10s of guest execution, approximately one
 hour of actual AKS/image overlap, and a failed validation attempt that offset
-the guest-stage savings. It distinguishes LocalBox completion from the
-unverified downstream Console outcome.
+the guest-stage savings. Subsequent Console output confirms global, shared and
+participant deployment completion, with approximately 11h00m30s of reported
+stage execution. This excludes initial setup and inter-stage gaps; participant
+sign-in and Defender cloud reporting remain separate verification steps.
 The 4 November 2026 run took **10 hours 30 minutes 44 seconds** from Console
 start to finish, including **5 hours 24 minutes 9 seconds** of managed guest
 execution. All 26 guest tests passed, but Console result retrieval failed and
@@ -643,12 +685,27 @@ not overwritten. After a completed/failed command, retrying starts a new tracked
 run and reuses preparation's resource checks; it does not delete the lab or reset
 existing VM passwords. Investigate failures before retrying.
 
+### Source pins and upstream promotion
+
 When changing any packaged guest script or health test, publish those sources
 first, then update the source manifest's repository, full commit SHA and file
 digests together. The offline tests require the pin's digests to match the
 checkout. Re-import the final content revision, not the intermediate source
 commit. The feature branch currently pins the tested guest sources in the fork;
 promotion upstream must retain an accessible immutable source revision.
+
+For the PR, retain the working pin unless maintainers choose to publish the
+guest sources upstream first. Confirm the current fork revision will remain
+accessible, or publish the same reviewed guest files to an upstream commit and
+then update the repository, full SHA and all digests together in a follow-up
+content revision. Do not substitute `main`, an unpublished commit or the future
+merge SHA. Verify all five packaged files against the manifest and exercise the
+`labautomation`-only packaging path before re-importing a changed pin.
+
+Include the TEST14 Console closeout in [its timing report](test-14-timing-analysis.md)
+and this runbook when promoting the documentation. Do not replace historical
+failure reports or publish private run artifacts, TAPs, passwords or unredacted
+credential screenshots as PR evidence.
 
 ### Remaining event validation
 
@@ -659,10 +716,20 @@ an installed extension, a resource-count check or admin kubeconfig access.
 
 - After participant deployments, run [health checks](../tests/readme.md) for each
   selected lab; they cannot run inside the earlier global stage.
+- Before pre-event smoke tests, check the test account's TAP validity window and
+  event time zone. A TAP issued for the workshop date may not work the day before.
+  Arrange an authorized test credential/window; after an approved schedule change,
+  save it and select **Update TAPs**. Do not include credential values in evidence.
+- Smoke-test at least one Spain Central and one West US 2 participant when both
+  regions are used, including sign-in, the Challenge 7 Bastion/K3s path and actual
+  AKS access. Include a participant in a different subscription from LocalBox.
 - Complete the [Defender readiness checklist](../localbox/manual-preparation.md#defender-for-servers-readiness-organizer),
   including actual device reporting and recommendation/assessment visibility.
 - Verify intended lab users/coaches belong to the Console group and test a real
   participant's Entra-authenticated proxy and private application port-forward.
+- Complete the [participant VM exercise](../localbox/manual-preparation.md#step-6-test-the-environment)
+  in the assigned participant scope. Rehearse planned nested-VM concurrency and
+  capacity; successful AKS/K3s provisioning is not evidence of LocalBox workload capacity.
 - Preserve the [manual preparation guide](../localbox/readme.md) for BYOS and
   deliberate recovery only. Do not run it concurrently with hosted automation.
 
@@ -673,6 +740,45 @@ Graph-capable identity, and records it in the shared RG tag
 fails setup explicitly. Organizer preparation reads that nonsecret tag; it does
 not require Graph permissions on the Client managed identity. The global hook
 invokes AKS and MetalLB preparation inside the Client after nested readiness.
+
+### Participant regions and exercise policies
+
+The default participant candidate order is Spain Central/v5, Sweden Central/v5,
+Spain Central/v6, then Sweden Central/v6. Event-specific SKU/quota restrictions
+can require other configured candidates. West US 2 was used for five participants
+in the 9 November validation; it is a **synthetic-lab capacity workaround, not
+EU data residency**. Do not add it to sovereignty policy examples as an approved
+European region.
+
+- Challenge 1's example allowlist includes four European regions and the
+  Australia East lab exception, **not Spain Central or West US 2**.
+  `DoNotEnforce` still reports noncompliance but does not deny requests through
+  that assignment. During Task 9's scoped enforcement test, deployments or
+  updates in disallowed regions can be denied; restore the three exercise
+  assignments to `DoNotEnforce` afterward and keep the bonus initiative in that
+  mode. Existing resources are not automatically stopped or deleted.
+- For Challenges 2/3, keep the assigned resource group and deploy exercise
+  resources in the approved region specified by the walkthrough/organizer.
+  A resource group's metadata location does not require every resource to use
+  that location. Keep the Key Vault and storage account colocated.
+- Challenge 4 retains **`LOCATION=northeurope`** for the validated confidential
+  ACI comparison. Challenges 5/7 use the actual provided AKS/K3s resources;
+  their region does not change Challenge 4's setting.
+- Challenge 6 uses the shared LocalBox custom location. Its registration
+  defaults to **Australia East** independently of the Azure host and participant
+  regions; see the [registration-region guidance](#localbox-registration-region-and-location-policies).
+- Inherited/organizer-managed policies still apply. `SecurityControl=Ignore`
+  and `CostControl=Ignore` do not override arbitrary location restrictions.
+  Escalate those denials to the policy owner rather than disabling governance.
+
+For an existing event, preserve the original preferred-region order on retry.
+Participant quota recovery pins the saved region/SKU, but the global hosted-tag
+policy assignment's managed identity has a separate location constraint:
+changing the first preferred region can cause
+`AlreadyExistServicePrincipalInDifferentRegion`. For the recovered event the
+working order was **Spain Central, West US 2, Australia East, Sweden Central**;
+this is not a replacement for the pack's default or a guarantee of capacity.
+Do not delete the policy assignment or relocate resources to force a retry.
 
 ### LocalBox registration region and location policies
 

@@ -15,9 +15,10 @@ or unrun. Update assessment succeeded at 07:18:55.558 UTC.
   7 November to 07:26:19.066 on 8 November, **10h 35m 38s**.
 - This second interval excludes Console setup before ARM and all subsequent
   shared/participant stages. It is **not the total Console job duration**.
-- The participant resource group had no deployments or resources at the
-  post-completion checks. Console's final status and downstream completion
-  were not established by this investigation.
+- The participant resource group was empty at the earlier post-guest checks.
+  Subsequently supplied Console output confirms completion of the global,
+  shared and participant deployment stages; those earlier checks were not
+  evidence of a downstream failure.
 - Defender cloud reporting and real participant sign-in remain manual checks.
 
 The guest completed without operator resubmission or infrastructure recreation.
@@ -25,6 +26,28 @@ Automatic validation retry, Blob propagation handling, AKS submission
 reconciliation and MetalLB recovery were all exercised. The historical startup
 report still records the BGInfo failure described below; it was not rewritten
 to disguise that failure.
+
+## Console completion
+
+The operator subsequently supplied Console output for the same TEST14 event
+and subscription. It reports successful completion of all three deployment
+stages, including the single participant job:
+
+| Console stage | Reported duration | Outcome |
+|---|---:|---|
+| Global event deployment | 10h43m | Completed, 1/1 |
+| Shared deployment | 6m01s | Completed, 1/1 |
+| Participant deployment | 11m29s | Completed, 1/1 |
+| **Sum of reported stage durations** | **Approximately 11h00m30s** | **All deployment stages completed** |
+
+This closes the earlier uncertainty about the Console handoff and downstream
+deployment stages. The global duration includes LocalBox work; do not add the
+guest or ARM-to-guest duration to this total. The global duration is only
+reported to minute precision, and the sum excludes initial Console setup and
+gaps between stages. Without job start/end timestamps, it is not an exact
+end-to-end wall-clock duration. Completion messages establish Console-reported
+deployment success, not independent validation of participant access or
+Defender cloud reporting.
 
 ## Comparison with previous observations
 
@@ -148,7 +171,9 @@ image-start lines hours after their embedded timestamps. This report uses the
 embedded timestamps, not the later polling observation time.
 
 Private reports and operational snapshots remain outside the repository.
-Console's screenshot does not establish a consistent UTC start/end pair;
-the total Console job duration is intentionally not inferred from it.
+Neither the earlier Console screenshot nor the subsequently supplied completion
+output establishes a consistent UTC start/end pair. The stage-duration sum above
+is therefore reported separately from the still-unmeasured total Console job
+wall-clock duration.
 See the [TEST06 analysis](test-06-timing-analysis.md) for the earlier baseline
 and [hosted provisioning guidance](readme.md) for readiness and retry contracts.

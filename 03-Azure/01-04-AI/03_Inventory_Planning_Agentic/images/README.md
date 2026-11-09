@@ -32,4 +32,8 @@ The `setup-*.png` files illustrate the generic MicroHack lab sign-in and Codespa
 flow: Azure portal sign-in and resource
 groups, GitHub sign-in via the identity provider, the lab organization, forking the
 `microhack` repository under a unique name, **Code → Codespaces → New with options**,
+selecting the **Azure / AI / Inventory Planning Agentic** dev container
+(`setup-dev-container-list.png`, `setup-select-dev-container.png`), the ready
+Codespace (`setup-codespace-ready.png`), the workspace trust dialog
+(`setup-trust-folder.png`),
 and the *Never* answer to VS Code's "open the parent repository" prompt.

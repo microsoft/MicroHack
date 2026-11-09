@@ -36,7 +36,21 @@
         "python.defaultInterpreterPath": "${containerWorkspaceFolder}/src/.venv/bin/python",
         "python.terminal.activateEnvironment": true,
         "python.analysis.include": ["src"],
-        "python.analysis.exclude": ["**/.venv", "**/node_modules", "**/__pycache__", "**/.*"]
+        "python.analysis.exclude": ["**/.venv", "**/node_modules", "**/__pycache__", "**/.*"],
+        "files.exclude": {
+          "**/.git": true,
+          "**/.svn": true,
+          "**/.hg": true,
+          "**/.DS_Store": true,
+          "**/Thumbs.db": true,
+          "labautomation": true,
+          ".github": true,
+          "docs": true,
+          ".devcontainer": true
+        },
+        "workbench.editorAssociations": {
+          "*.md": "vscode.markdown.preview.editor"
+        }
       }
     }
   },

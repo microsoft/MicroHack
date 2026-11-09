@@ -33,7 +33,26 @@
         // Scope Pylance to the hack's code so it never indexes the whole repo or the venv
         // (avoids the "large number of source files" prompt). Relative to the open folder.
         "python.analysis.include": ["src"],
-        "python.analysis.exclude": ["**/.venv", "**/node_modules", "**/__pycache__", "**/.*"]
+        "python.analysis.exclude": ["**/.venv", "**/node_modules", "**/__pycache__", "**/.*"],
+        // Hide facilitator/authoring/container folders from attendees in the Explorer (container only;
+        // local VS Code windows are unaffected). VS Code defaults are repeated because this
+        // object replaces them.
+        "files.exclude": {
+          "**/.git": true,
+          "**/.svn": true,
+          "**/.hg": true,
+          "**/.DS_Store": true,
+          "**/Thumbs.db": true,
+          "labautomation": true,
+          ".github": true,
+          "docs": true,
+          ".devcontainer": true
+        },
+        // Open Markdown (README, challenges) rendered by default in the container.
+        // To edit one: right-click the tab > Reopen Editor With... > Text Editor.
+        "workbench.editorAssociations": {
+          "*.md": "vscode.markdown.preview.editor"
+        }
       }
     }
   },

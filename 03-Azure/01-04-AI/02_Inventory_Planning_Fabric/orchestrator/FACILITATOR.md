@@ -127,8 +127,12 @@ facilitator folders and AI chat features are disabled.
 Keep Cloud Shell as the default path:
 
 - The lab provides **no GitHub account or GitHub Copilot licence** (`lab-defaults.json`
-  only grants `M365-E5-Users`), so Codespaces needs the participant's **own** GitHub
-  account and counts against its quota. A local Dev Container needs Docker.
+  only grants `M365-E5-Users`; lab GitHub accounts come only with `GHCPUsers`). Lab
+  accounts therefore **cannot create Codespaces or fork** — Codespaces needs the
+  participant's **personal** GitHub account. A local Dev Container needs no GitHub
+  account (the repo is public) but needs Docker.
+- Do **not** add `GHCPUsers` just for this option: it adds Copilot seats and a fork step the
+  hack doesn't otherwise need.
 - Some participants' organisations block personal GitHub use or Docker. Cloud Shell
   needs only the lab account.
 

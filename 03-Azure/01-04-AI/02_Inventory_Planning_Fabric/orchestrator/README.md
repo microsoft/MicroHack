@@ -31,11 +31,16 @@ Continue with [Step 2](#step-2-download-the-lab-files).
 Use this if you prefer working in VS Code. The container has the same tools as Cloud Shell (PowerShell 7, Azure CLI, `azd`, Python 3.12), and the lab files are already in it, so you **skip Step 2**.
 
 > [!NOTE]
-> **This option needs your own GitHub account (or Docker on your computer).** The lab gives you an Azure/Microsoft account, **not** a GitHub account or a GitHub Copilot licence, and nothing in this hack requires Copilot. Codespaces usage counts against **your** GitHub account's free monthly quota. If you can't use a personal GitHub account, use Option A.
+> **What you need for this option:**
+>
+> - **Local Dev Container:** VS Code + Docker on your computer. **No GitHub account is needed** — the repository is public, so you can clone it anonymously.
+> - **GitHub Codespaces:** **your own (personal) GitHub account.** Your lab account can't create a Codespace: the lab gives you an Azure/Microsoft account only — **no GitHub account and no GitHub Copilot licence** (nothing in this hack needs Copilot). Codespaces usage may count against your GitHub account's free monthly quota.
+>
+> In both cases you still sign in to **Azure with your lab account**. If neither works for you, use Option A (Cloud Shell).
 
-**GitHub Codespaces**
+**GitHub Codespaces** (with your **personal** GitHub account)
 
-1. Sign in to GitHub with **your own** account and open [microsoft/MicroHack](https://github.com/microsoft/MicroHack).
+1. Sign in to GitHub with **your own** account — not the lab account — and open [microsoft/MicroHack](https://github.com/microsoft/MicroHack). You don't need to fork it.
 2. Select **Code → Codespaces**, open the **⋯** menu and choose **New with options...**.
 
    ![Create a GitHub Codespace with options](../images/challenge-05-codespaces-new-with-options.png)
@@ -58,7 +63,7 @@ Use this if you prefer working in VS Code. The container has the same tools as C
 
    ![Codespace ready on the 02_Inventory_Planning_Fabric folder with a PowerShell terminal](../images/challenge-05-codespace-ready.png)
 
-**Local VS Code Dev Container** (needs [Docker Desktop](https://www.docker.com/products/docker-desktop/) and the [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension): clone `https://github.com/microsoft/MicroHack`, open the **repository root** in VS Code, run **Dev Containers: Reopen in Container**, and pick **Azure / AI / Inventory Planning Fabric**.
+**Local VS Code Dev Container** (no GitHub account needed; requires [Docker Desktop](https://www.docker.com/products/docker-desktop/) and the [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension): clone `https://github.com/microsoft/MicroHack`, open the **repository root** in VS Code, run **Dev Containers: Reopen in Container**, and pick **Azure / AI / Inventory Planning Fabric**.
 
 **Then, in the container terminal (either way):**
 
@@ -135,4 +140,5 @@ Go back to [Challenge 5, Part B](../challenges/challenge-05.md#part-b--run-the-c
 | Codespace / Dev Container: `Cannot read the Azure CLI subscription` or `authentication is unavailable` | Run `az login --use-device-code` with your **lab account**, then repeat Step 3. |
 | Codespace / Dev Container: the terminal shows `$` instead of `PS` | You're in bash. Type `pwsh` to switch to PowerShell, then repeat the command. |
 | **Azure / AI / Inventory Planning Fabric** isn't in the dev container list | Use **New with options...** on `microsoft/MicroHack` (not *Create codespace on main*), or use Option A (Cloud Shell). |
+| You can't create a Codespace or fork with your **lab** account | Expected — the lab doesn't include a GitHub account. Use your **personal** GitHub account, a local Dev Container (no GitHub account needed), or Option A (Cloud Shell). |
 | The check fails and mentions Fabric | Make sure your Fabric capacity is **running** and your Data Agent is **published**, then repeat Step 3. Give your facilitator the request ID from the error if it keeps failing. |

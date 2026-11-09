@@ -80,9 +80,11 @@ Participants follow the short [participant guide](README.md). This section descr
 what its commands do, so you can support and rehearse them.
 
 Only `-ResourceGroupName` is required. The script uses the subscription Cloud Shell is
-signed in to, the single Foundry project in that resource group and the single Fabric IQ
-connection in the project (a connection whose type is `fabric_iq_preview`). It stops with a
-clear message when there is none, or more than one. Pass `-SubscriptionId`,
+signed in to, the single Foundry project in that resource group and the project's Fabric IQ
+connection (type `fabric_iq_preview`). The portal currently creates **one connection per
+agent** (`inventoryhackagent`, `inventoryhackagent2`, …); when they all point at the same
+published Data Agent the script picks the first by name. It stops with a clear message when
+there is none, or when connections point at different Data Agents. Pass `-SubscriptionId`,
 `-ProjectEndpoint` or `-FabricIQConnectionName` to override. The checks it runs first fail
 fast if the subscription is not the one Cloud Shell is using.
 

@@ -56,6 +56,14 @@
 
   "remoteUser": "vscode",
 
+  // Keep the deployment tooling venv on a container volume: Docker Desktop (Windows/macOS)
+  // bind mounts can't create Python venvs ("ensurepip ... returned non-zero exit status 1").
+  "mounts": [
+    "source=inv-fabric-venv-tools-${devcontainerId},target=/workspaces/${localWorkspaceFolderBasename}/03-Azure/01-04-AI/02_Inventory_Planning_Fabric/orchestrator/.venv-tools,type=volume"
+  ],
+  // New volumes are root-owned; hand this one to the vscode user.
+  "postCreateCommand": "sudo chown vscode:vscode /workspaces/${localWorkspaceFolderBasename}/03-Azure/01-04-AI/02_Inventory_Planning_Fabric/orchestrator/.venv-tools",
+
   // ${localWorkspaceFolderBasename} = the repo/fork name, so this works for Codespaces on
   // microsoft/MicroHack, for uniquely named forks, and for local clones.
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}/03-Azure/01-04-AI/02_Inventory_Planning_Fabric",

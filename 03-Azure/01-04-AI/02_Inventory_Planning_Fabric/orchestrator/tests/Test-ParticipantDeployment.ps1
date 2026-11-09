@@ -5,7 +5,9 @@ $fixture = Join-Path ([IO.Path]::GetTempPath()) ("inventory-bootstrap-test-" + [
 $global:InventoryBootstrapCalls = [Collections.Generic.List[string]]::new()
 $global:InventoryBootstrapPipInstalls = 0
 $global:InventoryBootstrapSubscription = 'test-subscription'
-$global:InventoryBootstrapConnections = @('test-connection')
+$global:InventoryBootstrapAgentTarget = 'https://api.fabric.microsoft.com/v1/mcp/workspaces/11111111-1111-1111-1111-111111111111/dataagents/22222222-2222-2222-2222-222222222222/agent'
+$global:InventoryBootstrapConnections = @("test-connection`t$global:InventoryBootstrapAgentTarget")
+$global:InventoryBootstrapExtensions = @()
 $global:InventoryBootstrapPins = @{
     DEMAND_AGENT_NAME = 'demand-sensing-agent'; DEMAND_AGENT_VERSION = '8'
     OPTIMISATION_AGENT_NAME = 'inventory-optimisation-agent'; OPTIMISATION_AGENT_VERSION = '6'
@@ -34,7 +36,12 @@ function global:azd {
     $global:InventoryBootstrapCalls.Add("azd $($args -join ' ')")
     switch ("$($args[0]) $($args[1])") {
         'version ' { 'azd version 1.34.2' }
-        'extension list' { '[{"id":"azure.ai.agents","installedVersion":"1.0.0-beta.19"},{"id":"azure.ai.projects","installedVersion":"1.0.0-beta.13"}]' }
+        'extension list' { $global:InventoryBootstrapExtensions | ConvertTo-Json -AsArray -Compress }
+        'extension install' {
+            # Mirrors azd: installing azure.ai.agents also installs azure.ai.projects 1.0.0.
+            $global:InventoryBootstrapExtensions += @{ id = $args[2]; installedVersion = $args[4] }
+            if ($args[2] -eq 'azure.ai.agents') { $global:InventoryBootstrapExtensions += @{ id = 'azure.ai.projects'; installedVersion = '1.0.0' } }
+        }
         'config set' { }
         'auth login' { }
         'env list' { '[{"Name":"inventory-hosted"}]' }
@@ -67,7 +74,8 @@ try {
         FabricIQConnectionName = 'test-connection'
     }
     & (Join-Path $fixture 'Start-ParticipantDeployment.ps1') @parameters -VerifyHosted
-    Assert-True ($global:InventoryBootstrapPipInstalls -eq 1) 'Tooling dependencies must be restored on first run.'
+    Assert-True ([bool]($global:InventoryBootstrapCalls | Where-Object { $_ -like 'azd extension install azure.ai.agents *' })) 'A fresh shell must install azure.ai.agents.'
+    Assert-True (-not [bool]($global:InventoryBootstrapCalls | Where-Object { $_ -like 'azd extension install azure.ai.projects *' })) 'Must not reinstall/downgrade azure.ai.projects after azure.ai.agents brought a newer version (azd would prompt).' 'Tooling dependencies must be restored on first run.'
     Assert-True ($global:InventoryBootstrapCalls.Contains('azd config set auth.useAzCliAuth true')) 'Must reuse Cloud Shell Azure CLI authentication.'
     Assert-True ([bool]($global:InventoryBootstrapCalls | Where-Object { $_ -like '*verify_hosted.py*--version 7*' })) 'Must verify the actual deployed hosted version.'
     Assert-True ([bool]($global:InventoryBootstrapCalls | Where-Object { $_ -like 'azd env set DEMAND_AGENT_VERSION 8 *' })) 'Must pin a concrete saved specialist version.'
@@ -95,7 +103,7 @@ try {
     Assert-True ([bool]($global:InventoryBootstrapCalls | Where-Object { $_ -like 'azd env set FOUNDRY_PROJECT_ENDPOINT https://test-account.services.ai.azure.com/api/projects/test-project *' })) 'Must derive the project endpoint from the resource group.'
     foreach ($case in @(
         @{ Connections = @(); Expected = '*No Fabric IQ connection found*' },
-        @{ Connections = @('one', 'two'); Expected = '*More than one Fabric IQ connection*' }
+        @{ Connections = @("one`t$global:InventoryBootstrapAgentTarget", "two`thttps://api.fabric.microsoft.com/v1/mcp/workspaces/11111111-1111-1111-1111-111111111111/dataagents/33333333-3333-3333-3333-333333333333/agent"); Expected = '*point at different Data Agents*' }
     )) {
         $global:InventoryBootstrapConnections = $case.Connections
         $stopped = $false
@@ -106,7 +114,12 @@ try {
         }
         Assert-True $stopped "Connection lookup '$($case.Connections -join ',')' must stop with a clear message."
     }
-    $global:InventoryBootstrapConnections = @('test-connection')
+    # The portal creates one connection per agent for the same Data Agent: pick one automatically.
+    $global:InventoryBootstrapConnections = @("inventoryhackagent3`t$global:InventoryBootstrapAgentTarget", "inventoryhackagent`t$global:InventoryBootstrapAgentTarget/", "inventoryhackagent2`t$global:InventoryBootstrapAgentTarget")
+    $global:InventoryBootstrapCalls.Clear()
+    & (Join-Path $fixture 'Start-ParticipantDeployment.ps1') -ResourceGroupName 'test-rg' -ConfigureOnly
+    Assert-True ([bool]($global:InventoryBootstrapCalls | Where-Object { $_ -match 'configure_specialists\.py.*--connection-name inventoryhackagent(\s|$)' })) 'Per-agent connections to the same Data Agent must resolve to one automatically.'
+    $global:InventoryBootstrapConnections = @("test-connection`t$global:InventoryBootstrapAgentTarget")
     Write-Host 'PASS: participant bootstrap command flow, pinned versions, authentication, repeat run, auto-detection and scope guards (mocked CLIs).'
 }
 finally {

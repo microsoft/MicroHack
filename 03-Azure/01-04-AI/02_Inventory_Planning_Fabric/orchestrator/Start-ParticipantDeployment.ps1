@@ -65,20 +65,25 @@ if ($LASTEXITCODE -ne 0 -or -not $accountId) {
 $projectId = az resource show --ids "$accountId/projects/$projectName" --query id -o tsv
 if ($LASTEXITCODE -ne 0 -or -not $projectId) { throw 'Cannot read the existing lab Foundry project.' }
 if (-not $FabricIQConnectionName) {
-    $connections = @(az rest --method get --url "$($ProjectEndpoint.AbsoluteUri.TrimEnd('/'))/connections" `
+    $rows = @(az rest --method get --url "$($ProjectEndpoint.AbsoluteUri.TrimEnd('/'))/connections" `
         --uri-parameters api-version=v1 --resource https://ai.azure.com `
-        --query "value[?metadata.type=='fabric_iq_preview'].name" -o tsv)
+        --query "value[?metadata.type=='fabric_iq_preview'].[name, target]" -o tsv)
     if ($LASTEXITCODE -ne 0) {
         throw 'Cannot list the project connections. Pass -FabricIQConnectionName (the name shown next to Fabric IQ under Tools on your agents).'
     }
-    $connections = @($connections | Where-Object { $_ })
+    $connections = @($rows | Where-Object { $_ } | ForEach-Object {
+        $name, $target = "$_" -split "`t", 2
+        [pscustomobject]@{ Name = $name; Target = "$target".Trim().TrimEnd('/').ToLowerInvariant() }
+    })
     if ($connections.Count -eq 0) {
         throw 'No Fabric IQ connection found in your project. Add Fabric IQ to your demand-sensing-agent in Challenge 2, save it, and rerun.'
     }
-    if ($connections.Count -gt 1) {
-        throw "More than one Fabric IQ connection found: $($connections -join ', '). Rerun with -FabricIQConnectionName '<one of these>'."
+    # The portal creates one connection per agent; they are interchangeable when they all
+    # point at the same published Data Agent.
+    if (@($connections.Target | Sort-Object -Unique).Count -gt 1) {
+        throw "Fabric IQ connections point at different Data Agents: $($connections.Name -join ', '). Rerun with -FabricIQConnectionName '<the one for your inventory-hack-agent>'."
     }
-    $FabricIQConnectionName = $connections[0]
+    $FabricIQConnectionName = @($connections.Name | Sort-Object)[0]
 }
 Write-Host "Project: $($ProjectEndpoint.AbsoluteUri.TrimEnd('/'))"
 Write-Host "Fabric IQ connection: $FabricIQConnectionName"
@@ -98,14 +103,14 @@ if (-not $match.Success -or [version]$match.Value -lt [version]'1.34.2') {
     Invoke-Checked 'bash' @($installer, '--version', '1.34.2', '--install-folder', $bin, '--symlink-folder', $bin)
 }
 Invoke-Checked 'azd' @('config', 'set', 'auth.useAzCliAuth', 'true')
-$extensions = azd extension list --output json
-if ($LASTEXITCODE -ne 0) { throw 'Cannot inspect azd extensions.' }
-$installed = $extensions | ConvertFrom-Json
 foreach ($required in @(
     @{ Id = 'azure.ai.agents'; Version = '1.0.0-beta.19' },
     @{ Id = 'azure.ai.projects'; Version = '1.0.0-beta.13' }
 )) {
-    $current = ($installed | Where-Object id -eq $required.Id).installedVersion
+    # Re-read every time: installing azure.ai.agents also installs azure.ai.projects.
+    $extensions = azd extension list --output json
+    if ($LASTEXITCODE -ne 0) { throw 'Cannot inspect azd extensions.' }
+    $current = (($extensions | ConvertFrom-Json) | Where-Object id -eq $required.Id).installedVersion
     if (-not $current -or [System.Management.Automation.SemanticVersion]$current -lt [System.Management.Automation.SemanticVersion]$required.Version) {
         Invoke-Checked 'azd' @('extension', 'install', $required.Id, '--version', $required.Version)
     }

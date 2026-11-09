@@ -133,7 +133,7 @@ Go back to [Challenge 5, Part B](../challenges/challenge-05.md#part-b--run-the-c
 |--------------|------------|
 | `Select the assigned lab subscription` | Cloud Shell is using a different subscription. Run `az account list -o table`, then `az account set --subscription '<lab subscription id>'` (ask your facilitator which one it is), and repeat Step 3. |
 | `No Fabric IQ connection found` | Add **Fabric IQ** to your `demand-sensing-agent` as in Challenge 2, **Save**, then repeat Step 3. |
-| `More than one Fabric IQ connection found` | Repeat Step 3 with `-FabricIQConnectionName '<one of the names shown>'` added. |
+| `Fabric IQ connections point at different Data Agents` | Repeat Step 3 with `-FabricIQConnectionName '<the one for your inventory-hack-agent>'` added (the names are shown in the message and next to Fabric IQ under **Tools** on your agents). |
 | `Project not found` | Wait a few minutes and repeat Step 3. If it happens again, tell your facilitator. |
 | Permission denied | Tell your facilitator. Don't ask for Owner access. |
 | Cloud Shell timed out or the lab files are gone | Reopen Cloud Shell and repeat Steps 2 and 3. |

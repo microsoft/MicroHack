@@ -25,3 +25,11 @@ portal) from the sense → plan → approve → act loop:
 To refresh one, run the matching step in the planner console (or open the agent's
 **Traces** tab in the Foundry portal for the trace) and re-save it under the same file
 name. Keep them legible in the rendered Markdown.
+
+## Setup screenshots (Challenge 1)
+
+The `setup-*.png` files illustrate the generic MicroHack lab sign-in and Codespaces
+flow (shared with the Fraud Intelligence hack): Azure portal sign-in and resource
+groups, GitHub sign-in via the identity provider, the lab organization, forking the
+`microhack` repository under a unique name, **Code → Codespaces → New with options**,
+and the *Never* answer to VS Code's "open the parent repository" prompt.

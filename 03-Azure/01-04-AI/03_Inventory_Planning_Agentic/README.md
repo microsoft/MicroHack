@@ -131,8 +131,8 @@ it has the longest support horizon (retires **2027-03-18**), and it runs on
 
 To complete this MicroHack you'll need:
 
-- The **lab credentials from your Hackbox** — they sign you in to the Azure portal and to
-  **GitHub** (a lab GitHub account in the lab organization, used to fork the repo and
+- The **lab account from your Hackbox** — it signs you in to the Azure portal and,
+  via single sign-on, to **GitHub** (the lab organization, used to fork the repo and
   run a **Codespace**). Prefer local? **VS Code** + **Docker Desktop** + the
   **Dev Containers** extension runs the same dev container.
 - Access to the **Foundry project** and **Cosmos DB** your lab automation provisioned —

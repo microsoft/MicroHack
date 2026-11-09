@@ -47,9 +47,11 @@ subscription, resource group, GitHub organization, and repository.
 
 ### Part B — Sign in to GitHub and fork the repository (10 min)
 
-1. Open [GitHub](https://github.com) and sign in with your Hackbox credentials. When
-   prompted to choose an account, select **Use another account**, then select
-   **Sign in with your identity provider** and authenticate with the lab account.
+1. Open [GitHub](https://github.com) and select **Sign in**. There is **no separate
+   GitHub username or password** — GitHub uses single sign-on with the **same lab
+   account** you used for the Azure portal. When prompted to choose an account,
+   select **Use another account**, then select **Sign in with your identity
+   provider** and authenticate with the lab account.
 
    ![Sign in to GitHub with another account](../images/setup-github-login.png)
 
@@ -189,7 +191,7 @@ A row is **CRITICAL** when `onHand < safetyStock`, **AT_RISK** at/below `reorder
 
 | Symptom | Fix |
 |---------|-----|
-| GitHub organization or `microhack` repository missing | Sign out of GitHub and sign in again via **Sign in with your identity provider** using the Hackbox credentials. |
+| GitHub organization or `microhack` repository missing | Sign out of GitHub and sign in again via **Sign in with your identity provider** using the lab account (the same one as the Azure portal). If the organization is still missing, ask your facilitator — the lab user needs GitHub access (`GHCPUsers`). |
 | **Azure / AI / Inventory Planning Agentic** not in the dev container list | Make sure you're on your **fork** of the `microhack` repository and used **New with options...**. |
 | `python: command not found` / `uv: command not found` / `src/.venv` missing | The Codespace was created with the wrong dev container (e.g. *Create codespace on main*). Delete it and recreate it with **New with options...** → **Azure / AI / Inventory Planning Agentic**. If the config is right, open a new terminal or re-run `bash .devcontainer/post-create.sh`. |
 | `post-create.sh` fails locally with `$'\r': command not found` | The script was checked out with Windows line endings before the LF rule applied. In the container terminal run `sed -i 's/\r$//' .devcontainer/post-create.sh && bash .devcontainer/post-create.sh`. |

@@ -41,6 +41,8 @@ If either check fails, finish Challenge 4 first — the workflow only reuses you
 2. Pick the **Sequential** template. It opens a canvas with **Start**, three **agent nodes**, and three yellow **notes** with sample marketing instructions.
 3. **Delete the three yellow notes** (they're only sample text for the template).
 
+   ![The Sequential template canvas with three yellow sample notes above the agent nodes](../images/challenge-05-workflow-template.png)
+
 Don't save yet — the template isn't valid until you finish Part B.
 
 ### Part B — Put your three agents in the nodes (15 min)
@@ -51,6 +53,8 @@ Don't save yet — the template isn't valid until you finish Part B.
 4. Remove any **extra** template nodes you don't use (select the node's **⋯ → Delete**).
 5. If there's no **End** node after `replenishment-action-agent`, select the **+** after it → **Basics → End**. The chain must be exactly:
    **Start → `demand-sensing-agent` → `inventory-optimisation-agent` → `replenishment-action-agent` → End**.
+
+   ![Adding an End node from the + after replenishment-action-agent, under Basics](../images/challenge-05-workflow-add-end.png)
 6. Select the **`replenishment-action-agent`** node, open **Node settings**, and add the **human approval gate**:
    1. Leave **Conversation context** = `System.ConversationId` and **Input message** = `Local.LatestMessage` (the defaults — don't change them).
    2. Turn on **Allow multi-turn conversation**. This makes the node wait for your reply instead of ending after its first answer.
@@ -64,9 +68,11 @@ Don't save yet — the template isn't valid until you finish Part B.
       ```
 
       In plain words: *keep waiting for the human until the agent says the order was submitted or cancelled.* `MODIFY` re-presents the order and keeps waiting; `YES` or `NO` ends the node.
+
+      ![Node settings of replenishment-action-agent: Input message Local.LatestMessage, multi-turn on, loop condition pasted, Done](../images/challenge-05-workflow-approval-gate.png)
 7. Leave every other setting at its default. Select **Save**, and when asked, name the workflow `inventory-planning-workflow`.
 
-   ![Workflow canvas showing Start then demand-sensing-agent then inventory-optimisation-agent then replenishment-action-agent wired in sequence](../images/challenge-04-orchestrator.png)
+   ![Saved inventory-planning-workflow at version 1 with Start, the three agents and End](../images/challenge-05-workflow-saved.png)
 
 **✔ Checkpoint:** the name `inventory-planning-workflow` and a **Version** number show at the top, and the canvas shows the three agents in order between Start and End.
 
@@ -85,6 +91,8 @@ Don't save yet — the template isn't valid until you finish Part B.
 3. Watch the nodes turn green one after another: demand sensing → optimisation → replenishment. Each agent's answer appears in the chat pane.
 4. When the purchase-order proposal appears, check that the unit cost for P004 is **$95** (not the **$20** fallback). Then reply `YES`. Optionally try `MODIFY 1 50` first, then `YES`.
 5. Confirm the final message is `✅ Purchase order PO-… submitted to ERP.` and the **End** node turns green.
+
+   ![All nodes green; the replenishment agent confirms the purchase order was submitted after YES](../images/challenge-05-workflow-run-complete.png)
 6. Open the **Traces** tab of the workflow (or **Traces** next to a reply) and find your run. Expand it to see each agent node with its **Fabric IQ** tool call, and your approval turn on the replenishment node.
 
 **✔ Checkpoint:** one prompt plus one `YES` produced a submitted purchase order, and the trace shows all three agents.

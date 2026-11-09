@@ -54,15 +54,9 @@ if($PreferredLocation.Count -gt 0) {
     $deploymentLocations = @('swedencentral')
 }
 
-$selection = Get-MhhConfidentialComputeSelection -SubscriptionId $SubscriptionId
-$validCandidates = @(Get-MhhConfidentialComputeCandidates -PreferredLocation $deploymentLocations)
-$selectedCandidate = $validCandidates |
-    Where-Object {
-        $_.Location -ieq $selection.Location -and
-        $_.VmSize -ieq $selection.VmSize -and
-        $_.QuotaName -ieq $selection.QuotaName
-    } |
-    Select-Object -First 1
+$existingCompute = Get-MhhSovereignExistingCompute -SubscriptionId $SubscriptionId `
+    -NameSuffixes @($stableHash.Substring(0, 8)) -ResourceGroupName $ResourceGroupName
+$selectedCandidate = Get-MhhSovereignResumeCandidate -SubscriptionId $SubscriptionId -ExistingCompute $existingCompute
 if(-not $selectedCandidate) {
     throw 'The shared subscription preparation did not persist a valid confidential compute selection for this deployment.'
 }
@@ -70,10 +64,13 @@ if(-not $selectedCandidate) {
 $confidentialVmSize = $selectedCandidate.VmSize
 $confidentialQuotaName = $selectedCandidate.QuotaName
 $deploymentLocations = @($selectedCandidate.Location)
-$quotaRequirements = @(Get-MhhSovereignComputeRequirements -ConfidentialQuotaName $confidentialQuotaName)
+$quotaRequirements = @(Get-MhhSovereignAdditionalCompute -Candidate $selectedCandidate -ExistingCompute $existingCompute)
 $regionReadinessSummary = @()
 foreach($candidateLocation in $deploymentLocations) {
-    $requiredVmSizes = @($confidentialVmSize, 'Standard_D4s_v5')
+    $requiredVmSizes = @(
+        if (($quotaRequirements | Where-Object Name -eq $confidentialQuotaName).Additional -gt 0) { $confidentialVmSize }
+        if (($quotaRequirements | Where-Object Name -eq 'StandardDSv5Family').Additional -gt 0) { 'Standard_D4s_v5' }
+    )
     $availableVmSizes = Get-AzComputeResourceSku -Location $candidateLocation -ErrorAction Stop |
         Where-Object {
             $_.ResourceType -ieq 'virtualMachines' -and
@@ -84,8 +81,7 @@ foreach($candidateLocation in $deploymentLocations) {
     $unavailableVmSizes = @($requiredVmSizes | Where-Object { $_ -inotin $availableVmSizes })
 
     if($unavailableVmSizes.Count -gt 0) {
-        $regionReadinessSummary += "${candidateLocation}: unavailable VM sizes $($unavailableVmSizes -join ', ')"
-        continue
+        throw "${candidateLocation}: unavailable VM sizes $($unavailableVmSizes -join ', ') for missing participant compute."
     }
 
     $regionalUsage = Get-AzVMUsage -Location $candidateLocation -ErrorAction Stop
@@ -96,10 +92,10 @@ foreach($candidateLocation in $deploymentLocations) {
         $current = if($null -eq $quota) { 0 } else { $quota.CurrentValue }
         $limit = if($null -eq $quota) { 0 } else { $quota.Limit }
         $available = $limit - $current
-        $regionReadinessSummary += "${candidateLocation}/$($requirement.Name): ${current}/${limit} vCPUs used"
+        $regionReadinessSummary += "${candidateLocation}/$($requirement.Name): ${current}/${limit} vCPUs used; $($requirement.Existing) already allocated to this lab; $($requirement.Additional) additional required"
 
-        if($available -lt $requirement.PerParticipant) {
-            throw "The shared compute selection is no longer ready ($($regionReadinessSummary -join '; ')). $($requirement.PerParticipant) available $($requirement.Name) vCPUs are required per participant."
+        if($requirement.Additional -gt 0 -and $available -lt $requirement.Additional) {
+            throw "The shared compute selection is no longer ready ($($regionReadinessSummary -join '; ')). $($requirement.Additional) additional $($requirement.Name) vCPUs are required for this participant."
         }
     }
 }

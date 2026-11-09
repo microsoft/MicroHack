@@ -18,6 +18,26 @@ A fresh Codespace smoke test is still required to validate the devcontainer buil
 
 ## Participant K3s installation checks
 
+### Quota-safe deployment retries
+
+Run `Invoke-Pester ./quota-reuse.tests.ps1,./shared-aks.tests.ps1,./global-localbox.tests.ps1 -Output Detailed`.
+Shared and participant quota checks reserve only the missing compute for the current
+participants. Discovery uses their stable resource names and ownership tags, reads
+actual K3s VM and AKS scale-set instance power states, and caps credit at the lab's
+one K3s VM and two nodes per pool. Deallocated, missing, unrelated and unconfirmed
+instances receive no credit; desired AKS node counts alone are not allocation evidence.
+Unrelated usage, including LocalBox, remains part of the subscription's used quota.
+Inventory failures stop the deployment rather than masquerading as an empty inventory.
+
+Retries preserve the saved subscription region and confidential SKU, even if preferred
+regions are reordered. Conflicting resources, invalid selection tags, or existing labs
+without participant identities stop with an error instead of choosing another region.
+Fresh subscriptions still evaluate the configured candidates and request their full
+aggregate compute requirement. These checks do not repair failed K3s extensions,
+skip Console stages, or change the deployment helper's resource-group fallback behavior.
+
+### Bounded K3s downloads
+
 Run `Invoke-Pester ./k3s-install.tests.ps1 -Output Detailed` on a host with Bash.
 These offline tests execute the actual Bicep-embedded installation script with
 mocked download, installer, service and Kubernetes commands. They cover successful

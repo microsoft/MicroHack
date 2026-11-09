@@ -142,7 +142,7 @@ Describe 'Shared AKS infrastructure contract' {
         ($requirements | Where-Object Name -eq 'StandardDSv5Family').PerParticipant | Should -Be 12
         ($requirements | Where-Object Name -eq 'cores').PerParticipant | Should -Be 16
         foreach ($scriptName in @('deploy-lab.ps1', 'shared-deploy-lab.ps1')) {
-            Get-Content "$root/labautomation/$scriptName" -Raw | Should -Match 'Get-MhhSovereignComputeRequirements'
+            Get-Content "$root/labautomation/$scriptName" -Raw | Should -Match 'Get-MhhSovereignAdditionalCompute'
         }
         $defaults = Get-Content "$root/labautomation/lab-defaults.json" -Raw | ConvertFrom-Json
         $defaults.estimatedDailyCostsUsd | Should -Be 45

@@ -36,6 +36,7 @@ Submit-TestLocalBox @PSBoundParameters
     . "$root/labautomation/quota-helpers.ps1"
     function Get-AzComputeResourceSku { param($Location) }
     function Get-AzVMUsage { param($Location) }
+    function Get-MhhStableHash { param($Value, $Length) '123456781234567812345678' }
 }
 
 Describe 'Global LocalBox Console contract' {
@@ -102,6 +103,8 @@ Describe 'Event-wide LocalBox orchestration' {
             }
         }
         Mock Set-MhhConfidentialComputeSelection {}
+        Mock Get-MhhSovereignExistingCompute { [pscustomobject]@{ Resources = @(); Allocations = @(); ConfidentialVmSizes = @() } }
+        Mock Get-MhhSovereignResumeCandidate { $null }
         Mock Request-MhhComputeQuota { throw 'Unexpected quota request' }
     }
     It 'deploys once for an event and gives users from every subscription the same discovery scope' {

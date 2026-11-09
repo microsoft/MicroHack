@@ -34,7 +34,9 @@
       ],
       "settings": {
         "python.defaultInterpreterPath": "${containerWorkspaceFolder}/src/.venv/bin/python",
-        "python.terminal.activateEnvironment": true
+        "python.terminal.activateEnvironment": true,
+        "python.analysis.include": ["src"],
+        "python.analysis.exclude": ["**/.venv", "**/node_modules", "**/__pycache__", "**/.*"]
       }
     }
   },

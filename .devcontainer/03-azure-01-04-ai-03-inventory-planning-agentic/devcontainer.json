@@ -29,7 +29,11 @@
       "settings": {
         "terminal.integrated.defaultProfile.linux": "bash",
         "python.defaultInterpreterPath": "${containerWorkspaceFolder}/src/.venv/bin/python",
-        "python.terminal.activateEnvironment": true
+        "python.terminal.activateEnvironment": true,
+        // Scope Pylance to the hack's code so it never indexes the whole repo or the venv
+        // (avoids the "large number of source files" prompt). Relative to the open folder.
+        "python.analysis.include": ["src"],
+        "python.analysis.exclude": ["**/.venv", "**/node_modules", "**/__pycache__", "**/.*"]
       }
     }
   },

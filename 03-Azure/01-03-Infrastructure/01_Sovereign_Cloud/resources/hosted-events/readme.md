@@ -14,6 +14,8 @@ This runbook covers the FY27 EMEA Cloud & AI Hackathons program described in the
 
 When automatic provisioning is not scheduled, use the Console's **Create Users**, content-pack license defaults and **Deploy Lab Environment** lifecycle in order. Investigate failures before continuing; do not compensate by running subscription-wide manual utilities.
 
+For participant K3s installation failures, follow [event-lead troubleshooting](#retry-a-failed-install-k3s-extension) before retrying the Console deployment.
+
 ## One LocalBox per event
 
 Re-import the content pack after updating it. The Console discovers
@@ -776,6 +778,155 @@ If an earlier automation version already published an administrator password, re
 The global hook calls the Console-supported `Get-MhhDefaultLabGroup` helper and publishes **Lab Group ObjectId**, **Lab Group GroupName** and **Lab Group DisplayName** as separate credentials to the entire event. Complete the Console's Entra user/group creation lifecycle first; missing or invalid metadata stops global deployment. The object ID is the value to supply to LocalBox preparation for AKS Entra administration.
 
 The [platform contract](../../../../../99-MicroHack-Template/labautomation/README.md#groups-supported-values) still uses `groups` for licensing activation (`GHCPUsers`, `M365-E5-Users`), not arbitrary group creation. No new schema fields or Graph permissions are needed. The Console owns the event group, its membership and teardown; the facilitator must verify intended users/coaches and late registrations. The preparation script still prompts for the ID on the Client, where Console helpers are unavailable, and does not create groups or validate membership through Graph.
+
+## Event-lead troubleshooting
+
+### Retry a failed install-k3s extension
+
+**Symptom:** a participant deployment fails with `VMExtensionProvisioningError`
+on `install-k3s`, often with `[ERROR] Download failed`. AKS and the K3s VM can
+already exist even though the participant job failed.
+
+An unchanged Custom Script Extension does not necessarily execute again when
+Console resubmits the ARM template. Azure can report the **previous failure**:
+a new ARM deployment timestamp is not evidence of a new download attempt.
+In the observed recovery, all three failed extensions retained their original
+execution records until explicitly force-rerun; all three then installed
+successfully on the first attempt.
+
+A download failure alone does not distinguish Azure networking from GitHub/CDN
+availability. Inspect the error first. The procedure below reruns the existing
+extension; it does not fix a persistent network, configuration or policy problem.
+
+#### 1. Identify and inspect one failed participant
+
+Wait for the current Console deployment to finish. Do not race an active
+deployment or rerun healthy participants. Use an authenticated **Azure CLI in
+Bash**, with permission to read/update VM extensions and invoke VM Run Command
+on the affected participant VM, such as Virtual Machine Contributor scoped to
+that participant resource group. No VM administrator password is needed.
+
+Copy the subscription, resource group and VM name from the failed deployment
+and confirm they belong to the intended participant. Run the following blocks
+in the same Bash session, once per failed VM; do not target LocalBox-Client.
+
+```bash
+set -euo pipefail
+
+SUBSCRIPTION_ID='<participant-subscription-id>'
+RESOURCE_GROUP='rg-labuser-<number>'
+VM_NAME='vm-k3s-<suffix>'
+EXTENSION_NAME='install-k3s'
+
+extension_id="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.Compute/virtualMachines/$VM_NAME/extensions/$EXTENSION_NAME"
+extension_uri="https://management.azure.com$extension_id?api-version=2024-11-01"
+
+az vm extension show \
+  --subscription "$SUBSCRIPTION_ID" --resource-group "$RESOURCE_GROUP" \
+  --vm-name "$VM_NAME" --name "$EXTENSION_NAME" --instance-view \
+  --query '{state:provisioningState,status:instanceView.statuses}' \
+  --output json --only-show-errors
+```
+
+Confirm that the error is the K3s installation failure you intend to retry.
+For recurring failures, preserve the extension output and guest log timestamps;
+the original installer may not include the underlying HTTP status.
+
+#### 2. Force one execution without replacing the configuration
+
+This PATCH changes **only `forceUpdateTag`**. It preserves the extension's
+public/protected settings and does not recreate the VM, AKS or LocalBox. The
+existing installation script can restart K3s if it is already installed, so
+limit this action to the failed extension being repaired.
+
+```bash
+identity="$(az rest --subscription "$SUBSCRIPTION_ID" --method get \
+  --url "$extension_uri" \
+  --query "join('|', [properties.provisioningState, properties.publisher, properties.type])" \
+  --output tsv --only-show-errors)"
+
+if [[ "$identity" != 'Failed|Microsoft.Azure.Extensions|CustomScript' ]]; then
+  printf 'STOP: expected a failed Microsoft CustomScript extension, got: %s\n' "$identity" >&2
+  exit 1
+fi
+
+force_tag="event-lead-k3s-retry-$(date -u +%Y%m%dT%H%M%SZ)-$RANDOM"
+az rest --subscription "$SUBSCRIPTION_ID" --method patch \
+  --url "$extension_uri" \
+  --body "{\"properties\":{\"forceUpdateTag\":\"$force_tag\"}}" \
+  --query '{state:properties.provisioningState,forceUpdateTag:properties.forceUpdateTag}' \
+  --output json --only-show-errors
+
+if ! az vm extension wait \
+  --subscription "$SUBSCRIPTION_ID" --resource-group "$RESOURCE_GROUP" \
+  --vm-name "$VM_NAME" --name "$EXTENSION_NAME" \
+  --updated --interval 15 --timeout 2400 --only-show-errors; then
+  az vm extension show \
+    --subscription "$SUBSCRIPTION_ID" --resource-group "$RESOURCE_GROUP" \
+    --vm-name "$VM_NAME" --name "$EXTENSION_NAME" --instance-view \
+    --query '{state:provisioningState,status:instanceView.statuses}' \
+    --output json --only-show-errors
+  printf 'STOP: rerun failed or timed out. Inspect its status before taking further action.\n' >&2
+  exit 1
+fi
+
+az vm extension show \
+  --subscription "$SUBSCRIPTION_ID" --resource-group "$RESOURCE_GROUP" \
+  --vm-name "$VM_NAME" --name "$EXTENSION_NAME" --instance-view \
+  --query '{state:provisioningState,forceUpdateTag:forceUpdateTag,status:instanceView.statuses}' \
+  --output json --only-show-errors
+```
+
+The initial `Updating` response means only that Azure accepted the request.
+Require the final extension state **Succeeded**. The wait is bounded to
+40 minutes; a timeout does not cancel the extension. Do not submit another
+force-rerun while it is still running.
+
+#### 3. Verify K3s readiness
+
+Run this read-only check on the same VM:
+
+```bash
+az vm run-command invoke \
+  --subscription "$SUBSCRIPTION_ID" --resource-group "$RESOURCE_GROUP" \
+  --name "$VM_NAME" --command-id RunShellScript \
+  --scripts '
+set -eu
+systemctl is-active k3s
+systemctl is-enabled k3s
+timeout 45s k3s kubectl wait --for=condition=Ready nodes --all --timeout=30s --request-timeout=10s
+timeout 20s k3s kubectl get nodes --request-timeout=15s
+echo K3S_RECOVERY_VERIFIED
+' \
+  --query 'value[].message' --output json --only-show-errors
+```
+
+Require **active**, **enabled**, the expected VM's node **Ready**, and the final
+**K3S_RECOVERY_VERIFIED** marker without script errors. Run Command's outer
+`Enable succeeded` message alone is not proof that its script succeeded.
+If verification fails, investigate that VM rather than restarting the whole event.
+
+#### 4. Retry Console only after the affected VMs are healthy
+
+Re-import the content revision containing the reuse-aware quota checks before
+retrying. Keep the **same event, subscription assignments and preferred-region
+order**. In particular, changing the first preferred region can conflict with
+an existing global policy assignment's managed-identity location.
+
+Then retry the Console deployment so the failed participants can finish
+**RBAC assignment and credential publication**. Neither extension recovery nor
+Run Command publishes the missing K3s credentials or changes historical failed
+ARM deployment records to successful.
+
+A full Console retry is not a failed-participant-only resume: it runs global
+LocalBox checks, shared preparation and participant jobs again. Existing
+LocalBox is reused, and participant resources normally receive incremental
+updates. The region-fallback helper can still recycle resource groups for
+other retryable errors; do not delete resources or broaden recovery merely to
+clear a K3s extension failure.
+
+References: [Custom Script Extension for Linux](https://learn.microsoft.com/azure/virtual-machines/extensions/custom-script-linux)
+and [VM extension update / forceUpdateTag](https://learn.microsoft.com/rest/api/compute/virtual-machine-extensions/update).
 
 ## Run and close the event
 

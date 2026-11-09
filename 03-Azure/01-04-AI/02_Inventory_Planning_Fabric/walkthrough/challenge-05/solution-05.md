@@ -6,49 +6,70 @@
 
 ## Goal
 
-Chain the three agents in a Foundry **Workflow** (Sequential pattern + human-in-the-loop), then read the node-by-node trace.
+Chain the three agents in a Foundry **Workflow** (Sequential template) with a human approval gate on the last node, run the loop from one prompt, and read the node-by-node trace.
+
+> The visual designer is supported in the portal until **30 November 2026**; Foundry retires in-portal workflows on **1 December 2026**.
 
 ## Solution walkthrough
 
-### Why a workflow
+### Why it is simpler than it looks
 
-Use a Foundry **Workflow** for multi-agent orchestration. A workflow is a *deterministic* graph: each agent is a **node**, and edges pass one node's output to the next. That's a better fit than an LLM-driven orchestrator for this hack's fixed sense → plan → approve → act chain, and it keeps everything no-code.
+All nodes run in **one shared conversation** (`System.ConversationId`), so each agent reads the previous agent's reply from the conversation history. **No data wiring between nodes is needed.** The only node that needs configuration is the last one.
 
-Wire the three specialists in order and name each node's output so the next node can consume it:
-- `demand-sensing-agent` → output `demandAssessment`
-- `inventory-optimisation-agent` → input `demandAssessment`, output `reorderTable`
-- `replenishment-action-agent` → input `reorderTable`, **Allow multi-turn conversation** ON for the approval gate
+### The finished workflow
 
-> The visual designer is supported in-portal until **1 December 2026**; after that, export the workflow **YAML** and run it via Microsoft Agent Framework / a hosted agent. The orchestration logic carries over unchanged.
+| Node | Agent | Settings |
+|------|-------|----------|
+| 1 | `demand-sensing-agent` | Defaults |
+| 2 | `inventory-optimisation-agent` | Defaults |
+| 3 | `replenishment-action-agent` | **Allow multi-turn conversation** = on · **Save agent output message as** = new variable `LatestMessage` · **Loop condition** = formula below |
+
+```powerfx
+And(
+  IsBlank(Find("submitted to ERP", Last(Local.LatestMessage).Text)),
+  IsBlank(Find("Order cancelled", Last(Local.LatestMessage).Text))
+)
+```
+
+The node keeps waiting for the human **while** the formula is true. `MODIFY` re-presents the proposal (neither phrase present), while `YES` (`✅ … submitted to ERP.`) or `NO` (`❌ Order cancelled…`) ends the node. `Find` is case-sensitive, so the Challenge 4 confirmation wording must stay exactly as written.
 
 ### What a good run looks like
 
-The orchestrator should narrate its delegation and stop at the approval gate:
-
 ```
-run (challenge 4 workflow)
+workflow run (inventory-planning-workflow)
 ├── node: demand-sensing-agent
-│   └── tool_call: Fabric Data Agent (stock + velocity)
+│   └── tool_call: Fabric IQ (stock + velocity)
 │   → "Outdoor power tools critically exposed at Portland/Seattle."
 ├── node: inventory-optimisation-agent
-│   └── tool_call: Fabric Data Agent (reorder point + demand)
+│   └── tool_call: Fabric IQ (reorder point + demand)
 │   → recommendation table with CRITICAL items
-└── node: replenishment-action-agent
-    ├── model_call (present PO, ask for approval)
+└── node: replenishment-action-agent   (multi-turn)
+    ├── tool_call: Fabric IQ (unit costs: P004 $95, P005 $140, P006 $85)
+    ├── model_call → PO proposal + "Do you approve…?"
     │   → user replies: YES
-    └── model_call (simulated PO confirmation)
+    └── model_call → "✅ Purchase order PO-<date>-001 submitted to ERP."  (loop ends → End)
 ```
+
+### Coaching tips
+
+- **Run the pre-flight check first.** Most failures come from an agent name that doesn't match or a changed confirmation phrase in `replenishment-action-agent`.
+- **Remind teams to Save after every change** — the designer doesn't save automatically.
+- **Always retry in a new conversation.** A failed run leaves its messages in the shared conversation, which confuses the next attempt.
+- **Use the trace to locate a bad step**, then fix that agent in its own playground before re-running the workflow.
 
 ### Common issues
 
 | Symptom | Fix |
 |---|---|
-| A node gets empty input | Wire it: set the node's **Input message** to the upstream node's **Save agent output message as** variable. |
-| A specialist node uses the wrong model | Each node runs its underlying agent — confirm that agent is on `gpt-5.4-mini` with **tool choice = required** so it always calls the Fabric tool. |
-| Approval gate is skipped | Enable **Allow multi-turn conversation** on the `replenishment-action-agent` node, and keep the Challenge 4 instructions that require explicit `YES`. |
-| No **Workflows** tab / designer | Preview rollout — use the Part D evaluation alternative instead. |
+| Loop condition error *"Name isn't valid"* | `LatestMessage` wasn't created. Set **Save agent output message as** → new variable `LatestMessage` on the replenishment node. |
+| The run ends at the proposal without waiting | **Allow multi-turn conversation** is off on the replenishment node. |
+| The node never stops asking | The confirmation wording in the Challenge 4 instructions was changed; restore `submitted to ERP` / `Order cancelled`. |
+| A later agent has no data or asks for a table | An earlier node failed (often the collation-conflict query). Start a new conversation and name the SKU and stores in the prompt. |
+| `$20` unit costs | The replenishment agent skipped the Fabric cost lookup. Reply `NO` and re-run in a new conversation. |
+| A node uses the wrong model or skips its tool | Each node runs its underlying agent — confirm the agent is on `gpt-5.4-mini` with Fabric IQ connected. |
+| No **Workflows** option | Use the new Foundry portal (**Build**) and check the attendee has **Contributor** on the project. |
 
 ### Discussion points
 
 - **Deterministic workflow vs. three human-driven agents:** the workflow is faster and hands-free, but the human loses the natural checkpoints between steps. The approval gate becomes the *only* control point — so it matters even more.
-- **Where would you add guardrails** in a production version? (e.g. a spend cap the orchestrator can't exceed without escalation.)
+- **Where would you add guardrails** in a production version? (e.g. a spend cap that requires escalation, and an audit review of the trace.)

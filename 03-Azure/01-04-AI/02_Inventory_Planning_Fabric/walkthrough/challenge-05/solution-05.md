@@ -22,7 +22,7 @@ All nodes run in **one shared conversation** (`System.ConversationId`), so each 
 |------|-------|----------|
 | 1 | `demand-sensing-agent` | Defaults |
 | 2 | `inventory-optimisation-agent` | Defaults |
-| 3 | `replenishment-action-agent` | **Allow multi-turn conversation** = on · **Save agent output message as** = new variable `LatestMessage` · **Loop condition** = formula below |
+| 3 | `replenishment-action-agent` | **Input message** = `Local.LatestMessage` (default) · **Allow multi-turn conversation** = on · **Loop condition** = formula below |
 
 ```powerfx
 And(
@@ -53,7 +53,7 @@ workflow run (inventory-planning-workflow)
 ### Coaching tips
 
 - **Run the pre-flight check first.** Most failures come from an agent name that doesn't match or a changed confirmation phrase in `replenishment-action-agent`.
-- **Remind teams to Save after every change** — the designer doesn't save automatically.
+- **Remind teams to Save after every change** — the designer doesn't save automatically, and only saves a valid workflow (template notes deleted, **End** node added). Refresh the page after saving before using **Preview**.
 - **Always retry in a new conversation.** A failed run leaves its messages in the shared conversation, which confuses the next attempt.
 - **Use the trace to locate a bad step**, then fix that agent in its own playground before re-running the workflow.
 
@@ -61,7 +61,9 @@ workflow run (inventory-planning-workflow)
 
 | Symptom | Fix |
 |---|---|
-| Loop condition error *"Name isn't valid"* | `LatestMessage` wasn't created. Set **Save agent output message as** → new variable `LatestMessage` on the replenishment node. |
+| Loop condition error *"Name isn't valid"* | Keep **Input message** = `Local.LatestMessage` (the default) on the replenishment node and re-paste the formula. |
+| **Save** fails | Delete the template's yellow notes and add an **End** node (**+ → Basics → End**). |
+| **Preview** disabled or chat won't accept input | **Save**, refresh the page, then open **Preview**. |
 | The run ends at the proposal without waiting | **Allow multi-turn conversation** is off on the replenishment node. |
 | The node never stops asking | The confirmation wording in the Challenge 4 instructions was changed; restore `submitted to ERP` / `Order cancelled`. |
 | A later agent has no data or asks for a table | An earlier node failed (often the collation-conflict query). Start a new conversation and name the SKU and stores in the prompt. |

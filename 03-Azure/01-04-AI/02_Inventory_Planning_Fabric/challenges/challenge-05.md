@@ -33,27 +33,28 @@ Start ─▶ demand-sensing-agent ─▶ inventory-optimisation-agent ─▶ rep
 If either check fails, finish Challenge 4 first — the workflow only reuses your agents.
 
 > [!WARNING]
-> **The workflow designer does not save automatically.** Select **Save** after every change in Parts A and B, or you will lose your work.
+> **The workflow designer does not save automatically**, and it only saves a **valid** workflow (every agent node has an agent, and the chain ends in **End**). Select **Save** once the workflow is valid, and again after every later change.
 
 ### Part A — Create the workflow from the Sequential template (10 min)
 
 1. In the [Foundry portal](https://ai.azure.com), select **Build** in the upper-right menu, then **Workflows → Create new workflow** (or **+ New workflow**).
-2. Pick the **Sequential** template. It opens a canvas with **Start**, a chain of **agent nodes**, and **End**.
-3. Select **Save** and name the workflow `inventory-planning-workflow`.
+2. Pick the **Sequential** template. It opens a canvas with **Start**, three **agent nodes**, and three yellow **notes** with sample marketing instructions.
+3. **Delete the three yellow notes** (they're only sample text for the template).
 
-**✔ Checkpoint:** you see the canvas with Start → agent nodes → End and the name `inventory-planning-workflow` at the top.
+Don't save yet — the template isn't valid until you finish Part B.
 
 ### Part B — Put your three agents in the nodes (15 min)
 
 1. Select the **first** agent node. Choose **Use an existing agent** (labelled **existing**), search for `demand-sensing-agent`, and select it.
 2. Select the **second** agent node and pick `inventory-optimisation-agent` in the same way.
 3. If there is no third agent node, select the **+** after the second node → **Invoke agent**. Pick `replenishment-action-agent` for the **third** node.
-4. Remove any **extra** template nodes you don't use (select the node's **⋯ → Delete**), so the chain is exactly:
+4. Remove any **extra** template nodes you don't use (select the node's **⋯ → Delete**).
+5. If there's no **End** node after `replenishment-action-agent`, select the **+** after it → **Basics → End**. The chain must be exactly:
    **Start → `demand-sensing-agent` → `inventory-optimisation-agent` → `replenishment-action-agent` → End**.
-5. Select the **`replenishment-action-agent`** node and add the **human approval gate** in its settings:
-   1. Turn on **Allow multi-turn conversation**. This makes the node wait for your reply instead of ending after its first answer.
-   2. In **Save agent output message as**, select **Create new variable** and name it exactly `LatestMessage`.
-   3. In **Loop condition**, paste this formula:
+6. Select the **`replenishment-action-agent`** node, open **Node settings**, and add the **human approval gate**:
+   1. Leave **Conversation context** = `System.ConversationId` and **Input message** = `Local.LatestMessage` (the defaults — don't change them).
+   2. Turn on **Allow multi-turn conversation**. This makes the node wait for your reply instead of ending after its first answer.
+   3. In **Loop condition**, paste this formula, then select **Done**:
 
       ```powerfx
       And(
@@ -63,15 +64,15 @@ If either check fails, finish Challenge 4 first — the workflow only reuses you
       ```
 
       In plain words: *keep waiting for the human until the agent says the order was submitted or cancelled.* `MODIFY` re-presents the order and keeps waiting; `YES` or `NO` ends the node.
-6. Leave every other setting at its default — in particular, keep the conversation set to `System.ConversationId` on all nodes. Select **Save**.
+7. Leave every other setting at its default. Select **Save**, and when asked, name the workflow `inventory-planning-workflow`.
 
    ![Workflow canvas showing Start then demand-sensing-agent then inventory-optimisation-agent then replenishment-action-agent wired in sequence](../images/challenge-04-orchestrator.png)
 
-**✔ Checkpoint:** after **Save**, the canvas shows the three agents in order (as above) and the replenishment node shows no error on the loop condition.
+**✔ Checkpoint:** the name `inventory-planning-workflow` and a **Version** number show at the top, and the canvas shows the three agents in order between Start and End.
 
 ### Part C — Run the full loop from one prompt (15 min)
 
-1. Select **Preview** (or **Run Workflow**) to open the chat pane.
+1. **Refresh the browser page**, then select **Preview** to open the chat pane. (Preview stays disabled while there are unsaved changes, and the chat box may not accept input until the page is refreshed after saving.)
 2. Send this request:
 
    ```text
@@ -103,7 +104,9 @@ If either check fails, finish Challenge 4 first — the workflow only reuses you
 | No **Workflows** option, or you can't create one | Make sure you use the new Foundry portal (the **New Foundry** toggle is on) and select **Build**. You need the **Contributor** role or higher on the project — ask your facilitator. |
 | Your changes are gone | The designer doesn't save automatically. Redo the change and select **Save** after each step. |
 | Your agent isn't in the **existing** agent list | Search by the exact name from Challenges 2–4. The agent must be saved in the **same** Foundry project. |
-| Loop condition error *"Name isn't valid"* | The variable doesn't exist yet. On the replenishment node, set **Save agent output message as** to a new variable named exactly `LatestMessage`, then re-paste the formula. |
+| **Save** does nothing or shows an error | The workflow isn't valid yet: every agent node needs an agent, the yellow template notes should be deleted, and the chain must end in **End** (**+ → Basics → End**). |
+| **Preview** is greyed out, or you can't type in the preview chat | Select **Save** first, then refresh the browser page and open **Preview** again. |
+| Loop condition error *"Name isn't valid"* | On the replenishment node, keep **Input message** = `Local.LatestMessage` (the default) and re-paste the formula exactly. |
 | The run ends right after the proposal, without waiting for you | **Allow multi-turn conversation** is off on the replenishment node. Turn it on, **Save**, and run again in a **new** conversation. |
 | The replenishment node never stops asking | The confirmation wording changed. The formula looks for `submitted to ERP` and `Order cancelled` (case-sensitive), exactly as in the Challenge 4 instructions. |
 | A later agent says it has no data, or asks you to paste a table | An earlier agent returned no usable result. Start a **new** conversation and send the prompt again with the product and stores named, as in Part C. |

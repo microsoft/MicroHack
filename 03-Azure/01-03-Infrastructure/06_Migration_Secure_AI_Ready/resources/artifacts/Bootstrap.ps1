@@ -4,6 +4,12 @@ param (
     [string]$spnAuthority,
     [string]$subscriptionId,
     [string]$resourceGroup,
+    [Parameter(Mandatory)]
+    [ValidateNotNullOrEmpty()]
+    [string]$hostVmName,
+    [Parameter(Mandatory)]
+    [ValidateNotNullOrEmpty()]
+    [string]$keyVaultName,
     [string]$acceptEula,
     [string]$registryUsername,
     [string]$azureLocation,
@@ -19,10 +25,57 @@ param (
     [string]$autoShutdownEnabled
 )
 
+$ErrorActionPreference = 'Stop'
+
+trap {
+    $failure = $_
+    Write-Error -ErrorRecord $failure -ErrorAction Continue
+    Remove-Item -LiteralPath 'C:\MHBox\lab-ready.json' -Force -ErrorAction SilentlyContinue
+    $azFailureScriptPath = $null
+    try {
+        # Keep Az isolated from the parent's package-management assemblies.
+        $azFailureScriptPath = Join-Path ([IO.Path]::GetTempPath()) "AzBootstrap-Failure-$([guid]::NewGuid().ToString('N')).ps1"
+        $azFailureScript = @'
+param(
+    [string]$tenantId,
+    [string]$subscriptionId,
+    [string]$resourceGroup,
+    [string]$hostVmName
+)
+
+$ErrorActionPreference = 'Stop'
+Import-Module Az.Accounts -Force
+Import-Module Az.Resources -Force
+Connect-AzAccount -Identity -Tenant $tenantId -Subscription $subscriptionId | Out-Null
+Set-AzContext -Subscription $subscriptionId | Out-Null
+$groupId = "/subscriptions/$subscriptionId/resourceGroups/$resourceGroup"
+foreach ($target in @($groupId, "$groupId/providers/Microsoft.Compute/virtualMachines/$hostVmName")) {
+    Update-AzTag -ResourceId $target -Operation Merge -Tag @{ DeploymentProgress = 'Deployment Failed' } | Out-Null
+}
+'@
+        $azFailureScript | Set-Content -LiteralPath $azFailureScriptPath -Encoding UTF8
+        & "$env:WINDIR\System32\WindowsPowerShell\v1.0\powershell.exe" `
+            -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $azFailureScriptPath `
+            -tenantId $tenantId -subscriptionId $subscriptionId -resourceGroup $resourceGroup -hostVmName $hostVmName
+        if ($LASTEXITCODE -ne 0) {
+            Write-Warning "Isolated bootstrap failure reporting failed with exit code $LASTEXITCODE. The original bootstrap error is retained."
+        }
+    }
+    catch { Write-Warning "Could not report bootstrap failure: $($_.Exception.Message)" }
+    finally {
+        if ($azFailureScriptPath) {
+            Remove-Item -LiteralPath $azFailureScriptPath -Force -ErrorAction SilentlyContinue
+        }
+    }
+    exit 1
+}
+
 [System.Environment]::SetEnvironmentVariable('adminUsername', $adminUsername, [System.EnvironmentVariableTarget]::Machine)
 [System.Environment]::SetEnvironmentVariable('spnAuthority', $spnAuthority, [System.EnvironmentVariableTarget]::Machine)
 [System.Environment]::SetEnvironmentVariable('tenantId', $tenantId, [System.EnvironmentVariableTarget]::Machine)
 [System.Environment]::SetEnvironmentVariable('resourceGroup', $resourceGroup, [System.EnvironmentVariableTarget]::Machine)
+[System.Environment]::SetEnvironmentVariable('hostVmName', $hostVmName, [System.EnvironmentVariableTarget]::Machine)
+[System.Environment]::SetEnvironmentVariable('keyVaultName', $keyVaultName, [System.EnvironmentVariableTarget]::Machine)
 [System.Environment]::SetEnvironmentVariable('ACCEPT_EULA', $acceptEula, [System.EnvironmentVariableTarget]::Machine)
 [System.Environment]::SetEnvironmentVariable('registryUsername', $registryUsername, [System.EnvironmentVariableTarget]::Machine)
 [System.Environment]::SetEnvironmentVariable('subscriptionId', $subscriptionId, [System.EnvironmentVariableTarget]::Machine)
@@ -36,20 +89,42 @@ param (
 [System.Environment]::SetEnvironmentVariable('sqlServerEdition', $sqlServerEdition, [System.EnvironmentVariableTarget]::Machine)
 [System.Environment]::SetEnvironmentVariable('autoShutdownEnabled', $autoShutdownEnabled, [System.EnvironmentVariableTarget]::Machine)
 
-if ($debugEnabled -eq 'true') {
-    [System.Environment]::SetEnvironmentVariable('ErrorActionPreference', 'Break', [System.EnvironmentVariableTarget]::Machine)
-}
-else {
-    [System.Environment]::SetEnvironmentVariable('ErrorActionPreference', 'Continue', [System.EnvironmentVariableTarget]::Machine)
-}
+[System.Environment]::SetEnvironmentVariable('ErrorActionPreference', 'Stop', [System.EnvironmentVariableTarget]::Machine)
 
-# Formatting VMs disk
-$disk = (Get-Disk | Where-Object partitionstyle -eq 'raw')[0]
-$driveLetter = 'F'
-$label = 'VMsDisk'
-$disk | Initialize-Disk -PartitionStyle MBR -PassThru | `
-    New-Partition -UseMaximumSize -DriveLetter $driveLetter | `
-    Format-Volume -FileSystem NTFS -NewFileSystemLabel $label -Confirm:$false -Force
+function Initialize-LabDataDisk {
+    # This host contract is OS + one data disk at LUN 0; never guess among RAW disks.
+    $dataDisks = @(Get-Disk | Where-Object { -not $_.IsBoot -and -not $_.IsSystem })
+    if ($dataDisks.Count -ne 1) {
+        throw "Expected exactly one non-system data disk; found $($dataDisks.Count). No disk was changed."
+    }
+    $disk = $dataDisks[0]
+    $scsiDisks = @(Get-CimInstance -ClassName Win32_DiskDrive -Filter "Index = $($disk.Number)")
+    if ($scsiDisks.Count -ne 1 -or $null -eq $scsiDisks[0].SCSILogicalUnit -or $scsiDisks[0].SCSILogicalUnit -ne 0) {
+        throw "Cannot identify disk $($disk.Number) as the expected LUN 0 data disk. No disk was changed."
+    }
+
+    $volumes = @(Get-Volume | Where-Object DriveLetter -eq 'F')
+    if ($volumes.Count -gt 0) {
+        $partitions = @(Get-Partition -DiskNumber $disk.Number | Where-Object DriveLetter -eq 'F')
+        if ($volumes.Count -ne 1 -or $partitions.Count -ne 1 -or
+            $volumes[0].FileSystemLabel -ne 'VMsDisk' -or $volumes[0].FileSystem -ne 'NTFS') {
+            throw 'F: is not the expected NTFS VMsDisk volume on the LUN 0 data disk. No disk was changed.'
+        }
+        return
+    }
+    if ($disk.PartitionStyle -ne 'RAW') {
+        throw "Expected an uninitialized LUN 0 data disk or an existing F: VMsDisk volume. Disk $($disk.Number) will not be formatted."
+    }
+    $disk | Initialize-Disk -PartitionStyle MBR -PassThru |
+        New-Partition -UseMaximumSize -DriveLetter F |
+        Format-Volume -FileSystem NTFS -NewFileSystemLabel 'VMsDisk' -Confirm:$false -Force |
+        Out-Null
+    $volume = Get-Volume -DriveLetter F
+    if ($volume.FileSystemLabel -ne 'VMsDisk' -or $volume.FileSystem -ne 'NTFS' -or
+        (Get-Partition -DriveLetter F).DiskNumber -ne $disk.Number) {
+        throw 'The initialized data disk did not produce the expected F: VMsDisk volume.'
+    }
+}
 
 # Creating MHBox path
 Write-Output 'Creating MHBox path'
@@ -63,11 +138,15 @@ $Env:MHBoxDemoPageDir = "$Env:MHBoxDir\DemoPage"
 New-Item -Path $Env:MHBoxDir -ItemType Directory -Force | Out-Null
 New-Item -Path $Env:MHBoxDscDir -ItemType Directory -Force | Out-Null
 New-Item -Path $Env:MHBoxLogsDir -ItemType Directory -Force | Out-Null
-New-Item -Path $Env:MHBoxVMDir -ItemType Directory -Force | Out-Null
 New-Item -Path $Env:tempDir -ItemType Directory -Force | Out-Null
 New-Item -Path $Env:MHBoxDemoPageDir -ItemType Directory -Force | Out-Null
 
 Start-Transcript -Path "$Env:MHBoxLogsDir\Bootstrap.log"
+if (Test-Path -LiteralPath "$Env:MHBoxDir\lab-ready.json") {
+    Remove-Item -LiteralPath "$Env:MHBoxDir\lab-ready.json" -Force
+}
+Initialize-LabDataDisk
+New-Item -Path $Env:MHBoxVMDir -ItemType Directory -Force | Out-Null
 
 Write-Host "Script path: $PSCommandPath"
 Write-Host "Script dir : $PSScriptRoot"
@@ -85,7 +164,10 @@ Set-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' '
 
 # Extending C:\ partition to the maximum size
 Write-Host 'Extending C:\ partition to the maximum size'
-Resize-Partition -DriveLetter C -Size $(Get-PartitionSupportedSize -DriveLetter C).SizeMax
+$maximumSystemPartitionSize = (Get-PartitionSupportedSize -DriveLetter C).SizeMax
+if ((Get-Partition -DriveLetter C).Size -lt $maximumSystemPartitionSize) {
+    Resize-Partition -DriveLetter C -Size $maximumSystemPartitionSize
+}
 
 # Installing PowerShell Modules
 Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
@@ -102,6 +184,8 @@ param(
     [string]$tenantId,
     [string]$subscriptionId,
     [string]$resourceGroup,
+    [string]$hostVmName,
+    [string]$keyVaultName,
     [string]$adminUsername,
     [string]$vmAutologon,
     [string]$autoShutdownEnabled,
@@ -116,24 +200,44 @@ try {
     Import-Module Az.Resources -Force
     Import-Module Az.KeyVault -Force
 
-    Connect-AzAccount -Identity -Tenant $tenantId -Subscription $subscriptionId | Out-Null
-    Set-AzContext -Subscription $subscriptionId | Out-Null
-
-    $DeploymentProgressString = 'Started bootstrap-script...'
-
-    $tags = Get-AzResourceGroup -Name $resourceGroup | Select-Object -ExpandProperty Tags
-    if ($null -ne $tags) {
-        $tags['DeploymentProgress'] = $DeploymentProgressString
-    } else {
-        $tags = @{ 'DeploymentProgress' = $DeploymentProgressString }
+    $initializationTimer = [Diagnostics.Stopwatch]::StartNew()
+    function Invoke-InitialAzureOperation {
+        param([scriptblock]$Operation, [string]$Description)
+        while ($true) {
+            try { return & $Operation }
+            catch {
+                $reason = $_.Exception.Message
+                $statusCode = $_.Exception.Response.StatusCode
+                $retryable = [string]$statusCode -match '^(401|403|408|429|500|502|503|504|Unauthorized|Forbidden|TooManyRequests|ServiceUnavailable)$' -or
+                    $reason -match '(?i)\b(401|403|408|429|500|502|503|504|Forbidden|ForbiddenByRbac|AuthorizationFailed)\b|role assignment|RBAC|managed identity.*(unavailable|not found)|identity not found|identity.*endpoint|IMDS|temporarily unavailable|timed out'
+                if (-not $retryable) { throw }
+                $remaining = 300 - $initializationTimer.Elapsed.TotalSeconds
+                if ($remaining -le 0) {
+                    throw "Timed out after 300 seconds waiting for $Description. Last error: $reason"
+                }
+                Write-Warning "Waiting for $Description (identity/RBAC propagation): $reason"
+                Start-Sleep -Seconds ([Math]::Min(10, [Math]::Ceiling($remaining)))
+                if ($initializationTimer.Elapsed.TotalSeconds -ge 300) {
+                    throw "Timed out after 300 seconds waiting for $Description. Last error: $reason"
+                }
+            }
+        }
     }
 
-    $null = Set-AzResourceGroup -ResourceGroupName $resourceGroup -Tag $tags
-
-    $KeyVault = Get-AzKeyVault -ResourceGroupName $resourceGroup
-    [System.Environment]::SetEnvironmentVariable('keyVaultName', $KeyVault.VaultName, [System.EnvironmentVariableTarget]::Machine)
-
-    $adminPassword = Get-AzKeyVaultSecret -VaultName $KeyVault.VaultName -Name 'windowsAdminPassword' -AsPlainText
+    Invoke-InitialAzureOperation -Description 'managed identity authentication' -Operation {
+        Connect-AzAccount -Identity -Tenant $tenantId -Subscription $subscriptionId | Out-Null
+        Set-AzContext -Subscription $subscriptionId | Out-Null
+    }
+    $adminPassword = Invoke-InitialAzureOperation -Description "secret access to vault '$keyVaultName'" -Operation {
+        Get-AzKeyVaultSecret -VaultName $keyVaultName -Name 'windowsAdminPassword' -AsPlainText
+    }
+    if ([string]::IsNullOrWhiteSpace($adminPassword)) { throw 'The Windows administrator secret is empty.' }
+    $groupId = "/subscriptions/$subscriptionId/resourceGroups/$resourceGroup"
+    foreach ($target in @($groupId, "$groupId/providers/Microsoft.Compute/virtualMachines/$hostVmName")) {
+        Invoke-InitialAzureOperation -Description "progress tag access to '$target'" -Operation {
+            Update-AzTag -ResourceId $target -Operation Merge -Tag @{ DeploymentProgress = 'Started bootstrap-script...' } | Out-Null
+        }
+    }
 
     if ($vmAutologon -eq 'true') {
         Write-Host 'Configuring VM Autologon'
@@ -145,22 +249,39 @@ try {
     }
 
     if ($autoShutdownEnabled -eq 'true') {
-        $ScheduleResource = Get-AzResource -ResourceGroup $resourceGroup -ResourceType Microsoft.DevTestLab/schedules
-        $Uri = "https://management.azure.com$($ScheduleResource.ResourceId)?api-version=2018-09-15"
+        $scheduleId = "$groupId/providers/Microsoft.DevTestLab/schedules/shutdown-computevm-$hostVmName"
+        $Uri = "https://management.azure.com${scheduleId}?api-version=2018-09-15"
 
-        $Schedule = Invoke-AzRestMethod -Uri $Uri
-        $ScheduleSettings = $Schedule.Content | ConvertFrom-Json
-        $ScheduleSettings.properties.status = 'Disabled'
+        Invoke-InitialAzureOperation -Description "shutdown schedule access to '$scheduleId' and its target VM" -Operation {
+            $Schedule = Invoke-AzRestMethod -Uri $Uri
+            if ($Schedule.StatusCode -ne 200) { throw "Reading shutdown schedule failed: HTTP $($Schedule.StatusCode). $($Schedule.Content)" }
+            $ScheduleSettings = $Schedule.Content | ConvertFrom-Json
+            $ScheduleSettings.properties.status = 'Disabled'
 
-        Invoke-AzRestMethod -Uri $Uri -Method PUT -Payload ($ScheduleSettings | ConvertTo-Json -Depth 10) | Out-Null
+            $result = Invoke-AzRestMethod -Uri $Uri -Method PUT -Payload ($ScheduleSettings | ConvertTo-Json -Depth 10)
+            if ($result.StatusCode -notin @(200, 201, 202)) { throw "Disabling shutdown schedule failed: HTTP $($result.StatusCode). $($result.Content)" }
+        }
     }
 
     Stop-Transcript
     exit 0
 }
 catch {
-    Write-Error $_
-    Stop-Transcript
+    $failure = $_
+    Write-Error -ErrorRecord $failure -ErrorAction Continue
+    try {
+        if (Get-AzContext -ErrorAction Stop) {
+            $groupId = "/subscriptions/$subscriptionId/resourceGroups/$resourceGroup"
+            foreach ($target in @($groupId, "$groupId/providers/Microsoft.Compute/virtualMachines/$hostVmName")) {
+                try {
+                    Update-AzTag -ResourceId $target -Operation Merge -Tag @{ DeploymentProgress = 'Deployment Failed' } -ErrorAction Stop | Out-Null
+                }
+                catch { Write-Warning "Could not report failure on '$target': $($_.Exception.Message)" }
+            }
+        }
+    }
+    catch { Write-Warning "Could not report bootstrap initialization failure: $($_.Exception.Message)" }
+    Stop-Transcript -ErrorAction SilentlyContinue
     exit 1
 }
 '@
@@ -175,6 +296,8 @@ $azInitScript | Set-Content -Path $azInitScriptPath -Encoding UTF8
   -tenantId $tenantId `
   -subscriptionId $subscriptionId `
   -resourceGroup $resourceGroup `
+  -hostVmName $hostVmName `
+  -keyVaultName $keyVaultName `
   -adminUsername $adminUsername `
   -vmAutologon $vmAutologon `
   -autoShutdownEnabled $autoShutdownEnabled `
@@ -196,7 +319,8 @@ $latestVersion = (Invoke-WebRequest -UseBasicParsing -Uri $url).Content |
 
 $downloadUrl = "https://github.com/PowerShell/PowerShell/releases/download/$latestVersion/PowerShell-$($latestVersion.Substring(1,5))-win-x64.msi"
 Invoke-WebRequest -UseBasicParsing -Uri $downloadUrl -OutFile .\PowerShell7.msi
-Start-Process msiexec.exe -Wait -ArgumentList '/I PowerShell7.msi /quiet ADD_EXPLORER_CONTEXT_MENU_OPENPOWERSHELL=1 ADD_FILE_CONTEXT_MENU_RUNPOWERSHELL=1 ENABLE_PSREMOTING=1 REGISTER_MANIFEST=1 USE_MU=1 ENABLE_MU=1 ADD_PATH=1'
+$installation = Start-Process msiexec.exe -Wait -PassThru -ArgumentList '/I PowerShell7.msi /quiet ADD_EXPLORER_CONTEXT_MENU_OPENPOWERSHELL=1 ADD_FILE_CONTEXT_MENU_RUNPOWERSHELL=1 ENABLE_PSREMOTING=1 REGISTER_MANIFEST=1 USE_MU=1 ENABLE_MU=1 ADD_PATH=1'
+if ($installation.ExitCode -notin @(0, 3010)) { throw "PowerShell installation failed with exit code $($installation.ExitCode)." }
 Remove-Item .\PowerShell7.msi -Force
 
 Write-Host "`n### Fetching GitHub Artifacts ###`n"
@@ -279,6 +403,7 @@ if (($rdpPort -ne $null) -and ($rdpPort -ne '') -and ($rdpPort -ne '3389')) {
         $systemroot = Get-Content env:systemroot
         netsh advfirewall firewall add rule name='Remote Desktop - Custom Port' dir=in program=$systemroot\system32\svchost.exe service=termservice action=allow protocol=TCP localport=$rdpPort enable=yes | Out-Null
     }
+    if ($LASTEXITCODE -ne 0) { throw "RDP firewall configuration failed with exit code $LASTEXITCODE." }
 
     Write-Host 'RDP port configuration complete.'
 }
@@ -328,6 +453,7 @@ param(
     [string]$tenantId,
     [string]$subscriptionId,
     [string]$resourceGroup,
+    [string]$hostVmName,
     [string]$deploymentProgressString,
     [string]$logPath
 )
@@ -342,21 +468,30 @@ try {
     Connect-AzAccount -Identity -Tenant $tenantId -Subscription $subscriptionId | Out-Null
     Set-AzContext -Subscription $subscriptionId | Out-Null
 
-    $tags = Get-AzResourceGroup -Name $resourceGroup | Select-Object -ExpandProperty Tags
-    if ($null -ne $tags) {
-        $tags['DeploymentProgress'] = $deploymentProgressString
-    } else {
-        $tags = @{ 'DeploymentProgress' = $deploymentProgressString }
+    $groupId = "/subscriptions/$subscriptionId/resourceGroups/$resourceGroup"
+    foreach ($target in @($groupId, "$groupId/providers/Microsoft.Compute/virtualMachines/$hostVmName")) {
+        Update-AzTag -ResourceId $target -Operation Merge -Tag @{ DeploymentProgress = $deploymentProgressString } | Out-Null
     }
-
-    $null = Set-AzResourceGroup -ResourceGroupName $resourceGroup -Tag $tags
 
     Stop-Transcript
     exit 0
 }
 catch {
-    Write-Error $_
-    Stop-Transcript
+    $failure = $_
+    Write-Error -ErrorRecord $failure -ErrorAction Continue
+    try {
+        if (Get-AzContext -ErrorAction Stop) {
+            $groupId = "/subscriptions/$subscriptionId/resourceGroups/$resourceGroup"
+            foreach ($target in @($groupId, "$groupId/providers/Microsoft.Compute/virtualMachines/$hostVmName")) {
+                try {
+                    Update-AzTag -ResourceId $target -Operation Merge -Tag @{ DeploymentProgress = 'Deployment Failed' } -ErrorAction Stop | Out-Null
+                }
+                catch { Write-Warning "Could not report failure on '$target': $($_.Exception.Message)" }
+            }
+        }
+    }
+    catch { Write-Warning "Could not report bootstrap progress failure: $($_.Exception.Message)" }
+    Stop-Transcript -ErrorAction SilentlyContinue
     exit 1
 }
 '@
@@ -371,6 +506,7 @@ $azProgressScript | Set-Content -Path $azProgressScriptPath -Encoding UTF8
   -tenantId $tenantId `
   -subscriptionId $subscriptionId `
   -resourceGroup $resourceGroup `
+  -hostVmName $hostVmName `
   -deploymentProgressString $DeploymentProgressString `
   -logPath $azProgressLogPath
 
@@ -381,7 +517,7 @@ if ($LASTEXITCODE -ne 0) {
 if ($flavor -eq 'ITPro') {
     # Creating scheduled task for WinGet.ps1
     $Trigger = New-ScheduledTaskTrigger -AtLogOn
-    $Action = New-ScheduledTaskAction -Execute $ScheduledTaskExecutable -Argument $Env:MHBoxDir\WinGet.ps1
+    $Action = New-ScheduledTaskAction -Execute $ScheduledTaskExecutable -Argument "-NoProfile -File $Env:MHBoxDir\WinGet.ps1"
     Register-ScheduledTask -TaskName 'WinGetLogonScript' -Trigger $Trigger -User $adminUsername -Action $Action -RunLevel Highest -Force | Out-Null
 
     # Creating scheduled task for MHServersLogonScript.ps1
@@ -395,11 +531,13 @@ Get-ScheduledTask -TaskName ServerManager | Disable-ScheduledTask | Out-Null
 if ($flavor -eq 'ITPro') {
     Write-Host "`n### Installing Hyper-V ###`n"
 
-    # Install Hyper-V and reboot
-    Write-Host 'Installing Hyper-V and restart'
+    Write-Host 'Installing Hyper-V without restarting the extension host'
     Enable-WindowsOptionalFeature -Online -FeatureName Containers -All -NoRestart | Out-Null
     Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform -NoRestart | Out-Null
-    Install-WindowsFeature -Name Hyper-V -IncludeAllSubFeature -IncludeManagementTools -Restart
+    $hyperVInstallation = Install-WindowsFeature -Name Hyper-V -IncludeAllSubFeature -IncludeManagementTools
+    if (-not $hyperVInstallation.Success) {
+        throw "Hyper-V installation failed: $($hyperVInstallation.ExitCode)."
+    }
 }
 
 # Clean up Bootstrap.log
@@ -408,5 +546,12 @@ Stop-Transcript
 $logSuppress = Get-Content "$Env:MHBoxLogsDir\Bootstrap.log" | Where-Object { $_ -notmatch "Host Application: $ScheduledTaskExecutable" }
 $logSuppress | Set-Content "$Env:MHBoxLogsDir\Bootstrap.log" -Force
 
-# Restart computer
-Restart-Computer
+# Let CSE report success before the host reboots and starts the logon stage.
+$restartAction = New-ScheduledTaskAction -Execute "$env:WINDIR\System32\shutdown.exe" `
+    -Argument '/r /t 0 /d p:2:4 /c "MicroHack bootstrap completed"'
+$restartTrigger = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(2)
+$restartPrincipal = New-ScheduledTaskPrincipal -UserId 'SYSTEM' -LogonType ServiceAccount -RunLevel Highest
+Register-ScheduledTask -TaskName 'MHBox-BootstrapRestart' -Action $restartAction -Trigger $restartTrigger `
+    -Principal $restartPrincipal -Force | Out-Null
+Write-Host 'Bootstrap completed; the host restart is scheduled in two minutes.'
+exit 0

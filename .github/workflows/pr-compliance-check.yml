@@ -1,5 +1,9 @@
 name: PR Compliance Check
 
+# Runs with a read-only token so it also works for pull requests from forks.
+# The PR comment is posted by pr-compliance-comment.yml (workflow_run), which
+# downloads the artifact produced here and never executes code from the PR.
+
 on:
   pull_request:
     paths:
@@ -7,156 +11,256 @@ on:
       - '02-Security/**'
       - '03-Azure/**'
       - '04-Microsoft-365/**'
+      - '.github/workflows/pr-compliance-check.yml'
+      - '.github/scripts/check_file_structure.py'
+      - '.github/scripts/requirements-compliance.txt'
 
 permissions:
   contents: read
-  pull-requests: write
+
+concurrency:
+  group: pr-compliance-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
   compliance-check:
     runs-on: ubuntu-latest
-    
+    timeout-minutes: 10
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0
+          # The PR merge commit plus its first parent (the base) is enough to diff.
+          fetch-depth: 2
+          persist-credentials: false
 
       - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96 # v47.0.6
-        with:
-          write_output_files: true
-          separator: "\n"
-          files: |
-            01-Identity and Access Management/**
-            02-Security/**
-            03-Azure/**
-            04-Microsoft-365/**
+        run: |
+          git -c core.quotepath=off diff --name-only --diff-filter=ACMRT HEAD^1 HEAD -- \
+            '01-Identity and Access Management/' \
+            '02-Security/' \
+            '03-Azure/' \
+            '04-Microsoft-365/' \
+            > changed-files.txt
+          echo "Changed files:"
+          cat changed-files.txt
 
       - name: Setup Python
         uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
-          python-version: '3.11'
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: .github/scripts/requirements-compliance.txt
 
       - name: Install brokelink
-        run: pip install brokelink beautifulsoup4 colorama click
+        run: pip install -r .github/scripts/requirements-compliance.txt
 
       - name: Check markdown links and images
         id: brokelink-check
         continue-on-error: true
+        env:
+          PYTHONIOENCODING: utf-8
         run: |
-          echo "## Brokelink Check Results" > brokelink-results.md
-          echo "" >> brokelink-results.md
-          
+          # Escape values for GitHub workflow commands (::error ...).
+          esc_data() { local v=${1//%/%25}; v=${v//$'\r'/%0D}; printf '%s' "${v//$'\n'/%0A}"; }
+          esc_prop() { local v; v=$(esc_data "$1"); v=${v//:/%3A}; printf '%s' "${v//,/%2C}"; }
+
+          # Full report for the job summary, compact table rows for the PR comment.
+          printf '## 🔗 Brokelink Check Results\n\n' > brokelink-results.md
+          : > brokelink-rows.md
+
           EXIT_CODE=0
-          
+          CHECKED=0
+          FAILED=0
+          BROKEN_TOTAL=0
+          MAX_ROWS=20
+
           while IFS= read -r file; do
             [ -z "$file" ] && continue
-            if [[ "$file" == *.md ]]; then
-              echo "Checking: $file"
-              OUTPUT=$(brokelink "$file" --include="*.md" --check-images 2>&1) || FILE_EXIT=$?
-              FILE_EXIT=${FILE_EXIT:-0}
-              
-              if [ "$FILE_EXIT" -ne 0 ]; then
-                echo "❌ **$file** - Issues found" >> brokelink-results.md
-                echo '```' >> brokelink-results.md
-                echo "$OUTPUT" >> brokelink-results.md
-                echo '```' >> brokelink-results.md
-                echo "" >> brokelink-results.md
-                EXIT_CODE=1
-              else
-                echo "✅ **$file** - OK" >> brokelink-results.md
+            [[ "$file" == *.md ]] || continue
+            CHECKED=$((CHECKED + 1))
+            echo "Checking: $file"
+            FILE_EXIT=0
+            OUTPUT=$(brokelink "$file" --include="*.md" --check-images 2>&1) || FILE_EXIT=$?
+
+            if [ "$FILE_EXIT" -ne 0 ]; then
+              EXIT_CODE=1
+              FAILED=$((FAILED + 1))
+
+              COUNT=$(printf '%s\n' "$OUTPUT" | grep -oP 'Found \K[0-9]+(?= broken)' | head -n 1 || true)
+              [ -z "$COUNT" ] && COUNT=$(printf '%s\n' "$OUTPUT" | grep -cE '^\s*Line [0-9]+:' || true)
+              BROKEN_TOTAL=$((BROKEN_TOTAL + ${COUNT:-0}))
+              # e.g. "Missing files (3), Missing images (1)"
+              KINDS=$(printf '%s\n' "$OUTPUT" | grep -oP '^\s*\S+\s+\K[A-Za-z][A-Za-z ]+ \([0-9]+\)(?=:)' | paste -sd ',' - | sed 's/,/, /g' || true)
+
+              {
+                echo "❌ **$file** - Issues found"
+                echo '```'
+                echo "$OUTPUT"
+                echo '```'
+                echo ""
+              } >> brokelink-results.md
+
+              if [ "$FAILED" -le "$MAX_ROWS" ]; then
+                echo "| \`$file\` | ${COUNT:-?} | ${KINDS:-see run details} |" >> brokelink-rows.md
+              fi
+
+              # One annotation per broken line so it shows inline in "Files changed".
+              ANNOTATED=0
+              while IFS= read -r hit; do
+                [ -z "$hit" ] && continue
+                echo "::error file=$(esc_prop "$file"),line=${hit%%:*},title=Broken link or image::$(esc_data "${hit#*: }")"
+                ANNOTATED=1
+              done < <(printf '%s\n' "$OUTPUT" | grep -oP '^\s*Line \K[0-9]+: .*' | sort -u || true)
+              if [ "$ANNOTATED" -eq 0 ]; then
+                echo "::error file=$(esc_prop "$file"),title=Broken links or images::brokelink found broken links or images in this file. See the job summary for details."
+              fi
+            else
+              printf '✅ **%s** - OK\n\n' "$file" >> brokelink-results.md
+            fi
+          done < changed-files.txt
+
+          if [ "$CHECKED" -eq 0 ]; then
+            echo "*No changed markdown files to check.*" >> brokelink-results.md
+          fi
+
+          {
+            echo '### 🔗 Links & Images'
+            echo ''
+            if [ "$CHECKED" -eq 0 ]; then
+              echo '*No changed markdown files to check.*'
+            else
+              echo "$((CHECKED - FAILED)) of $CHECKED markdown file(s) OK · $BROKEN_TOTAL broken link(s)/image(s)"
+              if [ "$FAILED" -gt 0 ]; then
+                echo ''
+                echo '| File | Broken | What |'
+                echo '|---|---|---|'
+                cat brokelink-rows.md
+                if [ "$FAILED" -gt "$MAX_ROWS" ]; then
+                  echo "| *…and $((FAILED - MAX_ROWS)) more file(s)* | | |"
+                fi
               fi
             fi
-          done < .github/outputs/all_changed_files.txt
-          
-          echo "BROKELINK_EXIT_CODE=$EXIT_CODE" >> $GITHUB_OUTPUT
+            echo ''
+          } > brokelink-comment.md
+
+          {
+            echo "BROKELINK_EXIT_CODE=$EXIT_CODE"
+            echo "checked=$CHECKED"
+            echo "failed=$FAILED"
+            echo "broken=$BROKEN_TOTAL"
+          } >> "$GITHUB_OUTPUT"
           cat brokelink-results.md
 
       - name: Run file structure compliance check
         id: structure-check
-        run: |
-          python .github/scripts/check_file_structure.py < .github/outputs/all_changed_files.txt
         continue-on-error: true
+        run: python .github/scripts/check_file_structure.py < changed-files.txt
 
       - name: Upload compliance summary
         if: always()
         run: |
           if [ -f structure-check-results.md ]; then
-            cat structure-check-results.md >> $GITHUB_STEP_SUMMARY
+            cat structure-check-results.md >> "$GITHUB_STEP_SUMMARY"
           fi
           if [ -f brokelink-results.md ]; then
-            cat brokelink-results.md >> $GITHUB_STEP_SUMMARY
+            cat brokelink-results.md >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: Check final compliance status
         id: final-status
+        env:
+          BROKELINK_STATUS: ${{ steps.brokelink-check.outputs.BROKELINK_EXIT_CODE }}
+          BROKELINK_OUTCOME: ${{ steps.brokelink-check.outcome }}
+          STRUCTURE_OUTCOME: ${{ steps.structure-check.outcome }}
         run: |
-          BROKELINK_STATUS=${{ steps.brokelink-check.outputs.BROKELINK_EXIT_CODE }}
-          STRUCTURE_STATUS=${{ steps.structure-check.outcome }}
-          
-          if [ "$BROKELINK_STATUS" != "0" ] || [ "$STRUCTURE_STATUS" == "failure" ]; then
-            echo "COMPLIANCE_FAILED=true" >> $GITHUB_OUTPUT
+          if [ "$BROKELINK_STATUS" != "0" ] || [ "$BROKELINK_OUTCOME" == "failure" ] || [ "$STRUCTURE_OUTCOME" == "failure" ]; then
+            echo "COMPLIANCE_FAILED=true" >> "$GITHUB_OUTPUT"
             echo "❌ Compliance check failed"
           else
-            echo "COMPLIANCE_FAILED=false" >> $GITHUB_OUTPUT
+            echo "COMPLIANCE_FAILED=false" >> "$GITHUB_OUTPUT"
             echo "✅ All compliance checks passed"
           fi
 
       - name: Build PR comment body
-        if: steps.final-status.outputs.COMPLIANCE_FAILED == 'true'
+        env:
+          COMPLIANCE_FAILED: ${{ steps.final-status.outputs.COMPLIANCE_FAILED }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          STRUCTURE_OUTCOME: ${{ steps.structure-check.outcome }}
+          STRUCTURE_ISSUES: ${{ steps.structure-check.outputs.issues }}
+          STRUCTURE_WARNINGS: ${{ steps.structure-check.outputs.warnings }}
+          PROJECTS_TOTAL: ${{ steps.structure-check.outputs.projects_total }}
+          PROJECTS_FAILED: ${{ steps.structure-check.outputs.projects_failed }}
+          LINKS_CHECKED: ${{ steps.brokelink-check.outputs.checked }}
+          LINKS_FAILED: ${{ steps.brokelink-check.outputs.failed }}
+          LINKS_BROKEN: ${{ steps.brokelink-check.outputs.broken }}
         run: |
+          if [ "$STRUCTURE_OUTCOME" == "failure" ]; then
+            if [ -n "$STRUCTURE_ISSUES" ]; then
+              STRUCTURE_LINE="❌ ${STRUCTURE_ISSUES} issue(s) in ${PROJECTS_FAILED} of ${PROJECTS_TOTAL} project(s)"
+            else
+              STRUCTURE_LINE="❌ Check errored, see run details"
+            fi
+          else
+            STRUCTURE_LINE="✅ OK"
+            [ "${STRUCTURE_WARNINGS:-0}" -gt 0 ] && STRUCTURE_LINE="✅ OK (${STRUCTURE_WARNINGS} warning(s))"
+          fi
+
+          if [ -z "$LINKS_CHECKED" ]; then
+            LINKS_LINE="❌ Check errored, see run details"
+          elif [ "${LINKS_FAILED:-0}" -gt 0 ]; then
+            LINKS_LINE="❌ ${LINKS_BROKEN} broken in ${LINKS_FAILED} of ${LINKS_CHECKED} file(s)"
+          elif [ "$LINKS_CHECKED" -eq 0 ]; then
+            LINKS_LINE="➖ No markdown files changed"
+          else
+            LINKS_LINE="✅ OK (${LINKS_CHECKED} file(s))"
+          fi
+
+          mkdir -p pr-comment
           {
-            echo '## ❌ PR Compliance Check Failed'
-            echo ''
-            echo 'Please fix the following issues before merging:'
-            echo ''
-            if [ -f structure-check-results.md ]; then
-              cat structure-check-results.md
+            if [ "$COMPLIANCE_FAILED" == "true" ]; then
+              echo '## ❌ PR Compliance Check Failed'
               echo ''
+              echo 'Please fix the issues below before merging.'
+            else
+              echo '## ✅ PR Compliance Check Passed'
+              echo ''
+              echo 'All compliance checks passed for the latest commit.'
             fi
-            if [ -f brokelink-results.md ]; then
-              cat brokelink-results.md
+            echo ''
+            echo '| Check | Result |'
+            echo '|---|---|'
+            echo "| 📋 Challenges & Walkthrough structure | $STRUCTURE_LINE |"
+            echo "| 🔗 Links & images | $LINKS_LINE |"
+            echo ''
+            if [ "$COMPLIANCE_FAILED" == "true" ]; then
+              if [ "$STRUCTURE_OUTCOME" == "failure" ] && [ -f structure-check-comment.md ]; then
+                cat structure-check-comment.md
+                echo ''
+              fi
+              if [ "${LINKS_FAILED:-0}" -gt 0 ] && [ -f brokelink-comment.md ]; then
+                cat brokelink-comment.md
+                echo 'Broken links are also annotated inline in the **Files changed** tab.'
+                echo ''
+              fi
             fi
+            echo "📄 **[Full report in the workflow run summary]($RUN_URL)**"
             echo ''
             echo '---'
             echo '*This comment was automatically generated by the PR Compliance Check workflow.*'
-          } > pr-comment.md
+          } > pr-comment/pr-comment.md
+          echo "$PR_NUMBER" > pr-comment/pr-number.txt
+          cat pr-comment/pr-comment.md
 
-      - name: Post comment on PR
-        if: steps.final-status.outputs.COMPLIANCE_FAILED == 'true'
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      - name: Upload PR comment artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          script: |
-            const fs = require('fs');
-            const body = fs.readFileSync('pr-comment.md', 'utf8');
-            
-            // Find and delete previous compliance check comments
-            const comments = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number
-            });
-            
-            for (const comment of comments.data) {
-              if (comment.body.includes('PR Compliance Check Failed') && 
-                  comment.body.includes('automatically generated by the PR Compliance Check workflow')) {
-                await github.rest.issues.deleteComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  comment_id: comment.id
-                });
-              }
-            }
-            
-            // Post new comment
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: body
-            });
+          name: pr-compliance-comment
+          path: pr-comment/
+          retention-days: 3
+          if-no-files-found: error
 
       - name: Fail workflow if compliance failed
         if: steps.final-status.outputs.COMPLIANCE_FAILED == 'true'

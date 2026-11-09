@@ -1,9 +1,8 @@
 # labautomation — Agentic Inventory hack
 
-This folder is the **EMEA MicroHack platform** entry point. The platform calls
-[`deploy-lab.ps1`](deploy-lab.ps1) once per attendee (in parallel) to provision
-their lab. Everything works out of the box — there is **no facilitator pre-setup**:
-each attendee gets a per-user Foundry project and Cosmos DB, provisioned in parallel.
+Everything works out of the box — there is **no facilitator pre-setup**:
+[`deploy-lab.ps1`](deploy-lab.ps1) gives each attendee a per-user Foundry project and
+Cosmos DB.
 
 ## What gets provisioned per attendee
 
@@ -20,11 +19,8 @@ each attendee gets a per-user Foundry project and Cosmos DB, provisioned in para
 The Zava data is **seeded into Cosmos by the app on first run** (idempotent,
 data-plane upserts using the attendee's identity) — no keys or connection strings.
 
-## Platform contract (why this "just works")
+## Implementation notes
 
-- The parameter block matches the platform contract exactly, so the platform runs it.
-- The platform pre-sets the Az context and pre-creates the resource group — the
-  script does **not** call `Connect-AzAccount` or `New-AzResourceGroup`.
 - Foundry, Cosmos, the database and containers are created via ARM REST
   (`Invoke-AzRestMethod`) so there is **no dependency on extra Az modules**; only
   standard `Az.Accounts` / `Az.Resources` are required. RBAC is standard.
@@ -45,6 +41,13 @@ data-plane upserts using the attendee's identity) — no keys or connection stri
 Edit [`lab-defaults.json`](lab-defaults.json) to tune region priority, labs per
 subscription, and the per-user daily cost estimate. No IDs or secrets are stored
 in this folder.
+
+`"groups": ["GHCPUsers"]` is **required**: the platform adds each lab Entra user to the
+lab GitHub organization (with access to the `microhack` repository and a Copilot
+seat). Attendees sign in to GitHub via **single sign-on** with the same lab account —
+`deploy-lab.ps1` does **not** emit any GitHub credentials. Attendees fork that
+repository and create their Codespace from the fork in Challenge 1 — without this
+group they cannot access GitHub and the setup cannot be completed.
 
 ## Deployment robustness
 

@@ -13,23 +13,23 @@ Throughout this MicroHack, you've gained hands-on experience with the complete m
 - Learned how GitHub Copilot Custom Agents, Skills, and MCP servers fit together (*Agent = who/how*, *Skill = what it knows*, *MCP = what it can do*)
 - Authored a Custom Agent (`.agent.md`) with a phased, gated workflow and a least-privilege tool allow-list
 - Packaged a reusable Skill (`SKILL.md`) with an explicit `WHEN:` trigger and transformation-rules table
-- Configured MCP (`mcp.json`) and confirmed the `appmod-*` tools resolve in the agent's tool picker
-- Dry-ran the gated assess → plan → execute → validate loop, confirming the agent stops at the assessment and plan approval gates before editing code
+- Configured MCP for GitHub Copilot CLI (`.github/mcp.json`) and confirmed the `azure` server resolves via `/mcp list`
+- Dry-ran skill detection: created a plan with `modernize plan create` and confirmed your custom skill was referenced in the plan's `tasks.json` — without executing the plan
 
 ### Challenge 2: Batch Upgrade a Java App and a .NET App
 
-- Forked the PhotoAlbum-Java (Spring Boot) and PhotoAlbum (.NET) sample repositories
+- Cloned the PhotoAlbum-Java (Spring Boot) and PhotoAlbum (.NET) sample repositories and worked on a local `modernize` branch
 - Installed and configured the GitHub Copilot App Modernization agent (modernize CLI)
 - Ran a batch assessment across both repositories for Upgrade and Cloud readiness
 - Reviewed the aggregated and per-repository assessment reports
 - Upgraded the .NET app to .NET 10 and the Java app to Java 25 / Spring Boot 4.0
-- Committed and pushed the upgraded code to each repository
+- Committed the upgraded code on each repository's `modernize` branch
 
 ### Challenge 3: Modernize the Upgraded Apps and Deploy Them to Azure
 
 - Created a cloud modernization plan targeting both repositories
 - Resolved cloud readiness issues and migrated dependencies (for example, Oracle to PostgreSQL)
-- Reviewed and merged the modernization pull request
+- Reviewed the locally generated plans and executed them with the modernize CLI
 - Provisioned Azure infrastructure and deployed the PhotoAlbum-Java app to Azure
 - Created an explicit infrastructure/deployment plan and deployed the PhotoAlbum (.NET) app to Azure
 - Validated both applications running on Azure Container Apps

@@ -8,13 +8,9 @@ participants/coaches during the hack, never by the platform).
 
 ## Platform entry point (EMEA MicroHack)
 
-The [microsoft/MicroHack](https://github.com/microsoft/MicroHack) platform provisions each
-team's environment by invoking **`deploy-lab.ps1`** with a fixed parameter contract and reading
-**`lab-defaults.json`** for its configuration:
-
 | File | Role |
 |------|------|
-| [`deploy-lab.ps1`](deploy-lab.ps1) | **Platform entry point.** Deploys [`infra/resources.bicep`](infra/) into the platform-provided resource group and returns the Foundry / Search endpoints (and model names) to the user dashboard. Do **not** rename or change its parameter block — the platform silently skips scripts that don't match. |
+| [`deploy-lab.ps1`](deploy-lab.ps1) | **Platform entry point.** Deploys [`infra/resources.bicep`](infra/) into the platform-provided resource group and returns the Foundry / Search endpoints (and model names) to the user dashboard. |
 | [`lab-defaults.json`](lab-defaults.json) | Platform config (`$schema`-validated): deployment type, region priority, per-user daily cost estimate. |
 
 `deploy-lab.ps1` is the **platform** path; `deploy.sh` / `deploy.ps1` below remain the

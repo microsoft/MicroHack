@@ -50,7 +50,7 @@ azure-mgmt-core==1.6.0
     # via azure-mgmt-apimanagement
 azure-storage-blob==12.28.0
     # via azure-ai-projects
-certifi==2026.4.22
+certifi==2026.10.18
     # via
     #   httpcore
     #   httpx
@@ -91,13 +91,11 @@ httpx==0.28.1
     #   langgraph-sdk
     #   langsmith
     #   openai
-idna==3.13
+idna==3.15
     # via
     #   anyio
     #   httpx
     #   requests
-importlib-metadata==8.7.1
-    # via opentelemetry-api
 ipykernel==7.2.0
     # via workshop (pyproject.toml)
 ipython==9.13.0
@@ -128,30 +126,33 @@ jupyter-core==5.9.1
     #   jupyter-client
 kiwisolver==1.5.0
     # via matplotlib
-langchain==1.2.15
+langchain==1.3.9
     # via workshop (pyproject.toml)
-langchain-core==1.3.2
+langchain-core==1.4.7
     # via
     #   langchain
     #   langchain-openai
     #   langgraph
     #   langgraph-checkpoint
     #   langgraph-prebuilt
+    #   langgraph-sdk
 langchain-openai==1.2.1
     # via workshop (pyproject.toml)
-langchain-protocol==0.0.12
-    # via langchain-core
-langgraph==1.1.9
+langchain-protocol==0.0.20
+    # via
+    #   langchain-core
+    #   langgraph-sdk
+langgraph==1.2.14
     # via langchain
-langgraph-checkpoint==4.0.2
+langgraph-checkpoint==4.1.1
     # via
     #   langgraph
     #   langgraph-prebuilt
-langgraph-prebuilt==1.0.11
+langgraph-prebuilt==1.1.1
     # via langgraph
-langgraph-sdk==0.3.13
+langgraph-sdk==0.4.6
     # via langgraph
-langsmith==0.7.37
+langsmith==0.8.18
     # via langchain-core
 matplotlib==3.10.9
     # via workshop (pyproject.toml)
@@ -159,7 +160,7 @@ matplotlib-inline==0.2.1
     # via
     #   ipykernel
     #   ipython
-msal==1.36.0
+msal==1.39.0
     # via
     #   azure-identity
     #   msal-extensions
@@ -178,14 +179,14 @@ openai==2.32.0
     #   agent-framework-openai
     #   azure-ai-projects
     #   langchain-openai
-opentelemetry-api==1.41.1
+opentelemetry-api==1.45.1
     # via
     #   agent-framework-core
     #   opentelemetry-sdk
     #   opentelemetry-semantic-conventions
-opentelemetry-sdk==1.41.1
+opentelemetry-sdk==1.45.1
     # via opentelemetry-semantic-conventions-ai
-opentelemetry-semantic-conventions==0.62b1
+opentelemetry-semantic-conventions==0.66b1
     # via
     #   opentelemetry-sdk
     #   opentelemetry-semantic-conventions-ai
@@ -321,11 +322,13 @@ uuid-utils==0.14.1
     #   langsmith
 wcwidth==0.6.0
     # via prompt-toolkit
+websockets==16.1.1
+    # via
+    #   langgraph-sdk
+    #   langsmith
 xxhash==3.7.0
     # via
     #   langgraph
     #   langsmith
-zipp==3.23.1
-    # via importlib-metadata
 zstandard==0.25.0
     # via langsmith

@@ -1,9 +1,5 @@
 # labautomation — Agentic Governance Hub MicroHack
 
-This folder is the **EMEA MicroHack platform** entry point. The platform calls
-[`deploy-lab.ps1`](deploy-lab.ps1) once per attendee (in parallel) to provision
-their lab into a pre-created resource group.
-
 The deployment provisions a **Citadel Agentic Governance Hub** and a sample **Spoke** (Azure AI Foundry workload) — both deployed into the same platform-provided resource group using deterministic naming to avoid collisions.
 
 ## What Gets Provisioned Per Attendee
@@ -36,15 +32,10 @@ Adapted from the Citadel workshop (`azd up`), the lab deploys:
 
 ## Platform Contract
 
-- The parameter block matches the MicroHack platform contract exactly.
-- The platform **pre-creates the resource group** and pre-sets the Azure context for the
-  `resourcegroup` / `resourcegroup-with-subscriptionowner` deployment types, so the script
-  does **not** call `Connect-AzAccount` or `New-AzResourceGroup` in those modes. In
-  `subscription` mode the platform hands over an empty subscription instead, and the script
-  creates its own `rg-citadel-microhack-<hash>` resource group.
-- [`shared-deploy-lab.ps1`](shared-deploy-lab.ps1) is picked up automatically by file name and
-  runs **once per subscription, before** the per-participant fan-out, to register the resource
-  providers this lab needs (see [Subscription Scope Prerequisites](#subscription-scope-prerequisites)).
+- In `subscription` mode the script creates its own `rg-citadel-microhack-<hash>` resource
+  group.
+- [`shared-deploy-lab.ps1`](shared-deploy-lab.ps1) registers the resource providers this lab
+  needs (see [Subscription Scope Prerequisites](#subscription-scope-prerequisites)).
 - Hub and spoke resources are deployed into **the same platform-provided ResourceGroupName**
   using deterministic suffixes to avoid name collisions.
 - Foundry accounts, projects, Log Analytics, App Insights, Key Vault, and APIM are all

@@ -456,6 +456,95 @@ class ComplianceChecker:
 
         return "\n".join(lines)
 
+    def generate_comment_markdown(self, max_items: int = 5) -> str:
+        """Generate a compact summary for the PR comment (tables kept, long lists capped)."""
+        lines = ["### 📋 Challenges & Walkthrough Structure\n"]
+
+        failed_projects = [
+            p for p, checks in self.check_results.items()
+            if not all(c["passed"] for c in checks.values())
+        ]
+        lines.append(
+            f"{len(self.check_results) - len(failed_projects)} of {len(self.check_results)} project(s) OK"
+            f" · {len(self.issues)} issue(s) · {len(self.warnings)} warning(s)\n"
+        )
+
+        if self.check_results:
+            check_names = {
+                "readme_exists": "Readme",
+                "challenges_numbering": "Challenges",
+                "walkthrough_numbering": "Walkthrough",
+                "count_match": "Count match",
+            }
+            lines.append("| Project | " + " | ".join(check_names.values()) + " |")
+            lines.append("|---" * (len(check_names) + 1) + "|")
+            for project_root in sorted(self.check_results.keys()):
+                checks = self.check_results[project_root]
+                cells = []
+                for key in check_names:
+                    if key not in checks:
+                        cells.append("-")
+                    else:
+                        cells.append("✅" if checks[key]["passed"] else "❌")
+                lines.append(f"| `{project_root}` | " + " | ".join(cells) + " |")
+            lines.append("")
+
+        if self.issues:
+            lines.append("**Must fix:**")
+            for issue in self.issues[:max_items]:
+                lines.append(f"- `{issue['file']}`: {issue['message']}")
+            if len(self.issues) > max_items:
+                lines.append(f"- *…and {len(self.issues) - max_items} more (see run details)*")
+            lines.append("")
+
+        return "\n".join(lines)
+
+    def summary_outputs(self) -> dict:
+        failed_projects = sum(
+            1 for checks in self.check_results.values()
+            if not all(c["passed"] for c in checks.values())
+        )
+        return {
+            "issues": len(self.issues),
+            "warnings": len(self.warnings),
+            "projects_total": len(self.check_results),
+            "projects_failed": failed_projects,
+        }
+
+    def emit_github_annotations(self):
+        """Emit GitHub Actions workflow commands so findings show up as check annotations."""
+        if os.environ.get("GITHUB_ACTIONS") != "true":
+            return
+
+        def escape_data(value: str) -> str:
+            return value.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+
+        def escape_property(value: str) -> str:
+            return escape_data(value).replace(":", "%3A").replace(",", "%2C")
+
+        for level, entries in (("error", self.issues), ("warning", self.warnings)):
+            for entry in entries:
+                file_path = escape_property(str(entry.get("file", "")))
+                message = escape_data(str(entry.get("message", "")))
+                print(f"::{level} file={file_path},title=Structure compliance::{message}")
+
+
+EMPTY_OUTPUTS = {"issues": 0, "warnings": 0, "projects_total": 0, "projects_failed": 0}
+
+
+def write_results(summary: str, comment: str, outputs: dict):
+    """Write the full summary, the compact PR comment section and step outputs."""
+    with open("structure-check-results.md", "w", encoding="utf-8") as f:
+        f.write(summary)
+    with open("structure-check-comment.md", "w", encoding="utf-8") as f:
+        f.write(comment)
+    github_output = os.environ.get("GITHUB_OUTPUT")
+    if github_output:
+        with open(github_output, "a", encoding="utf-8") as f:
+            for key, value in outputs.items():
+                f.write(f"{key}={value}\n")
+    print(summary)
+
 
 def main():
     """Main entry point."""
@@ -474,9 +563,7 @@ def main():
 
     if not changed_files:
         summary = "## 📋 Challenges & Walkthrough Compliance Check\n\n### ✅ Status: COMPLIANT\n\n*No files to check.*\n"
-        with open("structure-check-results.md", "w", encoding="utf-8") as f:
-            f.write(summary)
-        print(summary)
+        write_results(summary, "### 📋 Challenges & Walkthrough Structure\n\n*No files to check.*\n", EMPTY_OUTPUTS)
         sys.exit(0)
 
     # Filter to only include files from the relevant directories
@@ -494,20 +581,15 @@ def main():
 
     if not filtered_files:
         summary = "## 📋 Challenges & Walkthrough Compliance Check\n\n### ✅ Status: COMPLIANT\n\n*No relevant files in monitored directories.*\n"
-        with open("structure-check-results.md", "w", encoding="utf-8") as f:
-            f.write(summary)
-        print(summary)
+        write_results(summary, "### 📋 Challenges & Walkthrough Structure\n\n*No relevant files in monitored directories.*\n", EMPTY_OUTPUTS)
         sys.exit(0)
 
     # Run compliance checks
     checker = ComplianceChecker(filtered_files)
     is_compliant, summary = checker.run_all_checks()
 
-    # Write summary to file
-    with open("structure-check-results.md", "w", encoding="utf-8") as f:
-        f.write(summary)
-
-    print(summary)
+    write_results(summary, checker.generate_comment_markdown(), checker.summary_outputs())
+    checker.emit_github_annotations()
     sys.exit(0 if is_compliant else 1)
 
 

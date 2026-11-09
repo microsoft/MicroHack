@@ -6,5 +6,6 @@
   "preferredLocation": "spaincentral, swedencentral",
   "estimatedDailyCostsUsd": 45.0,
   "estimatedSharedDeploymentDailyCostsUsd": 0.0,
-  "estimatedGlobalDeploymentDailyCostsUsd": 110.0
+  "estimatedGlobalDeploymentDailyCostsUsd": 110.0,
+  "Quality": "GA"
 }

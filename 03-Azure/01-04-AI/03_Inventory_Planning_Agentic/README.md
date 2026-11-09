@@ -131,7 +131,10 @@ it has the longest support horizon (retires **2027-03-18**), and it runs on
 
 To complete this MicroHack you'll need:
 
-- A **GitHub account** (for Codespaces) **or** local **Python 3.11** + [uv](https://docs.astral.sh/uv/) + **Azure CLI**.
+- The **lab account from your Hackbox** — it signs you in to the Azure portal and,
+  via single sign-on, to **GitHub** (the lab organization, used to fork the repo and
+  run a **Codespace**). Prefer local? **VS Code** + **Docker Desktop** + the
+  **Dev Containers** extension runs the same dev container.
 - Access to the **Foundry project** and **Cosmos DB** your lab automation provisioned —
   you'll get a `FoundryProjectEndpoint`, `ModelDeploymentName`, and `CosmosEndpoint` on
   your dashboard.
@@ -139,7 +142,8 @@ To complete this MicroHack you'll need:
 - That's it — no data setup (the app seeds Cosmos on first run), no other software.
 
 > [!TIP]
-> **You're ready to start when** you can open the repo in a Codespace, run `az login`,
+> **You're ready to start when** you can open your fork in a Codespace using the
+> **Azure / AI / Inventory Planning Agentic** dev container, run `az login`,
 > and paste your three dashboard values into `src/.env`.
 
 ## Challenges
@@ -164,7 +168,7 @@ Each challenge follows the same anatomy, so you always know where to look:
 
 ### Challenge list
 
-- **Challenge 1**: **[Get Grounded & Set Up](challenges/challenge-01.md)** *(45 min)* — the scenario, the data model, your Codespace, and the planner console.
+- **Challenge 1**: **[Get Grounded & Set Up](challenges/challenge-01.md)** *(60 min)* — the scenario, the data model, your Codespace, and the planner console.
 - **Challenge 2**: **[Demand Sensing](challenges/challenge-02.md)** *(60 min)* — build and deploy your first hosted agent with function tools over the governed data.
 - **Challenge 3**: **[Inventory Optimisation](challenges/challenge-03.md)** *(60 min)* — a reasoning agent that produces a reorder recommendation, then read its trace.
 - **Challenge 4**: **[Replenishment + Human-in-the-Loop](challenges/challenge-04.md)** *(75 min)* — a real approval gate before the only side-effecting tool.
@@ -181,7 +185,8 @@ Each challenge follows the same anatomy, so you always know where to look:
 ## Repository layout
 
 ```
-.devcontainer/        Codespaces / devcontainer (uv, azd, Azure CLI)
+.devcontainer/        Dev container for this folder + post-create.sh (Codespaces uses
+                      /.devcontainer/03-azure-01-04-ai-03-inventory-planning-agentic)
 labautomation/        Platform entry point — provisions Foundry + Cosmos DB + App Insights
 src/
   pyproject.toml      Dependencies (managed by uv — no requirements.txt)

@@ -42,6 +42,13 @@ Edit [`lab-defaults.json`](lab-defaults.json) to tune region priority, labs per
 subscription, and the per-user daily cost estimate. No IDs or secrets are stored
 in this folder.
 
+`"groups": ["GHCPUsers"]` is **required**: the platform adds each lab Entra user to the
+lab GitHub organization (with access to the `microhack` repository and a Copilot
+seat). Attendees sign in to GitHub via **single sign-on** with the same lab account —
+`deploy-lab.ps1` does **not** emit any GitHub credentials. Attendees fork that
+repository and create their Codespace from the fork in Challenge 1 — without this
+group they cannot access GitHub and the setup cannot be completed.
+
 ## Deployment robustness
 
 `deploy-lab.ps1` is defensive about the failure modes that could otherwise produce a

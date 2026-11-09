@@ -1,15 +1,63 @@
 {
+  // Agentic Inventory Planning Hack — GitHub Codespaces / VS Code Dev Containers
+  // Python + uv + Azure CLI + azd. post-create.sh installs dependencies and seeds src/.env.
   "name": "Azure / AI / Inventory Planning Agentic",
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
-  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/microhack,type=bind,consistency=cached",
-  "workspaceFolder": "/workspaces/microhack/03-Azure/01-04-AI/03_Inventory_Planning_Agentic",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12-bookworm",
+
+  "features": {
+    "ghcr.io/devcontainers/features/azure-cli:1": {
+      "version": "latest"
+    },
+    "ghcr.io/azure/azure-dev/azd:latest": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "version": "latest"
+    }
+  },
+
   "customizations": {
     "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.debugpy",
+        "ms-azuretools.azure-dev",
+        "ms-azuretools.vscode-azureresourcegroups",
+        "ms-windows-ai-studio.windows-ai-studio",
+        "GitHub.copilot",
+        "GitHub.copilot-chat"
+      ],
       "settings": {
-        "terminal.integrated.defaultProfile.linux": "bash"
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/src/.venv/bin/python",
+        "python.terminal.activateEnvironment": true
       }
     }
   },
+
+  // Planner console (uvicorn ui.app:app --port 8000)
+  "forwardPorts": [8000],
+  "portsAttributes": {
+    "8000": { "label": "Planner Console", "onAutoForward": "openBrowser" }
+  },
+
+  // Runs once after the container is created, from workspaceFolder (the hack folder).
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "postAttachCommand": "bash /workspaces/${localWorkspaceFolderBasename}/.devcontainer/welcome.sh",
+
   "remoteUser": "vscode",
-  "postAttachCommand": "bash /workspaces/microhack/.devcontainer/welcome.sh"
+
+  // Keep the Python venv on a container volume instead of the bind-mounted workspace:
+  // Docker Desktop (Windows/macOS) file sharing fails with I/O errors on venv-sized installs.
+  "mounts": [
+    "source=inv-agentic-venv-${devcontainerId},target=/workspaces/${localWorkspaceFolderBasename}/03-Azure/01-04-AI/03_Inventory_Planning_Agentic/src/.venv,type=volume"
+  ],
+
+  // ${localWorkspaceFolderBasename} = the repo/fork name (e.g. microhack-labuser-0001),
+  // so this works for uniquely named forks in Codespaces and for local clones.
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}/03-Azure/01-04-AI/03_Inventory_Planning_Agentic",
+
+  "remoteEnv": {
+    "hackFolder": "/workspaces/${localWorkspaceFolderBasename}/03-Azure/01-04-AI/03_Inventory_Planning_Agentic",
+    "PYTHONPATH": "/workspaces/${localWorkspaceFolderBasename}/03-Azure/01-04-AI/03_Inventory_Planning_Agentic/src"
+  }
 }

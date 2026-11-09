@@ -112,6 +112,26 @@ A deployment success message alone does not certify planning or channels.
 Each new Cloud Shell session might require rerunning the bootstrap; private
 browser logout does not delete server-side deployments or conversations.
 
+### Optional: GitHub Codespaces / VS Code Dev Container
+
+Participants who prefer VS Code can run the same bootstrap in the repo-root dev
+container `.devcontainer/03-azure-01-04-ai-02-inventory-planning-fabric/`
+(**Azure / AI / Inventory Planning Fabric**). It mirrors Cloud Shell: Python 3.12,
+Azure CLI, `azd` and PowerShell 7 as the default terminal; no Docker is needed because
+the hosted build runs remotely. The repository is already in the container, so
+participants skip the sparse checkout, run `az login --use-device-code` with the lab
+account (the TAP goes only on the Microsoft sign-in page), `Set-Location ./orchestrator`,
+and run the same `Start-ParticipantDeployment.ps1` command. The Explorer hides
+facilitator folders and AI chat features are disabled.
+
+Keep Cloud Shell as the default path:
+
+- The lab provides **no GitHub account or GitHub Copilot licence** (`lab-defaults.json`
+  only grants `M365-E5-Users`), so Codespaces needs the participant's **own** GitHub
+  account and counts against its quota. A local Dev Container needs Docker.
+- Some participants' organisations block personal GitHub use or Docker. Cloud Shell
+  needs only the lab account.
+
 ### Advanced/local configuration
 
 From this folder, use a local Python 3.13 virtual environment:

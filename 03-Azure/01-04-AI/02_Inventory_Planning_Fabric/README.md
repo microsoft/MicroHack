@@ -82,6 +82,11 @@ Complete the following before the hack session:
 - For the optional Challenge 5: a private browser window (Edge InPrivate or Chrome Incognito)
   and the lab account you were given. Everything runs in your browser — Azure Cloud Shell,
   Teams for the web and Microsoft 365 Copilot for the web.
+- *Optional alternative for Challenge 5:* if you prefer VS Code, you can deploy from
+  **GitHub Codespaces** or a local **VS Code Dev Container** (configuration
+  **Azure / AI / Inventory Planning Fabric**) instead of Cloud Shell. This needs your own
+  GitHub account (or Docker locally) — the lab provides no GitHub account or GitHub Copilot
+  licence, and none is needed. See the [deployment guide](orchestrator/README.md#option-b-github-codespaces-or-a-local-dev-container).
 
 > [!TIP]
 > **Portal language:** the steps and screenshots use English. Before starting, set

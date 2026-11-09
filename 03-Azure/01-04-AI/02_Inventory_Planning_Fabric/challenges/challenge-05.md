@@ -22,7 +22,7 @@ The approval is **not** left to the AI. The app only accepts exact commands (`YE
 You don't install anything on your computer.
 
 1. Make sure your three agents from Challenges 2–4 are **saved**, use **Fabric IQ**, and that your Fabric capacity is **running**.
-2. Follow the [deployment guide](../orchestrator/README.md). It takes you through three short steps: open Cloud Shell in a private window, download the lab files, and run one command with the **ResourceGroupName** from your lab dashboard.
+2. Follow the [deployment guide](../orchestrator/README.md). It takes you through three short steps: open Cloud Shell in a private window, download the lab files, and run one command with the **ResourceGroupName** from your lab dashboard. (Prefer VS Code? The guide also covers running it from GitHub Codespaces or a local Dev Container.)
 3. Wait for `PASS: hosted multi-turn checks` (about 10 minutes in total). If it fails, read the message and ask your facilitator before moving on.
 
 > [!IMPORTANT]
@@ -107,7 +107,7 @@ Ask your facilitator whether publishing is enabled for your lab before you start
 
 ## 🏁 Success criteria
 
-- [ ] The assistant deployed from Cloud Shell and the check printed `PASS`.
+- [ ] The assistant deployed (from Cloud Shell, or a Codespace / Dev Container) and the check printed `PASS`.
 - [ ] One prompt ran all three agents and produced a proposal with **AWAITING_APPROVAL** and Fabric unit costs.
 - [ ] `MODIFY` changed the revision and total, and the old approval was rejected as stale.
 - [ ] `YES` gave a **simulated** submission, and repeating it did not submit again.

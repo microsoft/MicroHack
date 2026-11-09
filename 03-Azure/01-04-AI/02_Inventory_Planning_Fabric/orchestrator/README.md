@@ -2,6 +2,9 @@
 
 In this step you deploy a small app that runs your three agents from Challenges 2–4 in order and returns a purchase order proposal. You do it from **Azure Cloud Shell** in your browser. Nothing is installed on your computer, and it takes about 15 minutes.
 
+> [!TIP]
+> **Prefer VS Code?** You can run the same steps in **GitHub Codespaces** or a local **VS Code Dev Container** instead of Cloud Shell — see [Option B](#option-b-github-codespaces-or-a-local-dev-container). Cloud Shell (Option A) is the default and needs nothing but your lab account.
+
 > Facilitators and developers: see the [facilitator guide](FACILITATOR.md).
 
 ## Before you start
@@ -10,7 +13,9 @@ In this step you deploy a small app that runs your three agents from Challenges 
 - Your Fabric capacity is **running**.
 - Your lab dashboard is open. You need one value from it: **ResourceGroupName**.
 
-## Step 1: Open Cloud Shell
+## Step 1: Open a terminal
+
+### Option A: Azure Cloud Shell (default)
 
 1. Open a private window (Edge InPrivate or Chrome Incognito).
 2. Sign in to the [Azure portal](https://portal.azure.com/) with your **lab account**.
@@ -19,7 +24,48 @@ In this step you deploy a small app that runs your three agents from Challenges 
 > [!IMPORTANT]
 > Never type your Temporary Access Pass (TAP) in the terminal. Enter it only on the Microsoft sign-in page.
 
+Continue with [Step 2](#step-2-download-the-lab-files).
+
+### Option B: GitHub Codespaces or a local Dev Container
+
+Use this if you prefer working in VS Code. The container has the same tools as Cloud Shell (PowerShell 7, Azure CLI, `azd`, Python 3.12), and the lab files are already in it, so you **skip Step 2**.
+
+> [!NOTE]
+> **This option needs your own GitHub account (or Docker on your computer).** The lab gives you an Azure/Microsoft account, **not** a GitHub account or a GitHub Copilot licence, and nothing in this hack requires Copilot. Codespaces usage counts against **your** GitHub account's free monthly quota. If you can't use a personal GitHub account, use Option A.
+
+**GitHub Codespaces**
+
+1. Sign in to GitHub with **your own** account and open [microsoft/MicroHack](https://github.com/microsoft/MicroHack).
+2. Select **Code → Codespaces**, open the **⋯** menu and choose **New with options...**.
+
+   ![Create a GitHub Codespace with options](../images/challenge-05-codespaces-new-with-options.png)
+3. Set **Dev container configuration** to **Azure / AI / Inventory Planning Fabric**, keep the **2-core** machine type, and select **Create codespace**.
+
+   ![Create codespace with the Azure / AI / Inventory Planning Fabric configuration selected](../images/challenge-05-codespaces-select-config.png)
+4. Wait for the Codespace to open. The Explorer shows the `02_Inventory_Planning_Fabric` folder and the terminal opens in **PowerShell** (`PS /workspaces/...>`). If VS Code asks whether to trust the folder, select **Trust Folder & Continue**; if it asks to open the parent git repository, select **Never**.
+
+   ![Codespace ready on the 02_Inventory_Planning_Fabric folder with a PowerShell terminal](../images/challenge-05-codespace-ready.png)
+
+**Local VS Code Dev Container** (needs [Docker Desktop](https://www.docker.com/products/docker-desktop/) and the [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension): clone `https://github.com/microsoft/MicroHack`, open the **repository root** in VS Code, run **Dev Containers: Reopen in Container**, and pick **Azure / AI / Inventory Planning Fabric**.
+
+**Then, in the container terminal (either way):**
+
+1. Sign in to Azure with your **lab account**. Open the URL shown, enter the code, and sign in on the Microsoft page (that's where your TAP goes — never in the terminal):
+
+   ```powershell
+   az login --use-device-code
+   ```
+
+   If you're asked to pick a subscription, choose the one that contains your lab resource group.
+2. Move into the deployment folder, then continue with [Step 3](#step-3-deploy-and-check):
+
+   ```powershell
+   Set-Location ./orchestrator
+   ```
+
 ## Step 2: Download the lab files
+
+*(Cloud Shell only — skip this step in a Codespace or Dev Container.)*
 
 This copies only this lab's folder from GitHub (about 8 MB) into Cloud Shell, then moves you into it. It takes a few seconds.
 
@@ -70,4 +116,7 @@ Go back to [Challenge 5, Part B](../challenges/challenge-05.md#part-b--run-the-c
 | `Project not found` | Wait a few minutes and repeat Step 3. If it happens again, tell your facilitator. |
 | Permission denied | Tell your facilitator. Don't ask for Owner access. |
 | Cloud Shell timed out or the lab files are gone | Reopen Cloud Shell and repeat Steps 2 and 3. |
+| Codespace / Dev Container: `Cannot read the Azure CLI subscription` or `authentication is unavailable` | Run `az login --use-device-code` with your **lab account**, then repeat Step 3. |
+| Codespace / Dev Container: the terminal shows `$` instead of `PS` | You're in bash. Type `pwsh` to switch to PowerShell, then repeat the command. |
+| **Azure / AI / Inventory Planning Fabric** isn't in the dev container list | Use **New with options...** on `microsoft/MicroHack` (not *Create codespace on main*), or use Option A (Cloud Shell). |
 | The check fails and mentions Fabric | Make sure your Fabric capacity is **running** and your Data Agent is **published**, then repeat Step 3. Give your facilitator the request ID from the error if it keeps failing. |

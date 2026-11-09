@@ -1,8 +1,9 @@
 <#
 .SYNOPSIS
-Prepare tools inside Azure Cloud Shell and deploy into the participant's existing project.
+Prepare tools inside Azure Cloud Shell (or the lab's dev container) and deploy into the participant's existing project.
 .DESCRIPTION
-Requires Cloud Shell PowerShell and its existing Azure CLI/Python sign-in.
+Requires PowerShell 7 on Linux with a signed-in Azure CLI and Python 3.10+: Azure Cloud Shell, or the
+lab's GitHub Codespaces / VS Code Dev Container configuration.
 Does not install software on the participant's computer, assign roles, or provision infrastructure.
 #>
 #Requires -Version 7.2
@@ -20,11 +21,11 @@ param(
     [switch]$ConfigureOnly
 )
 $ErrorActionPreference = 'Stop'
-if (-not $IsLinux) { throw 'Run this bootstrap in Azure Cloud Shell (PowerShell), not on your computer.' }
+if (-not $IsLinux) { throw 'Run this bootstrap in Azure Cloud Shell (PowerShell) or in the lab''s Codespace / Dev Container, not directly on your computer.' }
 if ($VerifyHosted -and $ConfigureOnly) { throw '-VerifyHosted cannot be combined with -ConfigureOnly.' }
 foreach ($tool in @('az', 'python3', 'bash')) {
     if (-not (Get-Command $tool -ErrorAction SilentlyContinue)) {
-        throw "$tool is missing from this Cloud Shell. Use a supported Azure Cloud Shell session."
+        throw "$tool is missing. Use Azure Cloud Shell or the lab's Codespace / Dev Container configuration."
     }
 }
 function Invoke-Checked([string]$Program, [string[]]$Arguments) {
@@ -33,7 +34,7 @@ function Invoke-Checked([string]$Program, [string[]]$Arguments) {
 }
 $subscription = az account show --query id -o tsv
 if ($LASTEXITCODE -ne 0 -or -not $subscription) {
-    throw 'Cannot read the Cloud Shell subscription. Sign in to Cloud Shell with the lab account and rerun.'
+    throw 'Cannot read the Azure CLI subscription. Sign in with the lab account (in a Codespace / Dev Container: az login --use-device-code) and rerun.'
 }
 if (-not $SubscriptionId) { $SubscriptionId = $subscription }
 if ($subscription -ne $SubscriptionId) {
@@ -111,10 +112,10 @@ foreach ($required in @(
 }
 azd auth login --check-status
 if ($LASTEXITCODE -ne 0) {
-    throw 'Cloud Shell Azure CLI authentication is unavailable. Reopen Cloud Shell under the assigned lab account and refresh its sign-in, then rerun. No TAP belongs in this script or terminal.'
+    throw 'Azure CLI authentication is unavailable. Reopen Cloud Shell under the assigned lab account (or run az login --use-device-code in a Codespace / Dev Container), then rerun. No TAP belongs in this script or terminal.'
 }
 
-Invoke-Checked 'python3' @('-c', 'import sys; assert sys.version_info >= (3, 10), "Cloud Shell Python 3.10+ is required"')
+Invoke-Checked 'python3' @('-c', 'import sys; assert sys.version_info >= (3, 10), "Python 3.10+ is required"')
 $venv = Join-Path $PSScriptRoot '.venv-tools'
 $python = Join-Path $venv 'bin/python'
 if (-not (Test-Path -LiteralPath $python)) { Invoke-Checked 'python3' @('-m', 'venv', $venv) }

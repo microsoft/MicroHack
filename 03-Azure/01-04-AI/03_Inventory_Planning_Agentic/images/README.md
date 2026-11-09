@@ -29,7 +29,7 @@ name. Keep them legible in the rendered Markdown.
 ## Setup screenshots (Challenge 1)
 
 The `setup-*.png` files illustrate the generic MicroHack lab sign-in and Codespaces
-flow (shared with the Fraud Intelligence hack): Azure portal sign-in and resource
+flow: Azure portal sign-in and resource
 groups, GitHub sign-in via the identity provider, the lab organization, forking the
 `microhack` repository under a unique name, **Code → Codespaces → New with options**,
 and the *Never* answer to VS Code's "open the parent repository" prompt.

@@ -146,10 +146,21 @@ The planners who place orders live in Teams. Publishing an agent lets them chat 
 - When would you choose a deterministic workflow over three agents a human drives manually — and when would the **Group chat** pattern (dynamic hand-off) fit better?
 - Once the loop runs end-to-end from one prompt, the approval gate is the only human checkpoint. What else would you add before production?
 
+> [!NOTE]
+> **Using this pattern in your own scenarios after 1 December 2026.** The visual designer and in-portal workflow runs retire, but the pattern you built — specialist agents in a fixed order with a human approval gate — carries over:
+>
+> - **Keep your design:** before you leave, open your workflow's **YAML** view and copy the YAML. It is the portable definition of what you built today.
+> - **Code-first (recommended):** run the same sequence with **Microsoft Agent Framework** — reuse the YAML as a *declarative workflow*, or write it in Python/.NET — and deploy it to Foundry as a **hosted agent**. Your prompt agents from Challenges 2–4 stay unchanged.
+> - **Low-code, visual:** use **Azure Logic Apps** to call your Foundry agents as steps and mix them with business actions (approvals, emails, ERP or database writes).
+> - **Simple hand-off:** if one agent only needs to call another, connect them **agent-to-agent (A2A)** instead of building a workflow.
+>
+> Whichever path you pick, keep the human approval gate in front of any action that changes a real system. See the [migration guide](https://learn.microsoft.com/azure/foundry/agents/concepts/workflow#migration-guide).
+
 ## 📚 Learning resources
 
 - [Build a workflow in Microsoft Foundry (Preview)](https://learn.microsoft.com/azure/foundry/agents/concepts/workflow)
 - [Microsoft Agent Framework declarative workflows (the YAML behind the designer)](https://learn.microsoft.com/agent-framework/workflows/declarative)
+- [Automate Foundry agents with workflows in Azure Logic Apps](https://learn.microsoft.com/azure/logic-apps/automate-foundry-agents-with-workflows)
 - [Publish agents to Microsoft 365 Copilot and Microsoft Teams](https://learn.microsoft.com/azure/foundry/agents/how-to/publish-copilot)
 - [Agent tracing — Foundry](https://learn.microsoft.com/azure/foundry/observability/concepts/trace-agent-concept)
 - [Evaluate agents — Foundry](https://learn.microsoft.com/azure/foundry/observability/how-to/evaluate-agent)

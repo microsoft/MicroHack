@@ -73,3 +73,4 @@ workflow run (inventory-planning-workflow)
 
 - **Deterministic workflow vs. three human-driven agents:** the workflow is faster and hands-free, but the human loses the natural checkpoints between steps. The approval gate becomes the *only* control point — so it matters even more.
 - **Where would you add guardrails** in a production version? (e.g. a spend cap that requires escalation, and an audit review of the trace.)
+- **After 1 December 2026:** point teams to the note at the end of the challenge — copy the workflow YAML, then use Microsoft Agent Framework (hosted agent), Azure Logic Apps, or A2A to reuse the same pattern in their own scenarios.

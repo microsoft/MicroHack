@@ -41,6 +41,7 @@
           "docs": true,
           "dev": true,
           "archive": true,
+          "tests": true,
           ".devcontainer": true
         },
         // Open Markdown (README, challenges) rendered by default.

@@ -39,10 +39,22 @@ Use this if you prefer working in VS Code. The container has the same tools as C
 2. Select **Code → Codespaces**, open the **⋯** menu and choose **New with options...**.
 
    ![Create a GitHub Codespace with options](../images/challenge-05-codespaces-new-with-options.png)
-3. Set **Dev container configuration** to **Azure / AI / Inventory Planning Fabric**, keep the **2-core** machine type, and select **Create codespace**.
+3. Set **Dev container configuration** to **Azure / AI / Inventory Planning Fabric** (scroll the list — configurations are grouped by MicroHack area).
+
+   ![Dev container configuration list with Azure / AI / Inventory Planning Fabric highlighted](../images/challenge-05-codespaces-config-list.png)
+
+   Keep **Branch** `main` and the **2-core** machine type, then select **Create codespace**.
 
    ![Create codespace with the Azure / AI / Inventory Planning Fabric configuration selected](../images/challenge-05-codespaces-select-config.png)
-4. Wait for the Codespace to open. The Explorer shows the `02_Inventory_Planning_Fabric` folder and the terminal opens in **PowerShell** (`PS /workspaces/...>`). If VS Code asks whether to trust the folder, select **Trust Folder & Continue**; if it asks to open the parent git repository, select **Never**.
+4. Wait for the Codespace to open (the first start takes a few minutes).
+   - If VS Code asks **Do you trust the authors of the files in this folder?**, select **Trust Folder & Continue** — otherwise the terminal can't start.
+
+     ![Select Trust Folder & Continue](../images/challenge-05-codespace-trust.png)
+   - If it asks to open the git repository found in the parent folders, select **Never** — you only need this lab's folder.
+
+     ![Select Never when asked to open the parent repository](../images/challenge-05-codespace-never.png)
+
+   The Explorer shows the `02_Inventory_Planning_Fabric` folder, the README opens as a preview, and the terminal opens in **PowerShell** (`PS /workspaces/...>`):
 
    ![Codespace ready on the 02_Inventory_Planning_Fabric folder with a PowerShell terminal](../images/challenge-05-codespace-ready.png)
 
@@ -62,6 +74,10 @@ Use this if you prefer working in VS Code. The container has the same tools as C
    ```powershell
    Set-Location ./orchestrator
    ```
+
+   The prompt now ends in `/orchestrator>`:
+
+   ![PowerShell terminal in the Codespace after Set-Location ./orchestrator](../images/challenge-05-codespace-terminal.png)
 
 ## Step 2: Download the lab files
 

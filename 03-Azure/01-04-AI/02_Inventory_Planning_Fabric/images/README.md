@@ -59,5 +59,12 @@ This folder holds the screenshots embedded throughout the challenge guides and w
 | `challenge-05-publish-dialog.png` | 5 | The **Publish to Teams and Microsoft 365** dialog with the fields filled in. |
 | `challenge-05-publish-options.png` | 5 | **Publish options**: **Just you** selected, **People in your organization** needing admin approval. |
 | `challenge-05-publish-success.png` | 5 | The **Publish successful** message pointing to the Microsoft 365 Copilot agent store and Teams. |
+| `challenge-05-codespaces-new-with-options.png` | 5 *(optional path)* | `microsoft/MicroHack` → **Code → Codespaces → ⋯ → New with options...** for the Codespaces deployment option. |
+| `challenge-05-codespaces-config-list.png` | 5 *(optional path)* | The dev container configuration list with **Azure / AI / Inventory Planning Fabric** highlighted. |
+| `challenge-05-codespaces-select-config.png` | 5 *(optional path)* | **Create codespace**: branch `main`, **Azure / AI / Inventory Planning Fabric**, Europe West, 2-core. |
+| `challenge-05-codespace-trust.png` | 5 *(optional path)* | VS Code's workspace trust dialog — select **Trust Folder & Continue**. |
+| `challenge-05-codespace-never.png` | 5 *(optional path)* | VS Code's "open the parent git repository" prompt — select **Never**. |
+| `challenge-05-codespace-ready.png` | 5 *(optional path)* | The ready Codespace: Explorer on `02_Inventory_Planning_Fabric`, README preview, PowerShell terminal. |
+| `challenge-05-codespace-terminal.png` | 5 *(optional path)* | The Codespace PowerShell terminal after `Set-Location ./orchestrator`. |
 | `challenge-04-orchestrator.png` | 5 *(archived)* | **Historical.** The retiring `inventory-planning-workflow` canvas: Start → demand-sensing → inventory-optimisation → replenishment-action. Used only in `archive/visual-workflow-exercise.md`; do not re-shoot. |
 | `challenge-04-teams.png` | 5 *(archived)* | **Historical.** A prompt agent's **Publish** menu open on **Teams & Microsoft 365 Copilot**. Used only in `archive/visual-workflow-exercise.md`; do not re-shoot. |

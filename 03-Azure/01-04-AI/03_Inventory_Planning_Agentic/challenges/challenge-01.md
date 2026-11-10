@@ -87,18 +87,36 @@ subscription, resource group, GitHub organization, and repository.
    ![Create a GitHub Codespace with options](../images/setup-github-codespaces.png)
 
 2. Set **Dev container configuration** to
-   **Azure / AI / Inventory Planning Agentic**, keep the **2-core** machine type, and
-   select **Create codespace**.
+   **Azure / AI / Inventory Planning Agentic** (scroll the list — configurations are
+   grouped by MicroHack area).
+
+   ![Dev container configuration list with Azure / AI / Inventory Planning Agentic highlighted](../images/setup-dev-container-list.png)
+
+   Keep the **2-core** machine type and select **Create codespace**.
+
+   ![Create codespace with the Azure / AI / Inventory Planning Agentic configuration selected](../images/setup-select-dev-container.png)
+
 3. GitHub opens the Codespace in a new tab. The first build takes a few minutes: the
    container installs Python 3.12, `uv`, the Azure CLI, and `azd`, then
    `.devcontainer/post-create.sh` runs `uv sync` and seeds `src/.env`. The Explorer
-   opens directly on the `03_Inventory_Planning_Agentic` folder.
+   opens directly on the `03_Inventory_Planning_Agentic` folder, the README opens as a
+   rendered preview, and new terminals start in the project's Python environment
+   (`(agentic-inventory-hack)` in the prompt):
+
+   ![Codespace ready: Explorer on the 03_Inventory_Planning_Agentic folder, README rendered, terminal in the agentic-inventory-hack environment](../images/setup-codespace-ready.png)
 
    > [!IMPORTANT]
    > When VS Code asks whether to open the git repository found in the parent folders,
    > select **Never** — you only need the hack folder.
    >
    > ![Select Never when asked to open the repository](../images/setup-never-open-repository.png)
+
+   > [!IMPORTANT]
+   > If VS Code asks **Do you trust the authors of the files in this folder?** (for
+   > example when you open a terminal), select **Trust Folder & Continue** — otherwise
+   > the terminal and the Python extension stay in Restricted Mode.
+   >
+   > ![Select Trust Folder & Continue in the workspace trust dialog](../images/setup-trust-folder.png)
 
 **Option 2 — Local VS Code Dev Containers**
 

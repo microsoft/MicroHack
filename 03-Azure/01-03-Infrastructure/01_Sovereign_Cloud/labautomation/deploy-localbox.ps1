@@ -225,26 +225,26 @@ Invoke-AzJson -Arguments @(
     '--namespace', 'Microsoft.Network', '--wait'
 ) | Out-Null
 
-$availableVmSize = & az vm list-sizes `
-    --subscription $SubscriptionId `
-    --location $Location `
-    --query "[?name=='$VmSize'].name | [0]" `
-    --output tsv `
-    --only-show-errors
-if ($LASTEXITCODE -ne 0) {
-    throw "Unable to query VM size availability in $Location."
-}
-if ($availableVmSize -ne $VmSize) {
-    throw "VM size $VmSize is unavailable in $Location."
+$availableVmSizes = @(Invoke-AzJson -Arguments @(
+    'vm', 'list-skus', '--subscription', $SubscriptionId, '--location', $Location,
+    '--resource-type', 'virtualMachines', '--size', $VmSize, '--all'
+) | Where-Object { $_.name -eq $VmSize })
+if ($availableVmSizes.Count -ne 1 -or
+    @($availableVmSizes[0].restrictions | Where-Object { $_.type -ne 'Zone' }).Count -gt 0) {
+    throw "VM size $VmSize is unavailable in $Location for this subscription (missing SKU or regional restriction). No deployment was submitted."
 }
 
-$familyName = if ($VmSize -eq 'Standard_E32s_v6') { 'Standard Esv6 Family vCPUs' } else { 'Standard Esv5 Family vCPUs' }
+$familyName = if ($VmSize -eq 'Standard_E32s_v6') { 'standardEsv6Family' } else { 'standardESv5Family' }
 $usageEntries = Invoke-AzJson -Arguments @(
     'vm', 'list-usage', '--subscription', $SubscriptionId, '--location', $Location
 )
-$usage = @($usageEntries | Where-Object { $_.name.localizedValue -eq $familyName }) | Select-Object -First 1
+$usage = @($usageEntries | Where-Object { $_.name.value -eq $familyName }) | Select-Object -First 1
 if (-not $usage -or ($usage.limit - $usage.currentValue) -lt 32) {
     throw "At least 32 unused $familyName vCPUs are required in $Location."
+}
+$regionalUsage = @($usageEntries | Where-Object { $_.name.value -eq 'cores' }) | Select-Object -First 1
+if (-not $regionalUsage -or ($regionalUsage.limit - $regionalUsage.currentValue) -lt 32) {
+    throw "At least 32 unused regional vCPUs are required in $Location."
 }
 
 if ([string]::IsNullOrWhiteSpace($AzureLocalResourceProviderObjectId)) {

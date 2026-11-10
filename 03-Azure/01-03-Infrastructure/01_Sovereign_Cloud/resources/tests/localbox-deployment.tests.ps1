@@ -62,6 +62,10 @@ Describe 'LocalBox deployment entry points' {
             StartupTagUpdate = @()
             QueriesFail = $false
             ValidationFails = $false
+            Restrictions = @()
+            MissingSku = $false
+            FamilyQuota = 64
+            RegionalQuota = 64
             Submitted = 0
             Builds = 0
             Parameters = $null
@@ -101,8 +105,22 @@ var settings = {
                 '^provider show' { 'Registered'; break }
                 '^feature show' { 'Registered'; break }
                 '^provider register' { '{}'; break }
-                '^vm list-sizes' { 'Standard_E32s_v6'; break }
-                '^vm list-usage' { '[{"name":{"localizedValue":"Standard Esv6 Family vCPUs"},"limit":64,"currentValue":0}]'; break }
+                '^vm list-skus' {
+                    if ($deploymentTestState.MissingSku) { '[]' }
+                    else {
+                        $size = $args[[array]::IndexOf($args, '--size') + 1]
+                        ConvertTo-Json -InputObject @(@{ name = $size; restrictions = $deploymentTestState.Restrictions }) -Depth 10
+                    }
+                    break
+                }
+                '^vm list-usage' {
+                    ConvertTo-Json -InputObject @(
+                        @{ name = @{ value = 'standardEsv6Family' }; limit = $deploymentTestState.FamilyQuota; currentValue = 0 }
+                        @{ name = @{ value = 'standardESv5Family' }; limit = $deploymentTestState.FamilyQuota; currentValue = 0 }
+                        @{ name = @{ value = 'cores' }; limit = $deploymentTestState.RegionalQuota; currentValue = 0 }
+                    )
+                    break
+                }
                 '^ad sp list' { '[{"id":"20000000-0000-0000-0000-000000000001"}]'; break }
                 '^group exists' { $deploymentTestState.GroupExists.ToString().ToLowerInvariant(); break }
                 '^network bastion list' {
@@ -144,6 +162,34 @@ var settings = {
         $deploymentTestState.HostSource | Should -Not -Match 'customData|SovereignStartup'
         $deploymentTestState.Parameters.tags.value.PSObject.Properties.Name | Should -Not -Contain 'microhack-startup-id'
         $deploymentTestState.StartupTagUpdate.Count | Should -Be 0
+    }
+    It 'rejects a region-restricted or missing SKU before creating infrastructure' -TestCases @(
+        @{ Missing = $true; Restrictions = @() }
+        @{ Missing = $false; Restrictions = @(@{ type = 'Location'; reasonCode = 'NotAvailableForSubscription' }) }
+    ) {
+        param($Missing, $Restrictions)
+        $deploymentTestState.MissingSku = $Missing
+        $deploymentTestState.Restrictions = $Restrictions
+        { & "$fixture/labautomation/deploy-localbox.ps1" @arguments } | Should -Throw '*VM size*unavailable*'
+        $deploymentTestState.Submitted | Should -Be 0
+        $deploymentTestState.Builds | Should -Be 0
+    }
+    It 'permits zone-only restrictions for a non-zonal v5 deployment' {
+        $deploymentTestState.Restrictions = @(@{ type = 'Zone' })
+        $arguments.VmSize = 'Standard_E32s_v5'
+        & "$fixture/labautomation/deploy-localbox.ps1" @arguments
+        $deploymentTestState.Parameters.vmSize.value | Should -Be 'Standard_E32s_v5'
+        $deploymentTestState.Submitted | Should -Be 1
+    }
+    It 'requires both regional and family headroom' -TestCases @(
+        @{ Family = 31; Regional = 64 }
+        @{ Family = 64; Regional = 31 }
+    ) {
+        param($Family, $Regional)
+        $deploymentTestState.FamilyQuota = $Family
+        $deploymentTestState.RegionalQuota = $Regional
+        { & "$fixture/labautomation/deploy-localbox.ps1" @arguments } | Should -Throw '*At least 32 unused*'
+        $deploymentTestState.Submitted | Should -Be 0
     }
     It 'does not redeploy a guarded VM whose progress update removed identity tags' {
         $deploymentTestState.Clients = @(@{ name = 'LocalBox-Client'; tags = @{} })

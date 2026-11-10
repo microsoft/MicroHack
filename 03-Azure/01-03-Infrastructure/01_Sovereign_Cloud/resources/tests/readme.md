@@ -131,6 +131,30 @@ event-specific check of service availability and effective inherited policies.
 
 ## Global event LocalBox checks
 
+### ARM capacity and safe retries
+
+Run `Invoke-Pester ./localbox-arm-recovery.tests.ps1,./global-localbox.tests.ps1,./localbox-deployment.tests.ps1,./hosted-tag-policy.tests.ps1 -Output Detailed`.
+These offline regressions cover the TEST16 asynchronous `SkuNotAvailable` path:
+nested operation diagnostics, redaction, bounded traversal, mixed/unknown/read
+failures, canceled deployments, completion before guest automation, E32s_v6 to
+E32s_v5 fallback, inventory rechecks, existing-VM protection and refusal to move
+partial regional resources. SKU restrictions and both family/regional headroom
+are checked before submission. Hosted policy tests verify preservation of an
+existing identity's location when host preferences change.
+
+The tests do not allocate capacity, delete resources or prove the alternate SKU
+works in a live event. See [ARM recovery and the TEST16 status](../hosted-events/readme.md#localbox-arm-capacity-failures);
+a new Console run remains the integration gate.
+
+On 10 November 2026, the combined ARM-recovery, global LocalBox, deployment,
+preparation, hosted-tag-policy, hosted-Defender, shared-AKS and quota-reuse suites
+passed **563 tests**, with none failed or skipped. A separate GET-only Azure CLI
+adapter fed the actual TEST16 deployment/operation responses into the new wait
+helper and verified the nested `SkuNotAvailable` classification and diagnostic
+message. This read-only check did not deploy, retry or resize a VM.
+
+### Startup and guest automation
+
 Run `Invoke-Pester ./localbox-winget.tests.ps1,./localbox-startup.tests.ps1,./localbox-deployment.tests.ps1 -Output Detailed`
 for WinGet provisioning failures. These checks cover bounded HTTP 504 retries,
 CLI/module version mismatch, COM activation failure, nonzero/missing native exit

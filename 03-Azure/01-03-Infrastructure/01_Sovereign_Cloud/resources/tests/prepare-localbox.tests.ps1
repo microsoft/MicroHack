@@ -1060,9 +1060,11 @@ Describe 'Console lab group credentials' {
 
 Describe 'Console LocalBox credential isolation' {
     BeforeAll {
+        . "$PSScriptRoot/../../labautomation/localbox-automation.ps1"
         function New-MhhStablePassword { [CmdletBinding()] param($Purpose, $Length) }
         function Update-MhhToken { [CmdletBinding()] param() }
         function Get-AzResourceGroupDeployment { [CmdletBinding()] param($ResourceGroupName, $Name) }
+        function Get-AzResourceGroupDeploymentOperation { [CmdletBinding()] param($ResourceGroupName, $DeploymentName) }
     }
     BeforeEach {
         $deployment = @{
@@ -1070,6 +1072,7 @@ Describe 'Console LocalBox credential isolation' {
         }
         Mock Update-MhhToken {}
         Mock Get-AzResourceGroupDeployment { $deployment }
+        Mock Get-AzResourceGroupDeploymentOperation { @() }
         Mock New-MhhStablePassword { 'mock-password-not-a-secret' }
         Mock Start-Sleep {}
     }
@@ -1174,6 +1177,12 @@ Describe 'LocalBox registration region contract' {
 
 Describe 'Console LocalBox CLI failure propagation' {
     BeforeAll {
+        . "$PSScriptRoot/../../labautomation/localbox-credentials.ps1"
+        . "$PSScriptRoot/../../labautomation/localbox-automation.ps1"
+        function Update-MhhToken {}
+        function Get-AzResourceGroup { [CmdletBinding()] param() }
+        function Get-AzResource { [CmdletBinding()] param($ResourceGroupName) }
+        function Wait-LocalBoxDeployment { param($ResourceGroupName, $DeploymentName) }
         $deployer = [Management.Automation.Language.Parser]::ParseFile(
             "$PSScriptRoot/../../labautomation/deploy-localbox.ps1", [ref]$null, [ref]$null)
         $helper = $deployer.Find({
@@ -1235,11 +1244,18 @@ Invoke-AzJson @('deployment', 'group', 'validate', '--location', $Location) | Ou
 [pscustomobject]@{ ProvisioningState = 'Submitted'; Location = $Location }
 '@ | Set-Content (Join-Path $TestDrive 'deploy-localbox.ps1')
             $localBoxLocations = @('first-region', 'second-region')
+            $localBoxResourceGroupName = 'shared'
+            $candidateFailures = [Collections.Generic.List[string]]::new()
             $azureLocalResourceProviderObjectIds = @('test-object-id')
             $localBoxDeployment = $null
+            $cliState.Command = '[Console]::Error.WriteLine("SkuNotAvailable: capacity restriction"); exit 1'
+            Mock Update-MhhToken {}
+            Mock Get-AzResourceGroup {}
+            Mock Get-AzResource {}
+            Mock Wait-LocalBoxDeployment {}
             Mock az {
                 $cliState.Attempts++
-                if ($cliState.Attempts -eq 2) {
+                if ($cliState.Attempts -eq 3) {
                     & $nativeExecutable -NoProfile -NonInteractive -Command 'exit 0'
                 }
                 else {
@@ -1247,25 +1263,29 @@ Invoke-AzJson @('deployment', 'group', 'validate', '--location', $Location) | Ou
                 }
             }
         }
-        It 'tries the next region after the actual native regional failure' {
+        It 'tries both sizes then the next region after the actual native capacity failure' {
             . $fallback
             $localBoxDeployment.ProvisioningState | Should -Be 'Submitted'
             $localBoxDeployment.Location | Should -Be 'second-region'
-            Should -Invoke az -Times 2 -Exactly
+            Should -Invoke az -Times 3 -Exactly
         }
         It 'stops without retrying <Code>' -ForEach @(
             @{ Code = 'RequestDisallowedByPolicy' }
             @{ Code = 'AuthorizationFailed' }
             @{ Code = 'UnexpectedFailure' }
+            @{ Code = 'RequestDisallowedByAzure' }
         ) {
             $cliState.Command = "[Console]::Error.WriteLine('$Code'); exit 1"
             { . $fallback } | Should -Throw "*$Code*"
             Should -Invoke az -Times 1 -Exactly
         }
-        It 'preserves the regional failure when no fallback regions remain' {
+        It 'retains native failure details when no capacity candidates remain' {
             $localBoxLocations = @('first-region')
-            { . $fallback } | Should -Throw '*RequestDisallowedByAzure*locationineligible*'
-            Should -Invoke az -Times 1 -Exactly
+            . $fallback
+            $localBoxDeployment | Should -BeNullOrEmpty
+            $candidateFailures.Count | Should -Be 2
+            $candidateFailures -join '; ' | Should -Match 'SkuNotAvailable'
+            Should -Invoke az -Times 2 -Exactly
         }
     }
 }

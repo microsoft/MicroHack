@@ -42,6 +42,14 @@ run or claim that all startup-monitor behavior has been validated.
 Older TEST06/12/13/14 observations below are dated diagnostic history, not the
 current event status. Preserve their original failures and measurement boundaries.
 
+**Later cold test (TEST16, reviewed 10 November):** the initial LocalBox ARM
+deployment failed with `SkuNotAvailable` for `Standard_E32s_v6` in Spain Central,
+before a Client VM or guest preparation existed. Shared and participant stages
+were skipped. This was a capacity restriction, not a bootstrap/download failure.
+The [ARM capacity recovery handling](#localbox-arm-capacity-failures) below addresses
+the missed asynchronous failure path; a new Console run is still required to
+validate recovery end to end. It does not change the earlier event's successful result.
+
 ## Configure the event
 
 1. Agree the Sovereign Cloud scenario with your GEO/program lead and request an Event Lead account through the program's access process.
@@ -69,9 +77,11 @@ verify the global deployment job actually ran before continuing.
 The Console runs the global hook **once per event in the lowest-GUID event
 subscription**, passing all event lab-user object IDs. It completes before
 `shared-deploy-lab.ps1` runs in each subscription, followed by participant
-deployments. A global failure stops the event deployment. Host-region fallback
-uses the preferred regions within that selected subscription; it does not choose
-a different subscription if quota or SKU availability is insufficient.
+deployments. A global failure stops the event deployment. Host capacity selection
+tries `Standard_E32s_v6`, then `Standard_E32s_v5`, in each preferred region within
+that selected subscription. It does not choose another subscription, delete
+partial infrastructure or resize an existing VM. Regional resources constrain
+recovery to their existing region; see [ARM capacity failures](#localbox-arm-capacity-failures).
 
 The global hook deploys/reuses one `rg-localbox-shared`, including one LocalBox
 Client. It publishes **Shared LocalBox Subscription ID**, **Shared LocalBox Resource
@@ -338,7 +348,7 @@ attempt to decrypt them from a different Windows account.
 
 ### Timeouts and scheduling
 
-The initial ARM wait allows six hours, nested readiness eight hours, and the
+The ARM wait allows six hours per submitted capacity candidate, nested readiness eight hours, and the
 Managed Run Command twelve hours (with five additional minutes for host polling).
 These are independent ceilings, **not** expected durations. Confirm with the
 Console operator that its global-job limit accommodates the intended run; token
@@ -371,6 +381,59 @@ end-to-end event-duration benchmark; the report separates measured operations,
 bounded intervals and potential optimizations.
 
 ### Diagnostics and reruns
+
+#### LocalBox ARM capacity failures
+
+The global hook waits for ARM completion inside capacity selection, including
+when resuming a running deployment. `Submitted` is not success. Failed operations
+are inspected for nested error codes and bounded, redacted messages so Console
+shows the underlying `SkuNotAvailable`/allocation/quota error rather than only
+`ended as Failed`.
+
+For a new host, each candidate is tried at most once per hook invocation:
+**E32s_v6 then E32s_v5 in the first preferred region**, followed by the same
+sequence in subsequent regions when safe. The deployer checks subscription SKU
+restrictions, at least 32 unused family vCPUs and at least 32 unused regional
+vCPUs before submission. These checks are not a capacity reservation; ARM can
+still report an allocation failure afterward.
+
+Automatic fallback is allowed only for recognized capacity failures. Canceled
+deployments, timeouts, policy/authorization errors, mixed failure causes and
+missing/unreadable diagnostics stop the job. A timeout does not establish that
+the original deployment stopped, so no competing deployment is submitted.
+
+Before every new candidate, the hook rereads the resource inventory:
+
+- If any VM exists in the LocalBox group, stop for organizer inspection rather
+  than resize/recreate it or change its immutable startup payload.
+- Existing networking/workspace and other regional resources must match the
+  candidate region. Otherwise that region is skipped. Resource-group metadata
+  alone does not pin the host region; fixed-registration staging storage is
+  retained independently.
+- No cleanup is automatic. When a partial deployment pins the group to a region
+  where both host sizes are unavailable, retry after availability changes or
+  arrange a separately authorized cleanup/migration or fresh event. Merely
+  reordering regions cannot move the partial infrastructure.
+
+For TEST16, read-only checks on 10 November found both E32s sizes restricted in
+Spain Central for the selected subscription; Sweden Central listed both without
+restrictions and had sufficient family/regional quota. The existing Spain
+networking prevented an in-place cross-region retry. These are dated planning
+observations, not proof that a Sweden deployment will succeed. Do not remove
+the failed shared group without checking for new work and obtaining organizer
+approval; leave participant scopes and subscription policies intact.
+
+After explicit organizer approval, the failed TEST16 shared group was removed
+on 10 November, following confirmation that only the seven known leftover
+resources remained and no VM or active deployment existed. A subsequent read
+confirmed the group was gone, all eight participant groups remained, and the
+subscription's hosted-tag policy identity still used Spain Central. This was
+operator-authorized cleanup, not automatic fallback; no replacement deployment
+was started. The next Console run remains pending.
+
+Re-import the updated content pack before retrying Console. A failed global
+stage correctly prevents shared and participant deployments; guest health tests
+cannot run until the host and nested infrastructure exist.
 
 #### Guarded startup for new Client VMs
 
@@ -771,14 +834,16 @@ European region.
   and `CostControl=Ignore` do not override arbitrary location restrictions.
   Escalate those denials to the policy owner rather than disabling governance.
 
-For an existing event, preserve the original preferred-region order on retry.
-Participant quota recovery pins the saved region/SKU, but the global hosted-tag
-policy assignment's managed identity has a separate location constraint:
-changing the first preferred region can cause
-`AlreadyExistServicePrincipalInDifferentRegion`. For the recovered event the
-working order was **Spain Central, West US 2, Australia East, Sweden Central**;
-this is not a replacement for the pack's default or a guarantee of capacity.
-Do not delete the policy assignment or relocate resources to force a retry.
+For an existing event, normally retain the original preferred-region order.
+Participant quota recovery pins the saved region/SKU. Hosted-tag setup now reads
+and preserves the existing policy assignment's identity location independently
+of the preferred host region; lookup failures stop setup rather than treating
+the assignment as absent. This prevents the earlier
+`AlreadyExistServicePrincipalInDifferentRegion` failure when preferences changed.
+The recovered 25-lab event used **Spain Central, West US 2, Australia East, Sweden
+Central**; this is not a replacement for the pack's default or a capacity guarantee.
+Existing LocalBox regional resources still constrain host fallback. Do not delete
+the policy assignment or relocate resources to force a retry.
 
 ### LocalBox registration region and location policies
 
@@ -792,10 +857,10 @@ passes `azureLocalInstanceLocation` to the staging storage module, whose account
 name is `localbox` plus a generated suffix. In the 4 October 2026 hosted test,
 this account was rejected in West Europe while the host was selected in Spain
 Central. **Host-region fallback cannot resolve a rejection in the fixed
-registration/staging-storage region.** The shared setup tries
-the next configured preferred host region for recognized regional failures;
-it does not change the Azure Local registration region or delete the shared
-resource group. The CLI wrapper retains Azure's error details in the exception
+registration/staging-storage region.** Host capacity fallback does not change the
+Azure Local registration region or delete the shared resource group. Fixed-region
+eligibility failures require organizer review, not repeated host-region attempts.
+The CLI wrapper retains Azure's error details in the exception
 so PowerShell's generic native-command exit error cannot hide them from the
 fallback check. Policy denials, authorization failures, and unrecognized errors
 still stop the run. If all preferred regions fail, the final error is reported;

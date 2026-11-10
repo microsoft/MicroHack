@@ -82,7 +82,7 @@ $localBoxLocations = @(
         Select-Object -Unique
 )
 $activeDeploymentStates = @('Accepted', 'Running', 'Ready', 'Creating', 'Created', 'Succeeded')
-$resourceGroup = Get-AzResourceGroup -Name $localBoxResourceGroupName -ErrorAction SilentlyContinue
+$resourceGroup = Get-AzResourceGroup -ErrorAction Stop | Where-Object ResourceGroupName -eq $localBoxResourceGroupName
 if ($resourceGroup) {
     Update-AzTag `
         -ResourceId $resourceGroup.ResourceId `
@@ -122,44 +122,68 @@ if ($localBoxDeployment) {
             -Tag @{ CostControl = 'Ignore' } `
             -ErrorAction Stop | Out-Null
     }
+    try {
+        Wait-LocalBoxDeployment -ResourceGroupName $localBoxResourceGroupName -DeploymentName $localBoxDeployment.DeploymentName
+    }
+    catch {
+        if (-not (Test-LocalBoxCapacityFailure $_)) { throw }
+        Write-Warning $_.Exception.Message
+        $localBoxDeployment = $null
+    }
 }
-else {
-    foreach ($localBoxLocation in $localBoxLocations) {
-        try {
-            Write-Host "Submitting shared LocalBox deployment in $localBoxLocation..." -ForegroundColor Cyan
-            $localBoxDeployment = & (Join-Path $PSScriptRoot 'deploy-localbox.ps1') `
-                -SubscriptionId $SubscriptionId `
-                -ResourceGroupName $localBoxResourceGroupName `
-                -Location $localBoxLocation `
-                -AzureLocalResourceProviderObjectId $azureLocalResourceProviderObjectIds[0] `
-                -AzureLocalInstanceLocation 'australiaeast' `
-                -UseConsoleCredentials `
-                -NoWait
 
-            if (-not $localBoxDeployment -or $localBoxDeployment.ProvisioningState -ne 'Submitted') {
-                throw "LocalBox deployment submission did not return the expected Submitted state."
+if (-not $localBoxDeployment) {
+    $candidateFailures = [Collections.Generic.List[string]]::new()
+    :locations foreach ($localBoxLocation in $localBoxLocations) {
+        foreach ($localBoxVmSize in @('Standard_E32s_v6', 'Standard_E32s_v5')) {
+            Update-MhhToken | Out-Null
+            $existingGroup = Get-AzResourceGroup -ErrorAction Stop | Where-Object ResourceGroupName -eq $localBoxResourceGroupName
+            $resources = if ($existingGroup) {
+                @(Get-AzResource -ResourceGroupName $localBoxResourceGroupName -ErrorAction Stop)
+            } else { @() }
+            if (@($resources | Where-Object ResourceType -eq 'Microsoft.Compute/virtualMachines').Count) {
+                throw "A VM already exists in $localBoxResourceGroupName. Automatic LocalBox SKU/region changes are blocked; inspect the failed deployment. No VM was resized or deleted."
             }
-            break
-        }
-        catch {
-            $failureDetails = @(
-                $_.Exception.ToString()
-                $_.ErrorDetails.Message
-            ) | Where-Object { $_ }
-            $failureDetails = $failureDetails -join ' '
-            $retryableRegionalFailure = $failureDetails -match 'RequestDisallowedByAzure|locationineligible|SkuNotAvailable|QuotaExceeded|OperationNotAllowed|AllocationFailed|VM size .+ unavailable|At least 32 unused'
+            $conflicts = @($resources | Where-Object {
+                $_.ResourceType -notin @('Microsoft.Storage/storageAccounts', 'Microsoft.Resources/deployments') -and
+                ($_.Location -replace '\s', '') -ine ($localBoxLocation -replace '\s', '') -and $_.Location -ine 'global'
+            })
+            if ($conflicts.Count) {
+                $message = "Skipping ${localBoxLocation}: existing LocalBox resources are in another or unknown region. Preserve the partial environment; a region change requires a separately approved migration or fresh scope."
+                Write-Warning $message
+                $candidateFailures.Add($message)
+                continue locations
+            }
+            try {
+                Write-Host "Submitting shared LocalBox deployment in $localBoxLocation using $localBoxVmSize..." -ForegroundColor Cyan
+                $localBoxDeployment = & (Join-Path $PSScriptRoot 'deploy-localbox.ps1') `
+                    -SubscriptionId $SubscriptionId `
+                    -ResourceGroupName $localBoxResourceGroupName `
+                    -Location $localBoxLocation `
+                    -VmSize $localBoxVmSize `
+                    -AzureLocalResourceProviderObjectId $azureLocalResourceProviderObjectIds[0] `
+                    -AzureLocalInstanceLocation 'australiaeast' `
+                    -UseConsoleCredentials `
+                    -NoWait
 
-            if ($retryableRegionalFailure -and $localBoxLocation -ne $localBoxLocations[-1]) {
-                Write-Warning "LocalBox is unavailable in $localBoxLocation; trying the next preferred region. $($_.Exception.Message)"
+                if (-not $localBoxDeployment -or $localBoxDeployment.ProvisioningState -ne 'Submitted') {
+                    throw "LocalBox deployment submission did not return the expected Submitted state."
+                }
+                Wait-LocalBoxDeployment -ResourceGroupName $localBoxResourceGroupName -DeploymentName $localBoxDeployment.DeploymentName
+                break locations
+            }
+            catch {
+                if (-not (Test-LocalBoxCapacityFailure $_)) { throw }
+                $message = "$localBoxLocation/$localBoxVmSize : $(ConvertTo-LocalBoxDiagnosticText $_.Exception.Message 2000)"
+                Write-Warning "LocalBox capacity candidate failed: $message"
+                $candidateFailures.Add($message)
                 $localBoxDeployment = $null
-                continue
             }
-            throw
         }
     }
 
     if (-not $localBoxDeployment) {
-        throw "LocalBox deployment submission failed in all candidate regions for subscription $SubscriptionId."
+        throw "LocalBox capacity candidates exhausted for subscription $SubscriptionId. No resources were deleted or relocated. Retry after availability changes or arrange an approved fresh scope/migration. $($candidateFailures -join '; ')"
     }
 }
 
@@ -205,7 +229,6 @@ foreach ($participantObjectId in $participants) {
     }
 }
 
-Wait-LocalBoxDeployment -ResourceGroupName $localBoxResourceGroupName -DeploymentName $localBoxDeployment.DeploymentName
 $groupId = ($groupCredentials.HackboxCredential | Where-Object name -eq 'Lab Group ObjectId').value
 $automation = Invoke-LocalBoxHostedAutomation -SubscriptionId $SubscriptionId -ResourceGroupName $localBoxResourceGroupName `
     -AksAdminGroupObjectId $groupId -Package $localBoxAutomationPackage

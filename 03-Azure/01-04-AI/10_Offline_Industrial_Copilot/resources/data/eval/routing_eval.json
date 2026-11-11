@@ -1,0 +1,37 @@
+[
+  {"id": "S01", "request": "What is the status of machine CNC-07?", "expected_tool": "get_machine_status"},
+  {"id": "S02", "request": "Is PRESS-02 running OK right now?", "expected_tool": "get_machine_status"},
+  {"id": "S03", "request": "Give me the current readings from the compressor CMP-01.", "expected_tool": "get_machine_status"},
+  {"id": "S04", "request": "How hot is the welding robot ROB-04 at the moment?", "expected_tool": "get_machine_status"},
+  {"id": "S05", "request": "Check the conveyor CONV-03 for me.", "expected_tool": "get_machine_status"},
+  {"id": "S06", "request": "What is the vibration on LATHE-05 right now?", "expected_tool": "get_machine_status"},
+  {"id": "S07", "request": "Is CNC-03 running or stopped?", "expected_tool": "get_machine_status"},
+  {"id": "S08", "request": "Show me the load and current of CNC-07.", "expected_tool": "get_machine_status"},
+
+  {"id": "F01", "request": "Predict the most likely fault for CNC-07 from its sensor readings.", "expected_tool": "predict_fault"},
+  {"id": "F02", "request": "Run the fault prediction model for CNC-07.", "expected_tool": "predict_fault"},
+  {"id": "F03", "request": "Use the fault classifier to predict the fault of CNC-07.", "expected_tool": "predict_fault"},
+  {"id": "F04", "request": "What does the classifier say is wrong with CMP-01?", "expected_tool": "predict_fault"},
+  {"id": "F05", "request": "Diagnose PRESS-02.", "expected_tool": "predict_fault"},
+  {"id": "F06", "request": "Which kind of failure is LATHE-05 heading for?", "expected_tool": "predict_fault"},
+  {"id": "F07", "request": "According to the model, what is the likely cause of the problem on CNC-07?", "expected_tool": "predict_fault"},
+  {"id": "F08", "request": "Is CMP-01 more likely overheating or low on lubrication?", "expected_tool": "predict_fault"},
+
+  {"id": "P01", "request": "At what vibration level must a CNC spindle be stopped?", "expected_tool": "search_sops"},
+  {"id": "P02", "request": "What torque do I use for the spindle bearing cartridge bolts?", "expected_tool": "search_sops"},
+  {"id": "P03", "request": "How often must the compressor oil be replaced?", "expected_tool": "search_sops"},
+  {"id": "P04", "request": "What do I do before I open any machine cover?", "expected_tool": "search_sops"},
+  {"id": "P05", "request": "What does error E-CLT-042 mean?", "expected_tool": "search_sops"},
+  {"id": "P06", "request": "Which oil does the hydraulic press use?", "expected_tool": "search_sops"},
+  {"id": "P07", "request": "What is the first response time for a high priority ticket?", "expected_tool": "search_sops"},
+  {"id": "P08", "request": "Why is the sky blue?", "expected_tool": "search_sops"},
+  {"id": "P09", "request": "What does the SOP say about the vibration limit for CNC-07?", "expected_tool": "search_sops"},
+  {"id": "P10", "request": "CNC-07 shows error E-SPN-214. What should I do about it?", "expected_tool": "search_sops"},
+
+  {"id": "T01", "request": "Open a high priority ticket for CNC-07: spindle vibration above the stop limit.", "expected_tool": "create_maintenance_ticket"},
+  {"id": "T02", "request": "Please create a low priority ticket for ROB-04: nozzle needs cleaning at the next planned stop.", "expected_tool": "create_maintenance_ticket"},
+  {"id": "T03", "request": "Log a medium priority maintenance ticket for LATHE-05, vibration is close to the warning limit.", "expected_tool": "create_maintenance_ticket"},
+  {"id": "T04", "request": "Raise a ticket for PRESS-02, the oil is running too hot.", "expected_tool": "create_maintenance_ticket"},
+  {"id": "T05", "request": "I need a ticket for CMP-01, it keeps tripping.", "expected_tool": "create_maintenance_ticket"},
+  {"id": "T06", "request": "Can you file a work order for CNC-03? The coolant is low.", "expected_tool": "create_maintenance_ticket"}
+]

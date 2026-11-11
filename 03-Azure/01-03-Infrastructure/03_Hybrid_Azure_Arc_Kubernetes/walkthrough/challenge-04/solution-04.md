@@ -201,3 +201,236 @@ echo "Server=$master_ip,$node_port;Database=master;User Id=sa;Password=<your-pas
 You successfully completed challenge 4! 🚀🚀🚀
 
 [Next challenge](../../challenges/challenge-05.md) - [Next Challenge's Solution](../challenge-05/solution-05.md)
+
+---
+
+## Appendix - Known differences in SQL Managed Instance compared to SQL Server
+
+SQL Managed Instance enabled by Azure Arc is the SQL Server engine, but it is **not** a plain standalone SQL Server. It is deployed and operated by the Arc Data Controller on Kubernetes and, regardless of service tier, every instance is hosted inside a **Contained Availability Group (contained AG)**. This changes how you interact with the instance compared to an on-premises SQL Server.
+
+### Why server-level `sp_configure` commands cannot be run against `master` directly
+
+When you connect to the SQL MI through its external endpoint (the connection you used in Task 3), you are **not** connected to the SQL Server *instance*. You are connected into the context of the **contained availability group**.
+
+A contained AG has its own contained system databases. When you connect through the endpoint/listener, the `master` you see is actually the *contained* `master` of the availability group (at instance level it is named `<containedAG>_master`). Because of that, the engine deliberately blocks any change to **server-scoped** configuration from this connection.
+
+If you try to run, for example:
+
+```sql
+EXEC sys.sp_configure N'show advanced options', N'1';
+RECONFIGURE WITH OVERRIDE;
+```
+
+you get:
+
+```
+Msg 5874, Level 16, State 1, Procedure sys.sp_configure
+Changes to server configuration options are not permitted in the connection to Contained Availability Group.
+Change connection to SQL Server instance level and retry the operation.
+```
+
+This is by design. Per the [contained availability groups documentation](https://learn.microsoft.com/sql/database-engine/availability-groups/windows/contained-availability-groups-overview#differences):
+
+> *Server configuration through `sp_configure` can be **read** from the contained AG connection but can only be **written** from instance level.*
+
+So the problem is **not** permissions on `master` and **not** your admin login. Reads (e.g. `SELECT * FROM sys.configurations`) work fine from the endpoint; only **writes** to server-scoped settings are rejected, because they must be applied on the underlying SQL Server *instance*, not inside the contained AG.
+
+> **Note:** The same principle explains why you cannot manage the physical files of the system databases (`ALTER DATABASE [master] MODIFY FILE ...`), restore system databases, or perform most instance-, endpoint- or AG-level operations from the endpoint connection. These are managed by the Arc Data Controller / platform.
+
+### Which settings are affected
+
+Typical on-premises hardening/tuning you would normally apply via `sp_configure` — for example:
+
+* `max degree of parallelism` (MAXDOP)
+* `cost threshold for parallelism`
+* `fill factor (%)`
+
+are all **server-scoped** and therefore hit `Msg 5874` when set from the endpoint connection.
+
+> **Tip:** `max degree of parallelism` also has a database-scoped equivalent that you *can* set from the normal endpoint connection, per user database:
+> ```sql
+> ALTER DATABASE SCOPED CONFIGURATION SET MAXDOP = 2;
+> ```
+> There is **no** database-scoped equivalent for `cost threshold for parallelism` or `fill factor (%)`, so those still require the instance-level connection described below.
+
+### Workaround - Set server-level properties via port forwarding to the instance endpoint
+
+To change server-scoped settings you must connect to the **SQL Server instance**, which listens on a **separate internal port inside the pod** (typically `1533`; the external/listener port `1433` is the contained AG). This port is not exposed outside the cluster, so you tunnel to it with `kubectl port-forward` and then connect a client to the local end of the tunnel.
+
+You can confirm the instance port from the SQL error log inside the pod:
+
+```bash
+kubectl exec -n $namespace ${sqlmi_name}-0 -c arc-sqlmi -- \
+  bash -c "grep -i 'listening on' /var/opt/mssql/log/errorlog | tail -n 20"
+```
+
+Example output (the port that is **not** 1433 is the instance level):
+
+```
+Server is listening on [ 'any' <ipv4> 1533 ].   <- SQL Server instance   (sp_configure writes allowed)
+Server is listening on [ 'any' <ipv4> 1433 ].   <- Contained AG listener  (Msg 5874 on writes)
+```
+
+**Step 1 - Open a port-forward tunnel to the instance endpoint (leave this running):**
+
+```bash
+# maps local port 15330 -> pod port 1533 (the SQL Server instance)
+kubectl port-forward -n $namespace pod/${sqlmi_name}-0 15330:1533
+```
+
+Wait until it prints `Forwarding from 127.0.0.1:15330 -> 1533`.
+
+**Step 2 - In a second terminal, connect to the instance and apply the settings.**
+
+Create a file `config.sql`:
+
+```sql
+EXEC sys.sp_configure N'show advanced options', N'1';
+RECONFIGURE WITH OVERRIDE;
+GO
+EXEC sys.sp_configure N'cost threshold for parallelism', N'50';
+GO
+EXEC sys.sp_configure N'max degree of parallelism', N'2';
+GO
+EXEC sys.sp_configure N'fill factor (%)', N'80';
+GO
+RECONFIGURE WITH OVERRIDE;
+GO
+EXEC sys.sp_configure N'show advanced options', N'0';
+RECONFIGURE WITH OVERRIDE;
+GO
+-- Verify
+SELECT name, value, value_in_use
+FROM sys.configurations
+WHERE name IN ('cost threshold for parallelism','max degree of parallelism','fill factor (%)');
+GO
+```
+
+Run it against the tunnel (note the connection now targets `127.0.0.1,15330`, i.e. the instance):
+
+```bash
+sqlcmd -S tcp:127.0.0.1,15330 -U <admin-user> -P '<your-sql-password>' -C -i config.sql
+```
+
+Because you are now connected to the SQL Server **instance** (port `1533`) and no longer to the contained AG (port `1433`), `sp_configure` / `RECONFIGURE` succeed without `Msg 5874`.
+
+> **Windows / PowerShell jump box notes**
+> * If `sqlcmd` is missing, install go-sqlcmd with `winget install sqlcmd` and open a **new** shell so the updated `PATH` is picked up (or call it via its full path, e.g. `& "C:\Program Files\sqlcmd\sqlcmd.exe" ...`).
+> * The legacy .NET Framework `System.Data.SqlClient` may fail the TLS pre-login handshake against SQL Server on Linux. Use **go-sqlcmd** (`-C` to trust the self-signed certificate) or the **VS Code mssql extension** (ODBC Driver 18) with **Trust Server Certificate = Yes** — connect it to `127.0.0.1,15330` through the same tunnel.
+> * When creating `config.sql` from PowerShell, use a **single-quoted here-string** to preserve the SQL text literally. Put `@'` on its own opening line and `'@ | Set-Content -Path config.sql -Encoding ascii` on the closing line; leave the single quotes in `N'...'` unchanged. Double-quoted here-strings also preserve those quotes, but expand PowerShell variables and escape sequences.
+
+### Important behavior notes
+
+* **`max degree of parallelism`** and **`cost threshold for parallelism`** take effect immediately (`value_in_use` updates right away).
+* **`fill factor (%)`** requires an engine restart before `value_in_use` reflects the new value. On Arc this means restarting the SQL MI pod:
+  ```bash
+  kubectl delete pod ${sqlmi_name}-0 -n $namespace   # the operator recreates it automatically
+  ```
+* These settings are stored in the instance and persist across pod restarts/failover, but **not** across deleting and re-creating the SQL MI. For reproducible environments, keep `config.sql` as a post-deployment step.
+
+### System database files cannot be modified (`ALTER DATABASE [master] MODIFY FILE`)
+
+On a standalone SQL Server it is common to pre-size the system database files, e.g.:
+
+```sql
+USE [master];
+ALTER DATABASE [master] MODIFY FILE ( NAME = N'master',  MAXSIZE = 10240000KB );
+ALTER DATABASE [master] MODIFY FILE ( NAME = N'mastlog', MAXSIZE = 10240000KB );
+```
+
+On Arc-enabled SQL MI this **fails**, even though a `SELECT` against `master` works and shows the files:
+
+```
+Msg 5041, Level 16, State 1
+MODIFY FILE failed. File 'master' does not exist.
+```
+
+Key points:
+
+* The `NAME` argument expects the **logical** file name (e.g. `master` / `mastlog`), **not** the physical path (`/var/opt/mssql/data/...`). Passing the path produces the same `Msg 5041`.
+* But even with the correct logical name the statement fails: **the system databases (`master`, `model`, `msdb`) are managed by the Arc Data Controller / platform** and their files can't be altered by the user. The exact same statement against a **user database works without issues** — that is the quick way to prove the restriction is specific to system databases, not to your login.
+* `MAXSIZE` is only a logical ceiling anyway. The real capacity comes from the instance's persistent volumes (see next section), so setting it on `master` would have no practical effect.
+* This is consistent with Azure SQL Managed Instance, where the [T-SQL `ALTER DATABASE` differences](https://learn.microsoft.com/azure/azure-sql/managed-instance/transact-sql-tsql-differences-sql-server?view=azuresql#alter-database-statement) state that *file names/paths can't be changed* and the [master database](https://learn.microsoft.com/sql/relational-databases/databases/master-database#physical-properties-of-master) physical properties are platform-controlled.
+
+> **Takeaway:** Apply your usual `MAXSIZE` / `FILEGROWTH` settings on **user databases**. Control instance capacity through the storage volumes, not through `master`.
+
+### Storage layout: `master` and user databases share the same PVCs
+
+There are **no dedicated PVCs per database**. Storage is separated **by file type**, not by database — all databases of an instance (`master`, `model`, `msdb`, `tempdb` **and** your user DBs) live on the same volumes.
+
+Per-instance PVCs (General Purpose = single pod):
+
+| PVC (pattern) | Set via | Contains |
+| --- | --- | --- |
+| `<namespace>/data-<instance>-0` | `--volume-size-data` / `--storage-class-data` | all `.mdf`/`.ndf` (from `master` to user DBs) |
+| `<namespace>/datalogs-<instance>-0` | `--volume-size-datalogs` | the transaction logs (`.ldf`) of all DBs |
+| `<namespace>/logs-<instance>-0` | `--volume-size-logs` / `--storage-class-logs` | container/process logs (`/var/log`) |
+| `<namespace>/backups-<instance>-0` | `--volume-size-backups` | backup files (RWX storage class recommended) |
+
+> Naming pitfall: `--storage-class-logs` (`/var/log`) means the **container** logs, while the SQL **transaction logs** (`.ldf`) live on the `datalogs` volume.
+
+Consequences:
+
+* Because all databases share the `data` / `datalogs` volume, a full volume affects **all** databases at once — the sizing knob is the **volume size** (`--volume-size-*`), not `MAXSIZE`.
+* Real isolation is achieved by deploying a **separate SQL MI instance**, not by per-DB PVCs.
+* Growing a full volume: the MI is a `StatefulSet`, so resize in three steps — **scale the StatefulSet to 0 → patch the PVC → scale back up** (requires a storage class with `AllowVolumeExpansion=true`).
+* Inspect the PVCs with `kubectl get pvc -n $namespace`.
+
+See [Storage configuration](https://learn.microsoft.com/azure/azure-arc/data/storage-configuration) and [Resize persistent volume](https://learn.microsoft.com/azure/azure-arc/data/resize-persistent-volume-claim).
+
+### System databases cannot be backed up or restored — recovery model
+
+Because the system databases are platform-managed, you **cannot back up or restore `master` / `model` / `msdb`** yourself (no on-prem style `RESTORE DATABASE master`). Two failure scenarios matter:
+
+1. **Pod / node failure (most common) → automatic recovery, no action.** Kubernetes starts a new pod that **re-attaches to the same persistent volumes**, including `master.mdf`. System DBs, logins and instance config survive. (*"a new SQL Managed Instance will start up and re-attach to the persistent volume containing your data"* — see [features](https://learn.microsoft.com/azure/azure-arc/data/managed-instance-features).)
+2. **Full loss of the PV/instance → create a new SQL MI and restore user databases.** Instance-level objects (logins, SQL Agent jobs, server roles) lived in `master`/`msdb` and do **not** carry over — recreate them from scripts.
+
+Important restore caveat for scenario 2:
+
+* Point-in-time restore (PITR) **only restores to the same Arc-enabled SQL MI** where the backups were taken — it can't restore to a *new* instance (see [limitations](https://learn.microsoft.com/azure/azure-arc/data/limitations-managed-instance)).
+* To move user DBs to a new instance, keep your **own native backups** (`BACKUP ... TO URL` to Azure Blob, `COPY_ONLY`) or BACPACs, and `RESTORE FROM URL` there.
+
+> **DR practice:** back up user DBs to Blob yourself; keep logins/jobs/config as code (IaC/`.sql`); keep the instance reproducible via `az sql mi-arc create`; use the **Business Critical** tier (Always On AG) for higher availability.
+
+### Transparent Data Encryption (TDE) is supported
+
+TDE works on Arc-enabled SQL MI and is a good example of platform-managed system-database handling: enabling it makes the **platform** automatically create the database master key and certificate **inside `master`** — you don't do it manually as on-prem.
+
+Rahmenbedingungen:
+
+* TDE is **instance-wide**: all existing and future databases get encrypted.
+* Only the **General Purpose** tier is supported; **failover groups** are not supported; feature is **preview**.
+* Two modes: **Service-managed** (platform creates key + certificate) or **Customer-managed** (you supply the certificate).
+
+Enable service-managed TDE on an existing instance:
+
+```bash
+az sql mi-arc update --name $sqlmi_name --k8s-namespace $namespace --use-k8s --tde-mode ServiceManaged
+```
+
+Verify:
+
+```sql
+SELECT db.name, db.is_encrypted, dm.encryption_state_desc
+FROM sys.databases db
+LEFT JOIN sys.dm_database_encryption_keys dm ON db.database_id = dm.database_id;
+```
+
+Backup/restore caveats:
+
+* **Back up the TDE certificate** (`BACKUP CERTIFICATE ... TO FILE` in `master`, then `kubectl cp` it out of the pod) — otherwise encrypted backups can't be restored elsewhere.
+* Service-managed TDE uses a non-exportable internal key, so those `COPY_ONLY` backups **can't** be restored to another instance — use **Customer-managed** TDE for portable backups.
+* To restore a backup taken **before** TDE, temporarily disable TDE, restore, then re-enable.
+
+See [Enable TDE on SQL Managed Instance enabled by Azure Arc](https://learn.microsoft.com/azure/azure-arc/data/configure-transparent-data-encryption-sql-managed-instance).
+
+### Reference
+
+* [What is a contained availability group?](https://learn.microsoft.com/sql/database-engine/availability-groups/windows/contained-availability-groups-overview)
+* [High availability with SQL Managed Instance enabled by Azure Arc](https://learn.microsoft.com/azure/azure-arc/data/managed-instance-high-availability)
+* [Connect to SQL Managed Instance enabled by Azure Arc](https://learn.microsoft.com/azure/azure-arc/data/connect-managed-instance)
+* [Storage configuration (Azure Arc data services)](https://learn.microsoft.com/azure/azure-arc/data/storage-configuration)
+* [Resize persistent volume to increase size](https://learn.microsoft.com/azure/azure-arc/data/resize-persistent-volume-claim)
+* [Limitations of SQL Managed Instance enabled by Azure Arc](https://learn.microsoft.com/azure/azure-arc/data/limitations-managed-instance)
+* [Enable transparent data encryption on SQL Managed Instance enabled by Azure Arc](https://learn.microsoft.com/azure/azure-arc/data/configure-transparent-data-encryption-sql-managed-instance)
+* [T-SQL differences: ALTER DATABASE (Azure SQL Managed Instance)](https://learn.microsoft.com/azure/azure-sql/managed-instance/transact-sql-tsql-differences-sql-server?view=azuresql#alter-database-statement)

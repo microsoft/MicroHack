@@ -1,15 +1,74 @@
 {
+  // Inventory Planning Fabric Hack — GitHub Codespaces / VS Code Dev Containers.
+  // The hack is browser-based (Fabric + Foundry portals). This container is an OPTIONAL
+  // alternative to Azure Cloud Shell for the Challenge 5 hosted-assistant deployment.
+  // It mirrors Cloud Shell: PowerShell 7, Azure CLI, azd and Python 3.12. No Docker is needed
+  // (the hosted agent builds remotely in Foundry) and no GitHub Copilot licence is assumed.
   "name": "Azure / AI / Inventory Planning Fabric",
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
-  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/microhack,type=bind,consistency=cached",
-  "workspaceFolder": "/workspaces/microhack/03-Azure/01-04-AI/02_Inventory_Planning_Fabric",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12-bookworm",
+
+  "features": {
+    "ghcr.io/devcontainers/features/azure-cli:1": {
+      "version": "latest"
+    },
+    "ghcr.io/azure/azure-dev/azd:latest": {},
+    "ghcr.io/devcontainers/features/powershell:1": {
+      "version": "latest"
+    }
+  },
+
   "customizations": {
     "vscode": {
+      "extensions": [
+        "ms-vscode.powershell"
+      ],
       "settings": {
-        "terminal.integrated.defaultProfile.linux": "bash"
+        // Same shell as Cloud Shell, so the challenge commands work unchanged.
+        "terminal.integrated.defaultProfile.linux": "pwsh",
+        // Lab accounts have no GitHub Copilot licence: hide the built-in AI chat features.
+        "chat.disableAIFeatures": true,
+        // Hide facilitator/authoring folders from attendees (container only).
+        // VS Code defaults are repeated because this object replaces them.
+        "files.exclude": {
+          "**/.git": true,
+          "**/.svn": true,
+          "**/.hg": true,
+          "**/.DS_Store": true,
+          "**/Thumbs.db": true,
+          "**/__pycache__": true,
+          "labautomation": true,
+          ".github": true,
+          "docs": true,
+          "dev": true,
+          "archive": true,
+          "tests": true,
+          ".devcontainer": true
+        },
+        // Open Markdown (README, challenges) rendered by default.
+        "workbench.editorAssociations": {
+          "*.md": "vscode.markdown.preview.editor"
+        }
       }
     }
   },
+
+  "postAttachCommand": "bash /workspaces/${localWorkspaceFolderBasename}/.devcontainer/welcome.sh",
+
   "remoteUser": "vscode",
-  "postAttachCommand": "bash /workspaces/microhack/.devcontainer/welcome.sh"
+
+  // Keep the deployment tooling venv on a container volume: Docker Desktop (Windows/macOS)
+  // bind mounts can't create Python venvs ("ensurepip ... returned non-zero exit status 1").
+  "mounts": [
+    "source=inv-fabric-venv-tools-${devcontainerId},target=/workspaces/${localWorkspaceFolderBasename}/03-Azure/01-04-AI/02_Inventory_Planning_Fabric/orchestrator/.venv-tools,type=volume"
+  ],
+  // New volumes are root-owned; hand this one to the vscode user.
+  "postCreateCommand": "sudo chown vscode:vscode /workspaces/${localWorkspaceFolderBasename}/03-Azure/01-04-AI/02_Inventory_Planning_Fabric/orchestrator/.venv-tools",
+
+  // ${localWorkspaceFolderBasename} = the repo/fork name, so this works for Codespaces on
+  // microsoft/MicroHack, for uniquely named forks, and for local clones.
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}/03-Azure/01-04-AI/02_Inventory_Planning_Fabric",
+
+  "remoteEnv": {
+    "hackFolder": "/workspaces/${localWorkspaceFolderBasename}/03-Azure/01-04-AI/02_Inventory_Planning_Fabric"
+  }
 }

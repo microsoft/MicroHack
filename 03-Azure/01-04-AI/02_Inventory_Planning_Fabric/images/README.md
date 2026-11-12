@@ -66,5 +66,9 @@ This folder holds the screenshots embedded throughout the challenge guides and w
 | `challenge-05-codespace-never.png` | 5 *(optional path)* | VS Code's "open the parent git repository" prompt — select **Never**. |
 | `challenge-05-codespace-ready.png` | 5 *(optional path)* | The ready Codespace: Explorer on `02_Inventory_Planning_Fabric`, README preview, PowerShell terminal. |
 | `challenge-05-codespace-terminal.png` | 5 *(optional path)* | The Codespace PowerShell terminal after `Set-Location ./orchestrator`. |
-| `challenge-04-orchestrator.png` | 5 *(archived)* | **Historical.** The retiring `inventory-planning-workflow` canvas: Start → demand-sensing → inventory-optimisation → replenishment-action. Used only in `archive/visual-workflow-exercise.md`; do not re-shoot. |
 | `challenge-04-teams.png` | 5 *(archived)* | **Historical.** A prompt agent's **Publish** menu open on **Teams & Microsoft 365 Copilot**. Used only in `archive/visual-workflow-exercise.md`; do not re-shoot. |
+| `challenge-05-workflow-template.png` | 5 *(archived)* | **Historical.** The **Sequential** template canvas with its three yellow sample notes (to delete). Used only in `archive/visual-workflow-exercise.md`. |
+| `challenge-05-workflow-add-end.png` | 5 *(archived)* | **Historical.** Adding an **End** node: **+** after `replenishment-action-agent` → **Basics → End**. Used only in the archive. |
+| `challenge-05-workflow-approval-gate.png` | 5 *(archived)* | **Historical.** `replenishment-action-agent` **Node settings**: Input message `Local.LatestMessage`, multi-turn on, loop condition, **Done**. Used only in the archive. |
+| `challenge-05-workflow-saved.png` | 5 *(archived)* | **Historical.** The saved `inventory-planning-workflow`: Start → three agents → End. Used only in the archive. |
+| `challenge-05-workflow-run-complete.png` | 5 *(archived)* | **Historical.** A completed workflow run: every node green and `✅ Purchase order PO-… submitted to ERP.` after `YES`. Used only in the archive. |

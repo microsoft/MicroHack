@@ -5,7 +5,7 @@
 > and in-portal workflow execution retire on **1 December 2026**. Do not use this
 > path for a 2027 workshop. Use the [hosted assistant challenge](../challenges/challenge-05.md).
 > The earlier Fabric Data Agent connector also retires on **6 November 2026**;
-> use Fabric IQ for new connections. **The two workflow screenshots below are historical: they show the retiring visual workflow designer, kept only so you can see what it looked like. The current Challenge 5 builds a hosted agent instead, which you will deploy and run yourself.**
+> use Fabric IQ for new connections. **The workflow screenshots below are historical: they show the retiring visual workflow designer, kept only so you can see what it looked like. The current Challenge 5 builds a hosted agent instead, which you will deploy and run yourself.**
 
 **[← Previous](../challenges/challenge-04.md)** - [Home](../README.md)
 
@@ -22,66 +22,85 @@ The planning team doesn't want to talk to three separate agents. They want to ty
 
 ## ✅ Tasks
 
-### Part A — Create the workflow (15 min)
+### Before you start — 2-minute pre-flight check
 
-> [!NOTE]
-> The visual workflow designer is in preview and is supported in-portal until **1 December 2026**, after which you run the same logic by exporting the workflow **YAML** and deploying it as a hosted agent (see Learning resources). For this hack's timeframe the visual designer is the fastest no-code path.
+- [ ] Your three agents exist with **exactly** these names: `demand-sensing-agent`, `inventory-optimisation-agent`, `replenishment-action-agent`.
+- [ ] In Challenge 4, `replenishment-action-agent` answered `YES` with `✅ Purchase order PO-… submitted to ERP.` and `NO` with `❌ Order cancelled. …`. The approval gate below looks for those exact phrases, so don't reword them.
 
-1. In the Foundry portal, go to **Agents → Workflows → + New workflow** (or **Create**).
-2. Choose the **Blank** workflow — it already includes a **Start** node you extend.
-3. Open the **Build** canvas (Visualizer view). You'll name it `inventory-planning-workflow` when you **Save** in Part B.
+If either check fails, finish Challenge 4 first — the workflow only reuses your agents.
 
-### Part B — Add and wire the three agent nodes (20 min)
+> [!WARNING]
+> **The workflow designer does not save automatically**, and it only saves a **valid** workflow (every agent node has an agent, and the chain ends in **End**). Select **Save** once the workflow is valid, and again after every later change.
 
-You'll chain the three specialist agents you built in Challenges 2–4. **You do not need a separate orchestrator agent — the workflow *is* the orchestrator.**
+### Part A — Create the workflow from the Sequential template (10 min)
 
-1. On the canvas, click **+ New node** (or the **+** on the Start node) and add an **Agent** node. In **Select an agent**, pick **`demand-sensing-agent`**.
-2. Add a second Agent node for **`inventory-optimisation-agent`**, connected after the first.
-3. Add a third Agent node for **`replenishment-action-agent`**, connected after the second.
-4. For each node, open **Node settings** and wire the data flow so each agent receives the previous agent's output:
-   - Use **Save agent output message as** on each node to name its output (e.g. `demandAssessment`, `reorderTable`).
-   - Set the next node's **Input message** to that upstream variable.
-   - Leave **Conversation context** as `System.ConversationId` so the run shares one conversation.
-5. On the **`replenishment-action-agent`** node, enable **Allow multi-turn conversation** — this lets the workflow pause at the purchase-order proposal and wait for the human's `YES` / `MODIFY` reply (the human-in-the-loop gate). In the **Loop condition** box, paste this PowerFx so the node keeps re-prompting until the agent submits or cancels the order:
+1. In the [Foundry portal](https://ai.azure.com), select **Build** in the upper-right menu, then **Workflows → Create new workflow** (or **+ New workflow**).
+2. Pick the **Sequential** template. It opens a canvas with **Start**, three **agent nodes**, and three yellow **notes** with sample marketing instructions.
+3. **Delete the three yellow notes** (they're only sample text for the template).
 
-   ```powerfx
-   And(
-     IsBlank(Find("submitted to ERP", Last(Local.LatestMessage).Text)),
-     IsBlank(Find("Order cancelled", Last(Local.LatestMessage).Text))
-   )
-   ```
+   ![The Sequential template canvas with three yellow sample notes above the agent nodes](../images/challenge-05-workflow-template.png)
 
-   The loop runs **while the condition is true**: `MODIFY` re-presents the proposal (neither phrase present → keep looping), while `YES` (`✅ … submitted to ERP.`) or `NO` (`❌ Order cancelled…`) makes it false and ends the node. `Find` is **case-sensitive**, so keep the Challenge 4 confirmation wording exactly.
-6. Click **Save**.
+Don't save yet — the template isn't valid until you finish Part B.
 
-   ![Workflow canvas showing Start then demand-sensing-agent then inventory-optimisation-agent then replenishment-action-agent wired in sequence](../images/challenge-04-orchestrator.png)
+### Part B — Put your three agents in the nodes (15 min)
 
-   **Historical screenshot: the workflow canvas retires on 1 December 2026. A hosted agent replaces it in the [current Challenge 5](../challenges/challenge-05.md).**
+1. Select the **first** agent node. Choose **Use an existing agent** (labelled **existing**), search for `demand-sensing-agent`, and select it.
+2. Select the **second** agent node and pick `inventory-optimisation-agent` in the same way.
+3. If there is no third agent node, select the **+** after the second node → **Invoke agent**. Pick `replenishment-action-agent` for the **third** node.
+4. Remove any **extra** template nodes you don't use (select the node's **⋯ → Delete**).
+5. If there's no **End** node after `replenishment-action-agent`, select the **+** after it → **Basics → End**. The chain must be exactly:
+   **Start → `demand-sensing-agent` → `inventory-optimisation-agent` → `replenishment-action-agent` → End**.
 
-> [!TIP]
-> Foundry also ships a **Human in the loop** template and a **Group chat** template. The **Sequential** pattern used here matches this hack's deterministic sense → plan → approve → act chain; **Group chat** is for dynamic hand-off scenarios.
+   ![Adding an End node from the + after replenishment-action-agent, under Basics](../images/challenge-05-workflow-add-end.png)
+6. Select the **`replenishment-action-agent`** node, open **Node settings**, and add the **human approval gate**:
+   1. Leave **Conversation context** = `System.ConversationId` and **Input message** = `Local.LatestMessage` (the defaults — don't change them).
+   2. Turn on **Allow multi-turn conversation**. This makes the node wait for your reply instead of ending after its first answer.
+   3. In **Loop condition**, paste this formula, then select **Done**:
 
-### Part C — Run the full loop from one prompt (20 min)
+      ```powerfx
+      And(
+        IsBlank(Find("submitted to ERP", Last(Local.LatestMessage).Text)),
+        IsBlank(Find("Order cancelled", Last(Local.LatestMessage).Text))
+      )
+      ```
 
-1. Click **Preview** to open the workflow playground.
-2. Send a single request, e.g.:
+      In plain words: *keep waiting for the human until the agent says the order was submitted or cancelled.* `MODIFY` re-presents the order and keeps waiting; `YES` or `NO` ends the node.
+
+      ![Node settings of replenishment-action-agent: Input message Local.LatestMessage, multi-turn on, loop condition pasted, Done](../images/challenge-05-workflow-approval-gate.png)
+7. Leave every other setting at its default. Select **Save**, and when asked, name the workflow `inventory-planning-workflow`.
+
+   ![Saved inventory-planning-workflow at version 1 with Start, the three agents and End](../images/challenge-05-workflow-saved.png)
+
+**✔ Checkpoint:** the name `inventory-planning-workflow` and a **Version** number show at the top, and the canvas shows the three agents in order between Start and End.
+
+### Part C — Run the full loop from one prompt (15 min)
+
+1. **Refresh the browser page**, then select **Preview** to open the chat pane. (Preview stays disabled while there are unsaved changes, and the chat box may not accept input until the page is refreshed after saving.)
+2. Send this request:
 
    ```text
    A prolonged heatwave is hitting the Pacific Northwest. Check our exposure on outdoor power tools and prepare a replenishment order for approval. Include Leaf Blower X2 (P004) at Seattle and Portland.
    ```
 
    > [!TIP]
-   > **Name the product, as in Challenge 3.** A prompt that only says "outdoor power tools" sometimes makes the Fabric Data Agent write a query that fails with a *collation conflict*, and then the later agents have no data to work with. Naming the SKU (`P004`) and the locations avoids it. If a run says it cannot verify inventory, send the request again.
+   > **Keep the product and stores in the prompt, as in Challenge 3.** Naming the SKU (`P004`) and the locations avoids a Fabric query error (*collation conflict*) that would leave the later agents with no data.
 
-3. Watch the nodes execute in order: demand sensing → optimisation → replenishment. When the replenishment node presents the PO proposal, check that the unit costs are **$95** (P004) and not the **$20** fallback, then reply `YES` (or `MODIFY <line> <qty>`).
-4. Open **Traces** and find the run. Confirm you can see the **node-by-node execution** — each agent node's model call with its **Fabric IQ** tool call underneath, and the human approval turn on the replenishment node.
+3. Watch the nodes turn green one after another: demand sensing → optimisation → replenishment. Each agent's answer appears in the chat pane.
+4. When the purchase-order proposal appears, check that the unit cost for P004 is **$95** (not the **$20** fallback). Then reply `YES`. Optionally try `MODIFY 1 50` first, then `YES`.
+5. Confirm the final message is `✅ Purchase order PO-… submitted to ERP.` and the **End** node turns green.
+
+   ![All nodes green; the replenishment agent confirms the purchase order was submitted after YES](../images/challenge-05-workflow-run-complete.png)
+6. Open the **Traces** tab of the workflow (or **Traces** next to a reply) and find your run. Expand it to see each agent node with its **Fabric IQ** tool call, and your approval turn on the replenishment node.
+
+**✔ Checkpoint:** one prompt plus one `YES` produced a submitted purchase order, and the trace shows all three agents.
 
 ## 🏁 Success criteria
 
-- [ ] `inventory-planning-workflow` exists with the three agents chained Start → demand → optimisation → replenishment.
-- [ ] A single prompt drives the full sense → plan → approve → act loop, pausing only at the human approval gate on the replenishment node.
-- [ ] The trace shows node-by-node execution (each agent node → its Fabric Data Agent tool call), plus the human approval turn.
-- [ ] You can explain the trade-offs of a deterministic workflow vs. three agents a human drives manually — and when you'd choose the Group chat pattern instead.
+- [ ] `inventory-planning-workflow` chains Start → `demand-sensing-agent` → `inventory-optimisation-agent` → `replenishment-action-agent` → End.
+- [ ] A single prompt runs the full sense → plan → approve → act loop and pauses only at the approval gate.
+- [ ] Replying `YES` ends the run with `✅ Purchase order PO-… submitted to ERP.` (and `NO` would end it with `❌ Order cancelled…`).
+- [ ] The trace shows node-by-node execution — each agent's Fabric IQ tool call, plus your approval turn.
+- [ ] You can explain the trade-off between a deterministic workflow and three agents a human drives manually.
 
 ## Part D — Alternative / bonus: an evaluation pass (optional)
 
@@ -163,7 +182,9 @@ See [schema-object descriptions and inheritance](https://learn.microsoft.com/fab
 | The replenishment node asks you to paste a table or SKU data instead of presenting a purchase order | An earlier node returned no usable recommendation. Run the workflow again in a **new** conversation, and name the product as in Part C (*Include Leaf Blower X2 (P004) at Seattle and Portland*). |
 | Chatting a published **workflow** in Teams/M365 fails: *"Agent kind 'workflow' is not supported"* | Teams / Microsoft 365 publishing supports only **prompt and hosted agents**. Publish a **prompt agent** (e.g. `demand-sensing-agent`) instead — see Part E. |
 | The replenishment node never stops looping | The **Loop condition** `Find` is **case-sensitive** — keep the Challenge 4 confirmation wording (`submitted to ERP`, `Order cancelled`) exactly. |
-| A node doesn't receive the previous agent's output | Set **Save agent output message as** on the upstream node and reference that variable in the next node's **Input message**. |
+| **Save** does nothing or shows an error | The workflow isn't valid yet: every agent node needs an agent, the yellow template notes should be deleted, and the chain must end in **End** (**+ → Basics → End**). |
+| **Preview** is greyed out, or you can't type in the preview chat | Select **Save** first, then refresh the browser page and open **Preview** again. |
+| Loop condition error *"Name isn't valid"* | On the replenishment node, keep **Input message** = `Local.LatestMessage` (the default) and re-paste the formula exactly. |
 | The visual designer isn't available | Do the **Part D** evaluation bonus instead, or export the workflow **YAML** and run it as a hosted agent (see Learning resources). |
 | Publishing says `Microsoft.BotService` is not registered | Ask the facilitator to rerun the subscription preparation hook and wait for Registered. An attendee's resource-group permissions may not allow registration. |
 | Schema descriptions or ontology are unavailable | They are optional and have separate preview/tenant prerequisites. Keep the core instructions/examples and complete the lab without them. |

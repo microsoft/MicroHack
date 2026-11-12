@@ -1,4 +1,4 @@
-# Solution 05 — The Loop Reacts (Event-Driven, Stretch)
+# Solution 6 — The Loop Starts Itself (Event-Driven, Stretch)
 
 **[← Back to Challenge 6](../../challenges/challenge-06.md)** · [Home](../../README.md)
 

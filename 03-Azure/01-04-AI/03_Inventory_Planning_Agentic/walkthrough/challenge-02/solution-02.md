@@ -1,4 +1,4 @@
-# Solution 01 — Demand Sensing (Hosted Agent)
+# Solution 2 — Demand Sensing (Hosted Agent)
 
 **[← Back to Challenge 2](../../challenges/challenge-02.md)** · [Home](../../README.md)
 

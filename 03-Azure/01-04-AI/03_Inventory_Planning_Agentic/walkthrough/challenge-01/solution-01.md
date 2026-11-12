@@ -1,4 +1,4 @@
-# Solution 00 — Get Grounded & Set Up
+# Solution 1 — Set Up and Explore
 
 **[← Back to Challenge 1](../../challenges/challenge-01.md)** · [Home](../../README.md)
 

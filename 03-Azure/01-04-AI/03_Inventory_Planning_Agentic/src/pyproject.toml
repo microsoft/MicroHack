@@ -22,7 +22,7 @@ dependencies = [
     "python-dotenv>=1.0.1",
     # Model Context Protocol server — exposes `inject_signal` so an external MCP
     # client can drop a market signal into Cosmos and trigger the loop (Challenge 5).
-    "mcp>=1.2.0",
+    "mcp>=1.2.0,<2",
 ]
 
 # This is an application, not an installable library — uv manages the environment

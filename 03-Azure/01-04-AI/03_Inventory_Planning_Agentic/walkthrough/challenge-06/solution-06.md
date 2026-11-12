@@ -64,9 +64,19 @@ def inject_signal(headline, category="outdoor_power_tools", region="Pacific Nort
     return f"Injected signal {doc['signalId']} — the planner loop will react automatically."
 ```
 
-Run it with `uv run python mcp_server.py` (stdio) and point any MCP client at it. Calling
-`inject_signal` writes to Cosmos → the console's watcher reacts → the loop runs → it stops
+It's a **stdio** server, so an MCP client must launch it. [`src/mcp_client.py`](../../src/mcp_client.py)
+is that client — from `src/`, in a second terminal while the console runs:
+
+```bash
+uv run python mcp_client.py "Competitor out of stock on chainsaws in the West" --region West
+```
+
+Calling `inject_signal` writes to Cosmos → the console's watcher reacts → the loop runs → it stops
 at the gate. An external system, speaking a standard protocol, drove your inventory loop.
+
+> **Coach note:** if a team runs `uv run python mcp_server.py` on its own and presses Enter,
+> they get `Invalid JSON: EOF while parsing a value … input_value='\n'`. That's not a bug —
+> the server is waiting for a client. Have them **Ctrl+C** and use `mcp_client.py`.
 
 ## Interactive planning & the informed gate
 

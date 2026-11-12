@@ -199,6 +199,7 @@ src/
   workflow.py         Stretch: the loop as one sequential workflow
   live.py             Stretch: change-feed watcher — the loop reacts to Cosmos inserts
   mcp_server.py       Stretch: MCP server exposing inject_signal (external trigger)
+  mcp_client.py       Stretch: MCP client that launches the server and calls inject_signal
   ui/                 Minimal planner console (FastAPI + static HTML) — the only UI
 challenges/           Challenge instructions
 walkthrough/          Reference solutions (one per challenge)

@@ -79,17 +79,34 @@ The write can come from anywhere — including an **MCP** client (GitHub Copilot
 another agent). [`src/mcp_server.py`](../src/mcp_server.py) exposes one tool,
 `inject_signal`, that writes to the same `signals` container.
 
-1. From `src/`, run the MCP server. It uses **stdio transport** — it talks over standard
-   input/output, **not a network port**, so there's nothing to `curl`; an MCP client
-   launches and speaks to the process directly.
+The server uses **stdio transport**: it talks JSON-RPC over standard input/output, **not a
+network port**. You don't run it on its own — an **MCP client** starts it as a child process
+and speaks to it. [`src/mcp_client.py`](../src/mcp_client.py) is a minimal client that does
+exactly that.
+
+1. Keep the planner console running in its terminal. Open a **second terminal** (**+** in
+   the terminal panel) and go to `src/`:
    ```bash
-   uv run python mcp_server.py
+   cd src
    ```
-2. Point an MCP client at that command (or use an MCP client session to call the tool).
-   Invoke **`inject_signal`** with a headline, e.g. *"Competitor out of stock on
-   chainsaws in the West"*.
+2. Call the tool through MCP — the client launches `mcp_server.py`, lists its tools and calls
+   **`inject_signal`**:
+   ```bash
+   uv run python mcp_client.py "Competitor out of stock on chainsaws in the West" --region West
+   ```
+   You should see:
+   ```text
+   Connected to MCP server 'zava-signals' - tools: inject_signal
+   Injected signal SIG-… — the planner loop will react automatically.
+   ```
 3. Switch to the console — it **reacts on its own** to the MCP-driven insert, runs the
    loop, and waits at the gate. An external system just drove your inventory loop.
+
+> [!IMPORTANT]
+> **Don't run `uv run python mcp_server.py` by itself.** It starts and waits silently for
+> JSON-RPC messages from a client; pressing **Enter** sends an empty line and prints
+> `Invalid JSON: EOF while parsing a value … input_value='\n'`. That's expected — use
+> `mcp_client.py` (or another MCP client) instead. Stop a stray server with **Ctrl+C**.
 
 ### Part D — (Go further) any producer, same reaction
 
@@ -117,7 +134,8 @@ Explorer, a `az cosmosdb`/SDK script, or a scheduled job — and watch the conso
 | Steps error out mid-run | The auto-run uses the same agents as Challenges 2–4 — make sure they work manually first, and that `az login` is valid. |
 | SSE doesn't update the UI | Some corporate proxies buffer `text/event-stream`; open the forwarded port directly, or check the browser console for the `/api/events` connection. |
 | Watcher dot goes gray mid-session | The SSE link dropped; it **reconnects automatically** and the dot re-greens on the next event. If it stays gray, reload the page. |
-| MCP client can't call the tool | Run `uv run python mcp_server.py` from `src/`, and make sure `.env` + `az login` are in that shell (the tool writes to Cosmos). |
+| `Invalid JSON: EOF while parsing a value … input_value='\n'` | You ran `mcp_server.py` directly and pressed Enter. It's a stdio server that waits for a client — press **Ctrl+C** and use `uv run python mcp_client.py "<headline>"` instead (Part C). |
+| `mcp_client.py` fails calling the tool | Run it from `src/` (where `uv run` finds the project), check `COSMOS_ENDPOINT` in `src/.env`, and make sure `az login` is valid (the tool writes to Cosmos). |
 
 ## 🚀 Go further
 
@@ -127,6 +145,9 @@ Explorer, a `az cosmosdb`/SDK script, or a scheduled job — and watch the conso
   — same pattern, detached from the console. Note the added Function App infra.
 - Give the MCP server a second tool, `list_exposure`, so an external agent can *ask*
   before it *injects*.
+- Connect a full MCP host instead of the script: register the server in **GitHub Copilot
+  Chat** (agent mode) as a **stdio** server with command `uv` and arguments
+  `run python mcp_server.py` (working directory `src/`), then ask Copilot to inject a signal.
 
 ## 📚 Learning resources
 

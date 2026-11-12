@@ -54,6 +54,7 @@ again.
 | `workflow.py` | Stretch: the whole loop as one callable (used by `/api/run-loop`) |
 | `live.py` | Stretch (Challenge 6): Cosmos change-feed watcher — auto-runs the loop when a signal is written, streamed to the UI over SSE, stopping at the human gate |
 | `mcp_server.py` | Stretch (Challenge 6): MCP server exposing `inject_signal` so an external client can trigger the loop |
+| `mcp_client.py` | Stretch (Challenge 6): minimal MCP client that launches `mcp_server.py` over stdio and calls `inject_signal` |
 | `ui/` | Minimal FastAPI + static-HTML planner console — the only way in |
 
 > The store is provisioned by `labautomation` (per-attendee Cosmos DB, keyless). The

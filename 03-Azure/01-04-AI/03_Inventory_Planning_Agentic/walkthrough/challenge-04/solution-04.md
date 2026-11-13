@@ -1,4 +1,4 @@
-# Solution 03 — Replenishment + Human-in-the-Loop
+# Solution 4 — Replenishment Action and Human Approval
 
 **[← Back to Challenge 4](../../challenges/challenge-04.md)** · [Home](../../README.md)
 

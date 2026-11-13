@@ -8,11 +8,13 @@ insert is picked up by the change-feed watcher in the planner console, which aut
 sense → plan → propose and stops at the human-approval gate. No agent is called here —
 the tool only writes the signal; the reactive loop does the rest.
 
-Run it (stdio transport, from the ``src/`` folder):
+Run it (stdio transport) through an MCP client — not on its own. From the ``src/`` folder:
 
-    uv run python mcp_server.py
+    uv run python mcp_client.py "Competitor out of stock on chainsaws in the West"
 
-Then point an MCP client at that command. The app must be running and Cosmos configured
+``mcp_client.py`` starts this server as a child process and calls ``inject_signal``. Running
+``python mcp_server.py`` directly just waits for JSON-RPC on stdin (pressing Enter gives an
+"Invalid JSON" error). The app must be running and Cosmos configured
 (``COSMOS_ENDPOINT`` in ``.env`` + ``az login``) for the write — and the reaction — to work.
 """
 

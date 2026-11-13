@@ -4,6 +4,7 @@ BeforeAll {
 
     function Update-MhhToken {}
     function Get-AzContext { [CmdletBinding()] param() }
+    function Invoke-AzRestMethod { [CmdletBinding()] param($Method, $Path) }
     function New-AzSubscriptionDeployment { [CmdletBinding()] param($Name, $Location, $TemplateFile) }
     function New-AzResourceGroup { [CmdletBinding()] param($Name, $Location, $Tag, [switch]$Force) }
     function New-AzNetworkSecurityGroup { [CmdletBinding()] param($Name, $ResourceGroupName, $Location, $Tag, [switch]$Force) }
@@ -19,6 +20,7 @@ Describe 'Hosted control-tag setup' {
         $script:resourceTags = $script:groupTags.Clone()
         Mock Update-MhhToken {}
         Mock Get-AzContext { @{ Subscription = @{ Id = 'hosted-subscription' } } }
+        Mock Invoke-AzRestMethod { @{ StatusCode = 404 } }
         Mock New-AzSubscriptionDeployment { @{ ProvisioningState = 'Succeeded' } }
         Mock New-AzResourceGroup { $script:probeGroupName = $Name }
         Mock New-AzNetworkSecurityGroup {}
@@ -58,10 +60,34 @@ Describe 'Hosted control-tag setup' {
             if ($script:reads -eq 1) { return [pscustomobject]@{ Tag = @{} } }
             return [pscustomobject]@{ Tag = $script:resourceTags }
         }
+
         Initialize-MhhHostedTagPolicy -SubscriptionId 'hosted-subscription' -Location 'swedencentral'
         Should -Invoke New-AzNetworkSecurityGroup -Times 2 -Exactly
         Should -Invoke Start-Sleep -Times 1 -Exactly -ParameterFilter { $Seconds -eq 10 }
         Should -Invoke Remove-AzResourceGroup -Times 1 -Exactly
+    }
+
+    It 'preserves an existing policy identity location when host preferences change' {
+        Mock Invoke-AzRestMethod { @{ StatusCode = 200; Content = '{"location":"spaincentral"}' } }
+        Initialize-MhhHostedTagPolicy -SubscriptionId 'hosted-subscription' -Location 'swedencentral'
+        Should -Invoke Invoke-AzRestMethod -Times 1 -Exactly -ParameterFilter {
+            $Method -eq 'GET' -and $Path -eq '/subscriptions/hosted-subscription/providers/Microsoft.Authorization/policyAssignments/sov-hosted-control-tags?api-version=2026-06-01'
+        }
+        Should -Invoke New-AzSubscriptionDeployment -Times 1 -Exactly -ParameterFilter { $Location -eq 'spaincentral' }
+        Should -Invoke New-AzResourceGroup -Times 1 -Exactly -ParameterFilter { $Location -eq 'spaincentral' }
+    }
+
+    It 'stops on policy lookup failure or missing location instead of recreating the identity' -TestCases @(
+        @{ Status = 403; Content = '{}' }
+        @{ Status = 500; Content = '{}' }
+        @{ Status = 200; Content = '{}' }
+        @{ Status = 200; Content = 'invalid' }
+    ) {
+        param($Status, $Content)
+        Mock Invoke-AzRestMethod { @{ StatusCode = $Status; Content = $Content } }
+        { Initialize-MhhHostedTagPolicy -SubscriptionId 'hosted-subscription' -Location 'swedencentral' } | Should -Throw
+        Should -Invoke New-AzSubscriptionDeployment -Times 0
+        Should -Invoke New-AzResourceGroup -Times 0
     }
 
     It 'fails closed for missing or incorrect tags and cleans up' -TestCases @(

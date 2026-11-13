@@ -2,6 +2,54 @@
 
 This runbook covers the FY27 EMEA Cloud & AI Hackathons program described in the Event Lead Guide. Confirm eligibility and access with your program lead; the Console is not a general entitlement for all Microsoft events or 1:1 customer engagements. Other delivery uses [manual setup](../manual-setup/readme.md).
 
+## Current verified state
+
+Hosted provisioning automates LocalBox deployment, nested readiness, preparation
+and infrastructure health before shared and participant stages. Event leads do
+not routinely log into LocalBox-Client or invoke preparation. This does **not**
+automate participant exercises or prove attendee access and cloud security reporting.
+
+On **9 November 2026**, the final Console retry for a 25-lab, seven-subscription
+event completed successfully:
+
+| Evidence | Verified outcome |
+| --- | --- |
+| Console job | Succeeded; 12:10:31-13:16:11 UTC, approximately **1h05m40s** |
+| Shared LocalBox | Reused existing infrastructure; a new guest run passed **12/12 upstream and 14/14 Sovereign tests**, with no failed, skipped or unrun tests |
+| Subscription shared stages | **7/7 succeeded** |
+| Participant deployments | **25/25 succeeded**, including 20 labs in Spain Central and five in West US 2 |
+| K3s recovery and credentials | Three failed extensions were explicitly force-rerun and independently verified healthy; the subsequent Console run completed, and the organizer confirmed their credentials were published |
+
+This is **reuse/recovery evidence**, not an uninterrupted first-attempt cold
+deployment or a new cold-provisioning time estimate. Earlier runs ended at 22/25.
+An unchanged ARM redeployment had reused the three failed extension results;
+the [targeted recovery procedure](#retry-a-failed-install-k3s-extension) caused new
+executions, each successful on installer attempt 1/3. The original download logs
+do not establish whether Azure networking or remote binary availability caused
+the failures.
+
+Actual participant sign-in, Bastion/proxy/application access and Defender cloud
+reporting remain unverified for this event; use the [remaining validation checklist](#remaining-event-validation).
+The successful cloud participant jobs also do **not** validate 25 simultaneous
+nested Challenge 6 Windows VMs; retain the [LocalBox capacity limits and rehearsal guidance](../localbox/readme.md#tested-participant-vm-capacity).
+
+The BGInfo fix was present and the subsequent-logon Pester task was registered
+on the event Client, but the historical startup watcher still reported
+`StartupExited` without a successful terminal report. This diagnostic discrepancy
+remains unresolved; do not equate it with a failed current infrastructure health
+run or claim that all startup-monitor behavior has been validated.
+
+Older TEST06/12/13/14 observations below are dated diagnostic history, not the
+current event status. Preserve their original failures and measurement boundaries.
+
+**Later cold test (TEST16, reviewed 10 November):** the initial LocalBox ARM
+deployment failed with `SkuNotAvailable` for `Standard_E32s_v6` in Spain Central,
+before a Client VM or guest preparation existed. Shared and participant stages
+were skipped. This was a capacity restriction, not a bootstrap/download failure.
+The [ARM capacity recovery handling](#localbox-arm-capacity-failures) below addresses
+the missed asynchronous failure path; a new Console run is still required to
+validate recovery end to end. It does not change the earlier event's successful result.
+
 ## Configure the event
 
 1. Agree the Sovereign Cloud scenario with your GEO/program lead and request an Event Lead account through the program's access process.
@@ -13,6 +61,8 @@ This runbook covers the FY27 EMEA Cloud & AI Hackathons program described in the
 7. Preview content and review the live estimate, including shared LocalBox costs and licensing. The guide's Sovereign budget is **USD 2,000**; obtain program-lead approval for exceptions. Normal validation uses **exactly one lab**, not a load test. Content Leads own scale testing.
 
 When automatic provisioning is not scheduled, use the Console's **Create Users**, content-pack license defaults and **Deploy Lab Environment** lifecycle in order. Investigate failures before continuing; do not compensate by running subscription-wide manual utilities.
+
+For participant K3s installation failures, follow [event-lead troubleshooting](#retry-a-failed-install-k3s-extension) before retrying the Console deployment.
 
 ## One LocalBox per event
 
@@ -27,9 +77,11 @@ verify the global deployment job actually ran before continuing.
 The Console runs the global hook **once per event in the lowest-GUID event
 subscription**, passing all event lab-user object IDs. It completes before
 `shared-deploy-lab.ps1` runs in each subscription, followed by participant
-deployments. A global failure stops the event deployment. Host-region fallback
-uses the preferred regions within that selected subscription; it does not choose
-a different subscription if quota or SKU availability is insufficient.
+deployments. A global failure stops the event deployment. Host capacity selection
+tries `Standard_E32s_v6`, then `Standard_E32s_v5`, in each preferred region within
+that selected subscription. It does not choose another subscription, delete
+partial infrastructure or resize an existing VM. Regional resources constrain
+recovery to their existing region; see [ARM capacity failures](#localbox-arm-capacity-failures).
 
 The global hook deploys/reuses one `rg-localbox-shared`, including one LocalBox
 Client. It publishes **Shared LocalBox Subscription ID**, **Shared LocalBox Resource
@@ -39,6 +91,39 @@ LocalBox resource group, plus Security Reader on the host subscription for
 reference-VM security inspection. No participant Owner, host login or password is
 granted by this hook. Existing shared VM/AKS access remains a workshop trust
 boundary, not per-participant isolation.
+
+### LocalBox Bastion
+
+New LocalBox deployments use **Azure Bastion Developer**, with no hourly Bastion
+charge. It supports **one browser-based connection at a time**, intended for a
+coach accessing LocalBox-Client. It does not support native-client tunnels,
+concurrent sessions or peered-VNet access. Spain Central and Sweden Central are
+supported; check the current [SKU and region matrix](https://learn.microsoft.com/azure/bastion/bastion-sku-comparison)
+before choosing another host region. ARM validation remains authoritative; the
+deployer does not silently substitute a paid SKU.
+
+The [local network module](../../labautomation/localbox-network.bicep) replaces
+only the downloaded upstream network module. It preserves the LocalBox VNet,
+Client subnet/NSG and NAT Gateway outbound path, but creates no dedicated Bastion
+subnet, Bastion public IP or Bastion NSG. Keep this file beside
+`deploy-localbox.ps1` when importing the Console package. The interactive manual
+entry point delegates to the same deployer. Other Jumpstart templates and runtime
+artifacts still come from the selected upstream revision.
+
+This change applies only to **LocalBox**. Challenge 7's separate Bastion remains
+**Standard** because its K3s workflow requires `az network bastion tunnel`.
+Developer avoids dedicated Bastion provisioning, but neither a deployment-time
+improvement nor elimination of Azure service errors is guaranteed.
+
+Existing successful LocalBox deployments are reused without SKU changes.
+Azure does not support an in-place downgrade from Basic/Standard to Developer.
+The deployer rejects an existing dedicated `LocalBox-Bastion` or legacy
+`AzureBastionSubnet` rather than deleting resources or rewriting that subnet.
+Use a fresh event/resource group, or arrange a separate approved migration.
+Re-importing this change alone will **not** repair a failed dedicated Bastion.
+In particular, the failed Basic Bastion on traininglab-44 was left unchanged.
+
+### Participant access
 
 Participant RBAC setup reuses an existing direct Security Reader assignment on
 its subscription, including the grant made by the global hook for participants
@@ -100,32 +185,665 @@ releasing a subscription. This hook is not part of manual/BYOS preparation.
 
 ## Complete LocalBox preparation
 
-The global hook submits `localbox-*` in `rg-localbox-shared` in the published **Shared LocalBox Subscription ID**, then waits up to six hours for ARM completion, refreshing its Console authentication while polling. It does not publish LocalBox administrator credentials. A Client VM appearing after roughly 15-20 minutes confirms only that deployment has started. Full nested Azure Local provisioning can take 4-6 hours and must still be checked separately.
+The global hook now remains active through nested deployment, default Sovereign
+preparation, and infrastructure health checks. No organizer login, host password
+reset, or manual preparation invocation is required for a greenfield hosted event.
+It does not publish LocalBox administrator credentials.
+
+The [orchestrator](../../labautomation/localbox-automation.ps1) implements:
+
+1. Use the validated `Get-MhhDefaultLabGroup` result (also published as **Lab
+   Group ObjectId**) as `AksAdminGroupObjectId`. No guest Graph lookup is needed.
+2. Package the preparation script, guest runner and health tests before making
+   deployment changes. A full checkout uses local resources. Console can mount
+   only `labautomation`, without its sibling `resources` directory; in that case
+   download the complete guest file set from the immutable commit in
+   [localbox-automation-source.json](../../labautomation/localbox-automation-source.json)
+   and verify every SHA256. Never mix partial local files with downloaded files
+   or fall back to a moving `main` branch. A content hash identifies the package,
+   which is reused in the Managed Run Command payload after ARM completion.
+3. Wait for `localbox-*` ARM completion, then `localcluster-deploy`, connected
+   Azure Local, a running Arc Resource Bridge, custom location and
+   `hybridaksextension`. A successful Client bootstrap extension is not sufficient.
+4. Run `sovereign-localbox-prepare` asynchronously on LocalBox-Client as **SYSTEM**,
+   explicitly using PowerShell 7. The [guest runner](../invoke-localbox-automation.ps1)
+   prepares storage, logical networks, AKS, proxy RBAC, MetalLB, the Windows
+   image and the default reference VM.
+
+   SYSTEM does not inherit the interactive administrator's tools or profile.
+   Before Kubernetes health checks, the runner reuses an available `kubectl` with
+   the cluster's major/minor version, or uses `az aks install-cli` to install the
+   cluster's exact version in its private automation tools directory. The CLI
+   also installs its bundled `kubelogin` dependency there. Only the runner and its
+   child health process receive the private tools PATH; existing installations
+   and the machine PATH are not changed. Retries validate and reuse this client.
+   For a **new AKS cluster**, preparation validates AKS synchronously, then uses
+   [`az aksarc create --no-wait`](https://learn.microsoft.com/cli/azure/aksarc#az-aksarc-create)
+   to let Azure provision it while the Windows VM image imports. Storage and
+   logical networks are prepared first. CLI commands remain serial with the
+   existing isolated authentication profile; no competing CLI workers or shared
+   token-cache writers are introduced. After image completion, preparation
+   requires AKS provisioning success, the expected configuration, Arc connectivity,
+   proxy access and MetalLB before creating the reference VM. The final Full
+   readiness gate is unchanged.
+
+   Completed or legacy existing AKS deployments retain verification-before-image
+   ordering on retries. A matching accepted/running `pciDeployment-<cluster>`
+   is instead reused while the image imports; AKS creation is not repeated.
+   `aksarc` 1.5.117 can return `ResourceNotFound` after submitting this deployment
+   because it immediately reads resources that ARM has not created yet. Only
+   that cluster-specific error can be reconciled, and only against a new
+   correlation with matching cluster, custom location and region in an
+   accepted/running/succeeded ARM deployment. Missing, stale, failed, conflicting
+   or unreadable evidence still fails; this confirms submission, not readiness.
+   Manual preparation supports `-SequentialProvisioning` to restore serial
+   provisioning if contention is suspected. `-SkipAks` and `-WhatIf` retain their
+   existing behavior. If preparation fails after asynchronous submission, AKS may
+   continue provisioning in Azure; the error is propagated and nothing is rolled
+   back. Inspect both resource states before retrying rather than deleting the
+   environment. The parent guest timeout still applies. Compare equivalent cold
+   deployments before treating the potential ~71-minute saving as measured.
+
+   TEST12 exercised this race on 7 November 2026: `aksarc` reported a missing
+   cluster at **05:51:31 UTC**, while its ARM deployment was already running
+   and created the connected-cluster parent at **05:51:34 UTC**. The child
+   provisioning operation continued in Azure. A read-only live probe verified
+   the new submission-reconciliation helper against that same running deployment
+   at **06:01:19 UTC**, without issuing another create. The replacement preparation
+   run reused that deployment and reached image import at **06:06:03 UTC**.
+   The installed extension version comes from `az extension show`; recursively
+   inspecting the first Python `METADATA` file can instead report a dependency's
+   version. Full health remained unverified; the failed guest report was not
+   reclassified as successful.
+5. Wait for the reference VM to be Running, Arc Connected and MDE installation
+   Succeeded. Request an Update Manager assessment and require a successful,
+   timestamped result. This assesses updates; it does **not** install patches.
+6. Run installed upstream Jumpstart infrastructure Pester tests, then the
+   Sovereign **LocalBox Full** suite. The Client retrieves a private AKS admin
+   kubeconfig for infrastructure probes using its managed identity. It is not
+   shared with participants and is deleted after the run.
+   During the Sovereign checks, the parent runner temporarily routes only the
+   private AKS API IPv4 address (`/32`) through the configured internal gateway
+   (`SDNLABRoute`) and internal switch interface. The endpoint must match
+   `AKSControlPlaneIP`; no default route, subnet route, firewall or persistent
+   routing setting is changed. An existing matching route is reused and left
+   intact; conflicting routes fail explicitly. A newly created route uses
+   Windows `ActiveStore` and is removed in `finally` after the health child
+   succeeds or fails. Removal is verified before readiness can pass.
+   If the parent process is forcibly terminated, its `finally` cannot run;
+   inspect the API host route before retrying rather than deleting existing
+   routes indiscriminately. ActiveStore routes do not survive a reboot.
+
+   Before starting the Sovereign suite, the hosted runner uses that same
+   temporary route to check the in-cluster MetalLB IPAddressPool and
+   L2Advertisement. Missing objects get a **120-second reconciliation grace
+   period**, then at most **one unchanged Azure-managed pool PUT per guest run**.
+   Recovery requires a matching deployment manifest and network reservation,
+   exactly the expected Azure pool, and an already successful Arc networking
+   extension and ARP pool. Additional pools, conflicting settings, deletion,
+   authentication/connectivity errors, missing CRDs and malformed responses stop
+   the run rather than trigger a repair. No Kubernetes objects are directly
+   applied or deleted.
+
+   After the PUT, the runner polls for up to **300 seconds**, requiring both Azure
+   success and the expected Kubernetes objects before continuing with all Full
+   health tests. Individual Kubernetes requests retain their 20-second timeout;
+   recovery ARM reads use 30 seconds and the single PUT uses 120 seconds.
+   An in-flight request can finish after a polling deadline.
+   The attempt is recorded **before submission** in the private
+   `metallb-recovery.json` report. A timeout or restart cannot submit another PUT
+   for that run. A resumed run may proceed if objects have since become healthy;
+   otherwise it stops for organizer review. An explicitly retriggered Console
+   deployment with a new run ID has a new one-attempt budget.
+   Route cleanup still runs on recovery failure. Standalone health checks and
+   `-HealthOnly` remain read-only; this recovery is enabled by hosted deployment,
+   not by the health tests. It mitigates the observed Azure/Kubernetes state
+   mismatch, but does not establish the underlying provider cause or guarantee
+   against future drift.
+7. Require a zero guest exit code, matching run/content/group/scope metadata,
+   nonempty passing suites without skipped/not-run tests, and matching NUnit XML
+   before publishing global discovery credentials and returning to Console.
+   After these validations, Console Live Output prints **Infrastructure health:
+   PASSED**, actual upstream and Sovereign passed/failed/skipped/not-run counts,
+   reference-VM onboarding, the timestamped update-assessment result and the
+   private reports link. This summary covers shared LocalBox, not the subsequent
+   participant deployment stages. Defender cloud reporting and participant
+   sign-in remain explicitly listed as manual checks.
+   A failed execution, unavailable report or failed validation instead prints
+   **Readiness gate: FAILED - infrastructure health is NOT VERIFIED** and
+   propagates the error. For a correlated terminal guest execution, Console also
+   attempts to retrieve the original run's status and NUnit reports. It displays
+   the run ID, execution/exit status, last guest phase, bounded error details,
+   actual suite counts, and up to ten failed test names/reasons per suite.
+   Missing or invalid reports are explicitly **unavailable / NOT VERIFIED**;
+   mismatched run/content/group/scope metadata suppresses all report-derived
+   counts. A diagnostic-download failure never replaces the original failure.
+   Output strips terminal control codes, redacts common credential formats, and
+   does not dump transcripts, XML stack traces or raw guest stdout. Full reports
+   remain private. These summaries do not stream guest progress.
+   Result downloads suppress CLI progress and discard download-command metadata;
+   validation reads the downloaded JSON/XML files themselves. Native CLI stderr
+   is kept separate from JSON parsing, and nonzero CLI exits still fail the gate.
+
+For example, the original traininglab-02 MetalLB failure now renders:
+
+```text
+[LocalBox] Last guest phase: Pester; reported state: Failed.
+[LocalBox] Upstream tests: 12 passed, 0 failed, 0 skipped, 0 not run.
+[LocalBox] Sovereign tests: 13 passed, 1 failed, 0 skipped, 0 not run.
+[LocalBox] FAILED TEST (Sovereign): ...has an in-cluster MetalLB address pool and L2 advertisement
+[LocalBox] Reason: ...ipaddresspools.metallb.io "aks-pool" not found
+```
+
+That failure also prints a suggested check of the Azure-managed pool against the
+Kubernetes IPAddressPool/L2Advertisement, rather than advising an environment
+rebuild. Diagnostic counts never change the overall failed readiness outcome.
+
+`Update-MhhToken` runs in the **Console process** on each poll and before Azure
+operations, including result retrieval. It refreshes Console clients, not guest
+credentials or job time limits. The guest uses its own managed identity and
+locally resolved nested Windows credentials. Generated reference-VM credentials
+remain DPAPI-protected under SYSTEM; do not copy them into Console output or
+attempt to decrypt them from a different Windows account.
+
+### Timeouts and scheduling
+
+The ARM wait allows six hours per submitted capacity candidate, nested readiness eight hours, and the
+Managed Run Command twelve hours (with five additional minutes for host polling).
+These are independent ceilings, **not** expected durations. Confirm with the
+Console operator that its global-job limit accommodates the intended run; token
+refresh cannot prevent a platform-enforced job timeout. Subscription and
+participant jobs now start **after** this global readiness gate, rather than
+overlapping nested deployment.
 
 The subsequent preparation script took **4 hours 24 minutes 26 seconds** in the
 TEST4 run reported on 25 October 2026, including reference-VM creation. This is
 additional post-provisioning time, not the total event deployment duration or a
-guaranteed runtime. MDE was still Pending when preparation finished. See the
+guaranteed runtime. MDE was still Pending when preparation finished; the new
+automation waits separately for installation and assesses updates. See the
 [timing evidence and planning guidance](../localbox/readme.md#preparation-time);
 allow time for both preparation and later assessments.
 
-1. Inspect the Azure deployment, Client bootstrap logs and Azure Local/Arc status. Resolve failures before proceeding.
-2. If the Client password is unknown, an authorized event lead/coach uses the Azure VM's **Help > Reset password** to set a known password for the `arcdemo` host account, then connects to `LocalBox-Client` through Bastion. Do not expose this password through participant credentials or job logs. A host password reset does not change the nested-node Windows credentials. See [LocalBox credentials](#localbox-credentials).
-3. Copy **Lab Group ObjectId** from the Console's **Credentials** tab for the preparation prompt or `-AksAdminGroupObjectId`. Confirm that intended Azure lab identities/coaches are members; see the group dependency below.
-4. Follow [LocalBox preparation](../localbox/readme.md), **once per event on the global LocalBox Client**, in elevated PowerShell 7. It creates AKS and then installs/verifies the shared MetalLB extension and reserved ARP pool. Azure authentication uses the Client VM's managed identity; preparation constructs the nested Windows credential locally from the installed configuration without printing it. An explicit `-NodeCredential` overrides that value after a nested-account rotation.
-   Preparation includes `sov-ref-vm` by default; run it **the day before the event** for inspection while participant VMs onboard, or opt out with `-IncludeReferenceVm:$false`. Follow the [reference readiness checks](../localbox/readme.md#reference-readiness-and-participant-use); Console plan configuration and successful provisioning do not establish completed VM assessments. Participants must not modify this shared VM; no RBAC restrictions are added.
-5. Run [Pester health checks](../tests/readme.md) for LocalBox and every selected participant lab. A control-plane-only pass does not establish full readiness.
-6. Console shared setup enables and verifies **Defender for Servers Plan 2** and **Endpoint protection** on every event subscription. Complete the [Defender readiness checklist](../localbox/manual-preparation.md#defender-for-servers-readiness-organizer) and [participant VM readiness exercise](../localbox/manual-preparation.md#step-6-test-the-environment), including guest management, actual Defender onboarding and Update Manager. Verified subscription settings do not prove that a VM has completed onboarding.
-7. Verify an intended participant can use Entra-authenticated `az connectedk8s proxy` and a private application port-forward from their Codespace. Participants inspect MetalLB, not install it, and never need LocalBox-Client access. This validates the lab access path, not routing to the MetalLB service VIP.
+For a full cold-run breakdown, see the
+[test-06 timing and optimization assessment](test-06-timing-analysis.md).
+The [TEST14 section comparison and final warning review](test-14-timing-analysis.md)
+records the 8 November Full pass: 3h46m10s of guest execution, approximately one
+hour of actual AKS/image overlap, and a failed validation attempt that offset
+the guest-stage savings. Subsequent Console output confirms global, shared and
+participant deployment completion, with approximately 11h00m30s of reported
+stage execution. This excludes initial setup and inter-stage gaps; participant
+sign-in and Defender cloud reporting remain separate verification steps.
+The 4 November 2026 run took **10 hours 30 minutes 44 seconds** from Console
+start to finish, including **5 hours 24 minutes 9 seconds** of managed guest
+execution. All 26 guest tests passed, but Console result retrieval failed and
+downstream shared/participant stages were skipped. This is not a successful
+end-to-end event-duration benchmark; the report separates measured operations,
+bounded intervals and potential optimizations.
+
+### Diagnostics and reruns
+
+#### LocalBox ARM capacity failures
+
+The global hook waits for ARM completion inside capacity selection, including
+when resuming a running deployment. `Submitted` is not success. Failed operations
+are inspected for nested error codes and bounded, redacted messages so Console
+shows the underlying `SkuNotAvailable`/allocation/quota error rather than only
+`ended as Failed`.
+
+For a new host, each candidate is tried at most once per hook invocation:
+**E32s_v6 then E32s_v5 in the first preferred region**, followed by the same
+sequence in subsequent regions when safe. The deployer checks subscription SKU
+restrictions, at least 32 unused family vCPUs and at least 32 unused regional
+vCPUs before submission. These checks are not a capacity reservation; ARM can
+still report an allocation failure afterward.
+
+Automatic fallback is allowed only for recognized capacity failures. Canceled
+deployments, timeouts, policy/authorization errors, mixed failure causes and
+missing/unreadable diagnostics stop the job. A timeout does not establish that
+the original deployment stopped, so no competing deployment is submitted.
+
+Before every new candidate, the hook rereads the resource inventory:
+
+- If any VM exists in the LocalBox group, stop for organizer inspection rather
+  than resize/recreate it or change its immutable startup payload.
+- Existing networking/workspace and other regional resources must match the
+  candidate region. Otherwise that region is skipped. Resource-group metadata
+  alone does not pin the host region; fixed-registration staging storage is
+  retained independently.
+- No cleanup is automatic. When a partial deployment pins the group to a region
+  where both host sizes are unavailable, retry after availability changes or
+  arrange a separately authorized cleanup/migration or fresh event. Merely
+  reordering regions cannot move the partial infrastructure.
+
+For TEST16, read-only checks on 10 November found both E32s sizes restricted in
+Spain Central for the selected subscription; Sweden Central listed both without
+restrictions and had sufficient family/regional quota. The existing Spain
+networking prevented an in-place cross-region retry. These are dated planning
+observations, not proof that a Sweden deployment will succeed. Do not remove
+the failed shared group without checking for new work and obtaining organizer
+approval; leave participant scopes and subscription policies intact.
+
+After explicit organizer approval, the failed TEST16 shared group was removed
+on 10 November, following confirmation that only the seven known leftover
+resources remained and no VM or active deployment existed. A subsequent read
+confirmed the group was gone, all eight participant groups remained, and the
+subscription's hosted-tag policy identity still used Spain Central. This was
+operator-authorized cleanup, not automatic fallback; no replacement deployment
+was started. The next Console run remains pending.
+
+Re-import the updated content pack before retrying Console. A failed global
+stage correctly prevents shared and participant deployments; guest health tests
+cannot run until the host and nested infrastructure exist.
+
+#### Guarded startup for new Client VMs
+
+Re-import the complete `labautomation` directory, including
+[localbox-startup.ps1](../../labautomation/localbox-startup.ps1) and
+[localbox-startup-watch.ps1](../../labautomation/localbox-startup-watch.ps1).
+New Client VMs receive a deployment-specific startup guard through immutable VM
+custom data. Existing unprotected VMs are **not migrated or repaired**; existing
+guarded VMs keep their original payload and startup identity.
+
+Before entering upstream storage initialization, the guard waits for
+`WinGetLogonScript` to finish and unregister itself (at most **one hour**).
+The upstream WinGet and LocalBox tasks can both start at logon; starting downloads
+while WinGet is still installing AzCopy is not safe. After installation, the
+guard refreshes its process PATH and resolves AzCopy and BGInfo from PATH, the current
+startup user's WinGet link/package, or known machine installation paths. It does
+not search other users' profiles, install a replacement binary, or blindly pick
+between multiple unlinked package versions. Prerequisite failure is reported as
+`Prerequisites` / `StartupPrerequisitesFailed`, before storage initialization.
+
+TEST14 exposed an installed BGInfo executable that was not discoverable as
+`bginfo64.exe`. The upstream test runner failed at its desktop-status update,
+after running its tests but before registering its future-logon test task.
+For new deployments, the guard patches that exact
+invocation to resolve the installed binary explicitly and check its exit code.
+The retained runner uses the same helper on subsequent logons, not just during
+initial startup. Missing or ambiguous installations and upstream script drift
+still fail explicitly; the fix neither downloads another binary nor suppresses
+test failures. Existing immutable startup payloads are not changed.
+
+WinGet provisioning is also guarded. Its CLI is repaired to the installed
+`Microsoft.WinGet.Client` module version, with at most three attempts and
+30-second retry delays; version matching and a real `Get-WinGetPackage` COM
+enumeration must succeed before package configuration. Both configuration calls
+check their native exit codes, retain private stdout/stderr logs and allow at
+most three attempts, each capped at 15 minutes. A failed WinGet task is reported
+without waiting for the entire prerequisite grace period.
+
+The recognized upstream `Microsoft.AzureDataStudio` configuration entry is
+removed explicitly: [Azure Data Studio retired in February 2026](https://learn.microsoft.com/en-us/sql/tools/whats-happening-azure-data-studio)
+and its WinGet package is no longer available. This workshop does not depend on
+it. VS Code, SSMS and all other configured packages remain required; their errors
+are not ignored. Unrecognized configuration changes stop deployment for review.
+
+TEST12 exposed why checking only whether the WinGet task disappeared was
+insufficient. Both upstream manager repairs received HTTP 504, leaving CLI
+1.11.510 with Client/DSC modules 1.29.380. Subsequent DSC calls failed with
+`0x800706BA` (RPC server unavailable); see
+[microsoft/winget-cli#6560](https://github.com/microsoft/winget-cli/issues/6560).
+Live recovery on the existing traininglab-17 VM repaired the CLI to 1.29.380,
+verified COM enumeration, and found the additional retired-package failure.
+After removing only that entry, package configuration returned zero and AzCopy
+passed its executable version check. Startup was resumed only after verifying
+that no storage pools or nested VMs existed and archiving the original failed
+startup report. The resumed startup began at **18:10:38 UTC on 6 November 2026**
+and verified both base-image SHA256 checksums at **18:15:09 UTC** (4m31s after
+resume), then entered nested deployment with a healthy storage pool. This is
+authorized recovery evidence, not a claim that the complete resumed deployment
+or a new cold deployment has passed.
+
+The startup identity is also merged into the resource-group tags before deployment:
+upstream progress updates replace VM tags with the resource-group tags. If an
+existing Client has a startup monitor but has lost its identity tags, deployment
+and monitoring stop for organizer review rather than silently treating it as a
+legacy VM. No automatic repair of old guarded instances is performed.
+
+The guard replaces the recognized upstream base-VHD download/checksum block:
+
+- Each base image gets at most **three attempts**, with **60 seconds** between
+  retries. The shared download-phase budget is **two hours**; each AzCopy process
+  is capped at 30 minutes or the remaining budget, whichever is shorter.
+- AzCopy exit codes, file existence, nonempty images and valid SHA256 checksums
+  are mandatory. Missing image and checksum files can never count as a match.
+- Verified cached pairs are reused. Downloads are staged separately and promoted
+  only after verification; failed downloads do not replace canonical cached files.
+- Only recognized upstream public sources are accepted. A persistent 401 fails
+  explicitly; there is no authentication bypass or fallback to obsolete images.
+- An incomplete or failed startup is **not automatically replayed**, because the
+  upstream storage initialization is not safe to repeat blindly. Unsupported
+  upstream template/script changes also fail explicitly rather than dropping protection.
+
+While neither `localcluster-validate` nor `localcluster-deploy` exists, Console
+uses the read-only `sovereign-localbox-startup-watch` Managed Run Command.
+It verifies the startup identity and scope, then reports the failure phase, code
+and bounded diagnostic message (for example, `BaseImages`,
+`BaseImageDownloadFailed`, and `HTTP 401`) instead of waiting eight hours for a
+deployment that was never started. No startup report within **one hour** fails
+the gate; after a **two-minute monitoring grace period**, a Running report must
+have a live owner of the guarded startup mutex. The upstream script deliberately
+unregisters its scheduled task before desktop setup and final tests, so task
+registration is not used as process-liveness evidence. After the lock is released,
+the monitor rereads the report to handle completion between observations; absence
+of a terminal report remains a failure. Lock ownership alone never establishes
+startup success. Monitor failures include bounded, redacted underlying diagnostics
+using the same formatter as Console. Inspect the protected
+`C:\LocalBox\SovereignStartup\state.json` and the LocalBox startup logs.
+
+Startup success is **not infrastructure readiness**. All existing ARM, cluster,
+connectivity and Full health checks remain required. Monitoring uses the remaining
+nested-readiness budget. Offline tests and compilation against the real upstream
+templates/scripts validate this integration; a fresh Windows/Console deployment
+is still required to verify the complete new-VM path.
+
+TEST10 on traininglab-17 demonstrated the early failure path: Console stopped
+after **25m25s**, reporting missing AzCopy. The stored monitor report ended at
+**20:59:09 UTC on 5 November 2026**; the WinGet AzCopy link was installed at
+**21:00:18 UTC**, and WinGet finished at **21:03:59 UTC**. This exposed the
+installation race addressed by the prerequisite gate; it was not another HTTP
+401 failure. Read-only inspection also confirmed the upstream tag replacement.
+Neither bootstrap nor storage initialization was replayed during diagnosis.
+
+TEST11 on traininglab-05 progressed through WinGet, verified base-image downloads
+and creation of all three nested VMs, then stopped at cluster-build step 9 after
+approximately **1h18m**. Upstream looked up `ImageCustomizationScheduledTask`,
+which was absent on both nodes, although both module directories checked by
+`Wait-AzureEdgeBootstrap` were already present. The guard's inherited
+`ErrorActionPreference=Stop` incorrectly promoted that upstream non-terminating
+lookup error into a fatal exception.
+
+The guard now preserves upstream's `Continue` error semantics **only while
+invoking the upstream logon script**, including the global preference used by
+imported modules, and restores the previous global preference in `finally`.
+Non-terminating errors remain visible;
+explicit throws, explicit `-ErrorAction Stop` and upstream readiness timeouts
+still fail. Guard operations, prerequisite checks and image transfers remain
+strict, and all final deployment/health gates are unchanged. This does not bypass
+node readiness or create a replacement customization task.
+
+TEST12's authorized resume exposed an additional scope issue at **18:55:57 UTC
+on 6 November 2026**, 45m19s after resume: setting `Continue` only in the calling
+function did not affect the imported LocalBox module, which still resolved the
+global `Stop` preference. The earlier script-level probe did not exercise that
+module boundary. Regression tests now import a real fixture module, covering
+non-terminating errors, explicit failures and preference restoration. A read-only
+probe on the current Client reproduced the old module-scoped failure, then
+verified both nodes with the corrected boundary at **19:03:55 UTC**; both lookup
+errors remained visible and no tasks were started. Authorized recovery resumed
+at **19:10:24 UTC** from cluster-build step 9 only, preserving the healthy storage
+pool and all three running nested VMs. It uses a separate protected helper;
+the original read-only startup payload remains unchanged. Full end-to-end
+readiness remains unverified.
+
+By **19:20:50 UTC**, the continuation had reached step 10, reported successful
+Arc bootstrap on AzLHOST2, and verified all mandatory resource providers as
+registered. The upstream ten-minute registration-propagation wait still applies
+before validation submission. An operator-monitor token expired at 19:19:07;
+the guest task kept running. Monitoring was resumed without replaying any guest
+stage, using refresh deadlines derived from the actual token expirations.
+Reaching step 10 is not a successful validation or Full health result.
+
+New startup payloads embed the existing shared diagnostic formatter. A terminating
+startup failure now includes its bounded, credential-redacted underlying message
+in the correlated report instead of only a generic instruction to inspect logs.
+Existing VMs retain their original immutable payload; a fresh deployment is
+required to exercise these changes. TEST11 was inspected without replaying
+storage initialization or resuming cluster deployment.
+
+#### Automatic Azure Local validation recovery
+
+The Console can perform **one automatic validation retry**, after a **two-minute
+delay**, for the known `UpdateDeploymentSettingsDataFailed` failure in
+`Download content for deployment` with `Timeout of 7200 seconds reached for
+interface`. It requires exactly one failed deployment-settings operation and
+recognized error details. Other validation failures, cancellation, deployment
+failures, unreadable diagnostics and ambiguous state still stop the job.
+
+The host submits the asynchronous Managed Run Command
+`sovereign-localbox-validation-retry` on LocalBox-Client. Keep
+[localbox-validation-retry.ps1](../../labautomation/localbox-validation-retry.ps1)
+in the imported `labautomation` directory.
+
+Before using Azure CLI, the standalone Run Command refreshes its process PATH
+from the persisted machine/user paths, retaining existing entries. The VM agent
+can otherwise retain a PATH from before WinGet installed Azure CLI. Missing CLI
+still fails before any validation is submitted. Terminal retry errors include a
+bounded, redacted underlying diagnostic in Console.
+
+The recovery:
+
+1. Rechecks the original failed validation correlation after the delay.
+2. Uses the Client's managed identity and existing `C:\LocalBox\azlocal.json` and
+   `azlocal.parameters.json`. Nonsecret environment identifiers must match the
+   failed deployment. It does not regenerate templates or credentials,
+   replay bootstrap, or export the parameter file to Console.
+3. Reruns `localcluster-validate` with `deploymentMode=Validate`. Only a new,
+   successful validation permits submission of `localcluster-deploy` with
+   `deploymentMode=Deploy`. A concurrent/manual deployment is not overwritten.
+4. Removes its temporary Azure CLI profile. Console refreshes its own tokens
+   while polling, reports retry status, and continues the normal cluster,
+   connectivity, bridge, extension and subsequent Full health gates.
+
+Recovery uses the **remaining eight-hour nested-readiness budget**, not a new
+eight-hour window. A retry can itself take hours, and neither its submission nor
+its successful exit means the nested deployment is ready. Ensure the Console
+job limit accommodates the complete workflow.
+
+The Run Command record persists: a restarted Console job monitors an existing
+recovery instead of submitting another. A failed/timed-out recovery is terminal;
+there is no automatic retry loop across Console restarts. Inspect its
+`instanceView` and the ARM deployment operations before manual intervention.
+Once a manual repair has produced a successful cluster deployment, the normal
+readiness checks can proceed without rerunning that historical recovery.
+Do not manually re-trigger validation/deployment while automatic recovery is
+running. Cancellation or forced guest termination may prevent CLI-profile
+cleanup; inspect the Client before resetting recovery state.
+
+TEST12's first validation failed with the recognized content-download timeout at
+**21:40:51 UTC on 6 November 2026**. Its automatic retry stopped before the delay
+or any validation submission because the agent's stale PATH could not resolve
+`az`. A live SYSTEM-context probe reproduced the missing command, then verified
+the actual PATH-refresh/CLI helpers, Azure CLI 2.92.0, managed-identity ARM access
+and matching existing template/parameter contracts without submitting validation.
+The authorized repair replaced only that failed preflight execution; retry 1/1
+started at **21:47:59 UTC**, retaining the original remaining timeout and failed
+validation correlation. ARM confirmed a new validation execution in `Running`
+state at **21:50:11 UTC**, after the required backoff. Validation succeeded at
+**22:25:07 UTC** (34m56s after submission), and recovery submitted cluster
+deployment and exited successfully at **22:25:32 UTC**. `localcluster-deploy`
+succeeded at **00:48:09 UTC on 7 November 2026**; the nested connectivity gate
+subsequently passed. No bootstrap, storage or VM stage was replayed. A later
+operator-only token-resource lookup failure interrupted the handoff to guest
+preparation, not the completed Azure Local deployment; monitoring/preparation
+was resumed without infrastructure replay. AKS/image preparation, the reference
+VM and Full health verification remain required.
+
+The operator's Contributor role also prevented the normal container-scoped Blob
+role assignments. After explicit authorization, the Client managed identity
+created and verified only the two required **Storage Blob Data Contributor**
+grants on the private automation container at **05:43:10 UTC on 7 November**.
+Operator Blob data access was verified before continuing guest preparation.
+No broader roles were granted. These observed times include operator repair and
+authorization pauses; they are not an uninterrupted cold-deployment benchmark.
+
+**TEST12 close-out:** the organizer subsequently confirmed that the original
+resources were torn down. Monitoring lost access at 19:00 UTC on 7 November;
+the teardown's exact time was not established. Azure Local validation, deployment
+and nested connectivity were verified, but no successful Full health report was
+verified before teardown. The last direct workload checks showed the existing
+AKS deployment running and the VM image downloading concurrently. Recovery of
+this instance has stopped; replacement resources are not assumed to be the same
+deployment. Published fixes and offline tests are not proof of a successful
+fresh end-to-end deployment.
+
+If an older run failed with `Could not find a part of the path
+'/content/.../resources/prepare-localbox.ps1'`, it reached ARM completion but
+could not package guest automation. Re-import the corrected branch (including
+the source manifest) and retry; the global hook can reuse the existing LocalBox
+deployment. Do not delete the environment to repair a missing content file.
+Missing manifests, unavailable downloads and checksum mismatches now fail
+preflight, before provisioning or changing subscription settings.
+
+Results use a private `microhack-automation` container in the existing LocalBox
+staging storage account. The Console identity and Client identity receive
+**Storage Blob Data Contributor at that container only**. No SAS tokens, account
+keys or participant data-plane grants are created. Storage firewall rules are
+not changed. The Console logs the authenticated result URL and run ID.
+
+The guest's existing ten-minute Blob readiness gate verifies both listing and
+the initial `status.json` upload before starting workload preparation. TEST13
+on 7 November 2026 passed listing after retries but failed that first upload
+at 11:06 UTC, despite the correct container-scoped role assignment. Read access
+alone is therefore insufficient evidence of write readiness during propagation.
+The upload now shares the bounded retry gate; persistent failure still blocks
+preparation and Full readiness. No additional permissions are granted.
+
+The authorized TEST13 recovery started a new guest run at **19:33 UTC** using
+the tested package. It passed the initial Blob upload and reached CLI prerequisite
+installation. Azure Local was not rebuilt, startup was not replayed, and role
+assignments were unchanged. The published five-file download was independently
+checksum-verified against the resumed package. Full health remains unverified;
+this guest-only recovery does not resume the failed Console's downstream stages.
+
+**TEST13 completion:** the resumed guest finished at **23:48:40 UTC on
+7 November 2026**, after **4h 15m 5s**. A separate read-only guest probe verified
+the run/package/group/Azure-scope identity, report timestamps, Full health JSON,
+and both NUnit XML reports: **12/12 upstream and 14/14 Sovereign tests passed**,
+with zero failed, skipped or unrun tests. The reference VM update assessment
+succeeded at 23:41:22 UTC. These results cover AKS runtime health, the imported
+image, reference VM, Arc connectivity and MDE installation.
+
+The bounded MetalLB recovery was exercised successfully: attempt **1/1**
+reapplied the unchanged Azure-managed ARP pool at 23:45:55 UTC and verified
+the Kubernetes pool and L2 advertisement at 23:46:14 UTC, without deletion.
+The Full suite subsequently passed. This supersedes the pending LocalBox health
+checkpoint above, but is a **successful resumed LocalBox run**, not proof of an
+uninterrupted fresh Console event. Console downstream stages, real participant
+sign-in and Defender cloud reporting remain outside this verified result.
+
+Each run has a separate prefix containing `status.json`, `automation.log`,
+`upstream.xml`, `health.xml` and `health.json` when those phases produced them.
+Status is updated at phase boundaries. Failures retain available diagnostics and
+resources; a failed upload also fails the command. Only the listed diagnostics
+are uploaded, never the AKS kubeconfig or reference-VM credential file.
+Prerequisite checks run inside transcript/status capture. If failure occurs
+before guest Azure authentication, diagnostics remain in the private run
+directory on LocalBox-Client and the error is reported through Run Command
+instanceView; no Blob upload is attempted without an authenticated guest.
+
+An organizer with Blob data access can download a run using:
+
+```bash
+az storage blob download-batch --account-name <localbox-storage-account> \
+  --source microhack-automation --pattern '<run-id>/*' \
+  --destination ./localbox-results --auth-mode login
+```
+
+Inspect **LocalBox-Client > Run commands > sovereign-localbox-prepare** and its
+instance view if no diagnostic blobs were uploaded. Bootstrap failures before
+the guest runner starts are reported there. A matching active command is
+monitored without resubmission. A different active content hash/group is rejected,
+not overwritten. After a completed/failed command, retrying starts a new tracked
+run and reuses preparation's resource checks; it does not delete the lab or reset
+existing VM passwords. Investigate failures before retrying.
+
+### Source pins and upstream promotion
+
+When changing any packaged guest script or health test, publish those sources
+first, then update the source manifest's repository, full commit SHA and file
+digests together. The offline tests require the pin's digests to match the
+checkout. Re-import the final content revision, not the intermediate source
+commit. The feature branch currently pins the tested guest sources in the fork;
+promotion upstream must retain an accessible immutable source revision.
+
+For the PR, retain the working pin unless maintainers choose to publish the
+guest sources upstream first. Confirm the current fork revision will remain
+accessible, or publish the same reviewed guest files to an upstream commit and
+then update the repository, full SHA and all digests together in a follow-up
+content revision. Do not substitute `main`, an unpublished commit or the future
+merge SHA. Verify all five packaged files against the manifest and exercise the
+`labautomation`-only packaging path before re-importing a changed pin.
+
+Include the TEST14 Console closeout in [its timing report](test-14-timing-analysis.md)
+and this runbook when promoting the documentation. Do not replace historical
+failure reports or publish private run artifacts, TAPs, passwords or unredacted
+credential screenshots as PR evidence.
+
+### Remaining event validation
+
+The automated gate verifies **infrastructure**, MDE extension installation and
+an Update Manager assessment. It explicitly reports Defender cloud device
+reporting and participant sign-in as `NotVerified`; these are not inferred from
+an installed extension, a resource-count check or admin kubeconfig access.
+
+- After participant deployments, run [health checks](../tests/readme.md) for each
+  selected lab; they cannot run inside the earlier global stage.
+- Before pre-event smoke tests, check the test account's TAP validity window and
+  event time zone. A TAP issued for the workshop date may not work the day before.
+  Arrange an authorized test credential/window; after an approved schedule change,
+  save it and select **Update TAPs**. Do not include credential values in evidence.
+- Smoke-test at least one Spain Central and one West US 2 participant when both
+  regions are used, including sign-in, the Challenge 7 Bastion/K3s path and actual
+  AKS access. Include a participant in a different subscription from LocalBox.
+- Complete the [Defender readiness checklist](../localbox/manual-preparation.md#defender-for-servers-readiness-organizer),
+  including actual device reporting and recommendation/assessment visibility.
+- Verify intended lab users/coaches belong to the Console group and test a real
+  participant's Entra-authenticated proxy and private application port-forward.
+- Complete the [participant VM exercise](../localbox/manual-preparation.md#step-6-test-the-environment)
+  in the assigned participant scope. Rehearse planned nested-VM concurrency and
+  capacity; successful AKS/K3s provisioning is not evidence of LocalBox workload capacity.
+- Preserve the [manual preparation guide](../localbox/readme.md) for BYOS and
+  deliberate recovery only. Do not run it concurrently with hosted automation.
 
 Global setup registers `Microsoft.KubernetesRuntime`, waits for registration,
 resolves its tenant service-principal object ID using the Console's existing
 Graph-capable identity, and records it in the shared RG tag
 `microhack-k8s-runtime-object-id`. Missing registration or identity resolution
 fails setup explicitly. Organizer preparation reads that nonsecret tag; it does
-not require Graph permissions on the Client managed identity. This does not move
-AKS or MetalLB installation into the Console hook: they remain part of the
-organizer's post-provisioning preparation.
+not require Graph permissions on the Client managed identity. The global hook
+invokes AKS and MetalLB preparation inside the Client after nested readiness.
+
+### Participant regions and exercise policies
+
+The default participant candidate order is Spain Central/v5, Sweden Central/v5,
+Spain Central/v6, then Sweden Central/v6. Event-specific SKU/quota restrictions
+can require other configured candidates. West US 2 was used for five participants
+in the 9 November validation; it is a **synthetic-lab capacity workaround, not
+EU data residency**. Do not add it to sovereignty policy examples as an approved
+European region.
+
+- Challenge 1's example allowlist includes four European regions and the
+  Australia East lab exception, **not Spain Central or West US 2**.
+  `DoNotEnforce` still reports noncompliance but does not deny requests through
+  that assignment. During Task 9's scoped enforcement test, deployments or
+  updates in disallowed regions can be denied; restore the three exercise
+  assignments to `DoNotEnforce` afterward and keep the bonus initiative in that
+  mode. Existing resources are not automatically stopped or deleted.
+- For Challenges 2/3, keep the assigned resource group and deploy exercise
+  resources in the approved region specified by the walkthrough/organizer.
+  A resource group's metadata location does not require every resource to use
+  that location. Keep the Key Vault and storage account colocated.
+- Challenge 4 retains **`LOCATION=northeurope`** for the validated confidential
+  ACI comparison. Challenges 5/7 use the actual provided AKS/K3s resources;
+  their region does not change Challenge 4's setting.
+- Challenge 6 uses the shared LocalBox custom location. Its registration
+  defaults to **Australia East** independently of the Azure host and participant
+  regions; see the [registration-region guidance](#localbox-registration-region-and-location-policies).
+- Inherited/organizer-managed policies still apply. `SecurityControl=Ignore`
+  and `CostControl=Ignore` do not override arbitrary location restrictions.
+  Escalate those denials to the policy owner rather than disabling governance.
+
+For an existing event, normally retain the original preferred-region order.
+Participant quota recovery pins the saved region/SKU. Hosted-tag setup now reads
+and preserves the existing policy assignment's identity location independently
+of the preferred host region; lookup failures stop setup rather than treating
+the assignment as absent. This prevents the earlier
+`AlreadyExistServicePrincipalInDifferentRegion` failure when preferences changed.
+The recovered 25-lab event used **Spain Central, West US 2, Australia East, Sweden
+Central**; this is not a replacement for the pack's default or a capacity guarantee.
+Existing LocalBox regional resources still constrain host fallback. Do not delete
+the policy assignment or relocate resources to force a retry.
 
 ### LocalBox registration region and location policies
 
@@ -139,10 +857,10 @@ passes `azureLocalInstanceLocation` to the staging storage module, whose account
 name is `localbox` plus a generated suffix. In the 4 October 2026 hosted test,
 this account was rejected in West Europe while the host was selected in Spain
 Central. **Host-region fallback cannot resolve a rejection in the fixed
-registration/staging-storage region.** The shared setup tries
-the next configured preferred host region for recognized regional failures;
-it does not change the Azure Local registration region or delete the shared
-resource group. The CLI wrapper retains Azure's error details in the exception
+registration/staging-storage region.** Host capacity fallback does not change the
+Azure Local registration region or delete the shared resource group. Fixed-region
+eligibility failures require organizer review, not repeated host-region attempts.
+The CLI wrapper retains Azure's error details in the exception
 so PowerShell's generic native-command exit error cannot hide them from the
 fallback check. Policy denials, authorization failures, and unrecognized errors
 still stop the run. If all preferred regions fail, the final error is reported;
@@ -231,6 +949,155 @@ If an earlier automation version already published an administrator password, re
 The global hook calls the Console-supported `Get-MhhDefaultLabGroup` helper and publishes **Lab Group ObjectId**, **Lab Group GroupName** and **Lab Group DisplayName** as separate credentials to the entire event. Complete the Console's Entra user/group creation lifecycle first; missing or invalid metadata stops global deployment. The object ID is the value to supply to LocalBox preparation for AKS Entra administration.
 
 The [platform contract](../../../../../99-MicroHack-Template/labautomation/README.md#groups-supported-values) still uses `groups` for licensing activation (`GHCPUsers`, `M365-E5-Users`), not arbitrary group creation. No new schema fields or Graph permissions are needed. The Console owns the event group, its membership and teardown; the facilitator must verify intended users/coaches and late registrations. The preparation script still prompts for the ID on the Client, where Console helpers are unavailable, and does not create groups or validate membership through Graph.
+
+## Event-lead troubleshooting
+
+### Retry a failed install-k3s extension
+
+**Symptom:** a participant deployment fails with `VMExtensionProvisioningError`
+on `install-k3s`, often with `[ERROR] Download failed`. AKS and the K3s VM can
+already exist even though the participant job failed.
+
+An unchanged Custom Script Extension does not necessarily execute again when
+Console resubmits the ARM template. Azure can report the **previous failure**:
+a new ARM deployment timestamp is not evidence of a new download attempt.
+In the observed recovery, all three failed extensions retained their original
+execution records until explicitly force-rerun; all three then installed
+successfully on the first attempt.
+
+A download failure alone does not distinguish Azure networking from GitHub/CDN
+availability. Inspect the error first. The procedure below reruns the existing
+extension; it does not fix a persistent network, configuration or policy problem.
+
+#### 1. Identify and inspect one failed participant
+
+Wait for the current Console deployment to finish. Do not race an active
+deployment or rerun healthy participants. Use an authenticated **Azure CLI in
+Bash**, with permission to read/update VM extensions and invoke VM Run Command
+on the affected participant VM, such as Virtual Machine Contributor scoped to
+that participant resource group. No VM administrator password is needed.
+
+Copy the subscription, resource group and VM name from the failed deployment
+and confirm they belong to the intended participant. Run the following blocks
+in the same Bash session, once per failed VM; do not target LocalBox-Client.
+
+```bash
+set -euo pipefail
+
+SUBSCRIPTION_ID='<participant-subscription-id>'
+RESOURCE_GROUP='rg-labuser-<number>'
+VM_NAME='vm-k3s-<suffix>'
+EXTENSION_NAME='install-k3s'
+
+extension_id="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.Compute/virtualMachines/$VM_NAME/extensions/$EXTENSION_NAME"
+extension_uri="https://management.azure.com$extension_id?api-version=2024-11-01"
+
+az vm extension show \
+  --subscription "$SUBSCRIPTION_ID" --resource-group "$RESOURCE_GROUP" \
+  --vm-name "$VM_NAME" --name "$EXTENSION_NAME" --instance-view \
+  --query '{state:provisioningState,status:instanceView.statuses}' \
+  --output json --only-show-errors
+```
+
+Confirm that the error is the K3s installation failure you intend to retry.
+For recurring failures, preserve the extension output and guest log timestamps;
+the original installer may not include the underlying HTTP status.
+
+#### 2. Force one execution without replacing the configuration
+
+This PATCH changes **only `forceUpdateTag`**. It preserves the extension's
+public/protected settings and does not recreate the VM, AKS or LocalBox. The
+existing installation script can restart K3s if it is already installed, so
+limit this action to the failed extension being repaired.
+
+```bash
+identity="$(az rest --subscription "$SUBSCRIPTION_ID" --method get \
+  --url "$extension_uri" \
+  --query "join('|', [properties.provisioningState, properties.publisher, properties.type])" \
+  --output tsv --only-show-errors)"
+
+if [[ "$identity" != 'Failed|Microsoft.Azure.Extensions|CustomScript' ]]; then
+  printf 'STOP: expected a failed Microsoft CustomScript extension, got: %s\n' "$identity" >&2
+  exit 1
+fi
+
+force_tag="event-lead-k3s-retry-$(date -u +%Y%m%dT%H%M%SZ)-$RANDOM"
+az rest --subscription "$SUBSCRIPTION_ID" --method patch \
+  --url "$extension_uri" \
+  --body "{\"properties\":{\"forceUpdateTag\":\"$force_tag\"}}" \
+  --query '{state:properties.provisioningState,forceUpdateTag:properties.forceUpdateTag}' \
+  --output json --only-show-errors
+
+if ! az vm extension wait \
+  --subscription "$SUBSCRIPTION_ID" --resource-group "$RESOURCE_GROUP" \
+  --vm-name "$VM_NAME" --name "$EXTENSION_NAME" \
+  --updated --interval 15 --timeout 2400 --only-show-errors; then
+  az vm extension show \
+    --subscription "$SUBSCRIPTION_ID" --resource-group "$RESOURCE_GROUP" \
+    --vm-name "$VM_NAME" --name "$EXTENSION_NAME" --instance-view \
+    --query '{state:provisioningState,status:instanceView.statuses}' \
+    --output json --only-show-errors
+  printf 'STOP: rerun failed or timed out. Inspect its status before taking further action.\n' >&2
+  exit 1
+fi
+
+az vm extension show \
+  --subscription "$SUBSCRIPTION_ID" --resource-group "$RESOURCE_GROUP" \
+  --vm-name "$VM_NAME" --name "$EXTENSION_NAME" --instance-view \
+  --query '{state:provisioningState,forceUpdateTag:forceUpdateTag,status:instanceView.statuses}' \
+  --output json --only-show-errors
+```
+
+The initial `Updating` response means only that Azure accepted the request.
+Require the final extension state **Succeeded**. The wait is bounded to
+40 minutes; a timeout does not cancel the extension. Do not submit another
+force-rerun while it is still running.
+
+#### 3. Verify K3s readiness
+
+Run this read-only check on the same VM:
+
+```bash
+az vm run-command invoke \
+  --subscription "$SUBSCRIPTION_ID" --resource-group "$RESOURCE_GROUP" \
+  --name "$VM_NAME" --command-id RunShellScript \
+  --scripts '
+set -eu
+systemctl is-active k3s
+systemctl is-enabled k3s
+timeout 45s k3s kubectl wait --for=condition=Ready nodes --all --timeout=30s --request-timeout=10s
+timeout 20s k3s kubectl get nodes --request-timeout=15s
+echo K3S_RECOVERY_VERIFIED
+' \
+  --query 'value[].message' --output json --only-show-errors
+```
+
+Require **active**, **enabled**, the expected VM's node **Ready**, and the final
+**K3S_RECOVERY_VERIFIED** marker without script errors. Run Command's outer
+`Enable succeeded` message alone is not proof that its script succeeded.
+If verification fails, investigate that VM rather than restarting the whole event.
+
+#### 4. Retry Console only after the affected VMs are healthy
+
+Re-import the content revision containing the reuse-aware quota checks before
+retrying. Keep the **same event, subscription assignments and preferred-region
+order**. In particular, changing the first preferred region can conflict with
+an existing global policy assignment's managed-identity location.
+
+Then retry the Console deployment so the failed participants can finish
+**RBAC assignment and credential publication**. Neither extension recovery nor
+Run Command publishes the missing K3s credentials or changes historical failed
+ARM deployment records to successful.
+
+A full Console retry is not a failed-participant-only resume: it runs global
+LocalBox checks, shared preparation and participant jobs again. Existing
+LocalBox is reused, and participant resources normally receive incremental
+updates. The region-fallback helper can still recycle resource groups for
+other retryable errors; do not delete resources or broaden recovery merely to
+clear a K3s extension failure.
+
+References: [Custom Script Extension for Linux](https://learn.microsoft.com/azure/virtual-machines/extensions/custom-script-linux)
+and [VM extension update / forceUpdateTag](https://learn.microsoft.com/rest/api/compute/virtual-machine-extensions/update).
 
 ## Run and close the event
 

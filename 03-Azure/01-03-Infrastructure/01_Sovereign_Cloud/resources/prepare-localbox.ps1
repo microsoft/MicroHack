@@ -23,6 +23,9 @@ ranges and known reservations are validated; live DHCP leases are not inspected.
 New image imports resolve latest from this cluster's Edge Marketplace catalog,
 not the Azure Compute catalog; existing working images are reused unchanged.
 Dot-source this file to load its functions without running provisioning.
+Fresh AKS creation runs asynchronously while the VM image imports. Both must
+succeed before reference VM creation. Use SequentialProvisioning for serial
+execution; existing AKS deployments retain verification-before-image ordering.
 #>
 [CmdletBinding(SupportsShouldProcess)]
 param(
@@ -32,6 +35,7 @@ param(
     [string]$AksAdminGroupObjectId,
     [string]$KubernetesRuntimeObjectId,
     [switch]$SkipAks,
+    [switch]$SequentialProvisioning,
     [switch]$IncludeReferenceVm = $true,
     [pscredential]$ReferenceVmCredential,
     [pscredential]$NodeCredential,
@@ -200,7 +204,7 @@ function Initialize-LocalBoxCliExtension {
 }
 
 function Get-LocalBoxResource {
-    param([string]$Id)
+    param([string]$Id, [int]$TimeoutSeconds = 300)
     $arguments = @('resource', 'show', '--ids', $Id)
     if ($Id -match '/providers/Microsoft\.HybridContainerService/provisionedClusterInstances/') {
         $arguments += @('--api-version', '2024-01-01')
@@ -217,7 +221,7 @@ function Get-LocalBoxResource {
     elseif ($Id -match '/providers/Microsoft\.HybridCompute/machines/') {
         $arguments += @('--api-version', '2024-07-10')
     }
-    Invoke-LocalBoxAz $arguments
+    Invoke-LocalBoxAz $arguments -TimeoutSeconds $TimeoutSeconds
 }
 
 function New-LocalBoxVmTemplate {
@@ -660,9 +664,9 @@ function Get-LocalBoxMetalLbPlan {
 }
 
 function Get-LocalBoxArmCollection {
-    param([Parameter(Mandatory)][string]$Url)
+    param([Parameter(Mandatory)][string]$Url, [int]$TimeoutSeconds = 300)
     do {
-        $page = Invoke-LocalBoxAz @('rest', '--method', 'get', '--url', $Url)
+        $page = Invoke-LocalBoxAz @('rest', '--method', 'get', '--url', $Url) -TimeoutSeconds $TimeoutSeconds
         # Background-job deserialization turns nested JSON arrays into ArrayList.
         if ($page -isnot [System.Collections.IDictionary] -or -not $page.Contains('value') -or
             $page.value -isnot [System.Collections.IList]) {
@@ -969,6 +973,54 @@ function Initialize-LocalBoxStorage {
     }
 }
 
+function Get-LocalBoxAksDeployment {
+    param([string]$SubscriptionId, [string]$ResourceGroupName, [string]$ClusterName,
+        [string]$CustomLocationId, [string]$Location)
+    $scope = @('--subscription', $SubscriptionId, '--resource-group', $ResourceGroupName)
+    $name = "pciDeployment-$ClusterName"
+    $existing = @((Invoke-LocalBoxAz (@('deployment', 'group', 'list') + $scope)) | Where-Object name -eq $name)
+    if (-not $existing.Count) { return }
+    if ($existing.Count -ne 1) { throw 'Ambiguous AKS ARM deployment records.' }
+    $deployment = Invoke-LocalBoxAz (@('deployment', 'group', 'show') + $scope + @('--name', $name))
+    $parameters = $deployment.properties.parameters
+    $clusterId = "/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Kubernetes/connectedClusters/$ClusterName"
+    $correlation = [guid]::Empty
+    if ($deployment.name -ne $name -or
+        $parameters.clusterId.value -ine $clusterId -or $parameters.customLocation.value -ine $CustomLocationId -or
+        $parameters.provisionedClustersName.value -ne $ClusterName -or $parameters.location.value -ine $Location -or
+        -not [guid]::TryParse([string]$deployment.properties.correlationId, [ref]$correlation) -or $correlation -eq [guid]::Empty) {
+        throw 'AKS ARM deployment does not match the requested cluster, location or correlation contract.'
+    }
+    if ($deployment.properties.provisioningState -notin @('Accepted', 'Running', 'Succeeded')) {
+        throw "AKS ARM deployment $name is not accepted or successful: $($deployment.properties.provisioningState). Inspect its deployment operations."
+    }
+    return $deployment
+}
+
+function Complete-LocalBoxAksPreparation {
+    [CmdletBinding(SupportsShouldProcess)]
+    param(
+        [string]$ClusterId, [hashtable]$Expected, [string]$GroupId,
+        [hashtable]$MetalLbPlan, [string]$RuntimeObjectId, [int]$TimeoutSeconds = 21600
+    )
+    if (-not $WhatIfPreference) {
+        $instanceId = "$ClusterId/providers/Microsoft.HybridContainerService/provisionedClusterInstances/default"
+        $instance = Wait-LocalBoxResource $instanceId -TimeoutSeconds $TimeoutSeconds
+        Assert-LocalBoxProperties $instance $Expected
+        $connected = Wait-LocalBoxResource $ClusterId -TimeoutSeconds $TimeoutSeconds
+        Assert-LocalBoxProperties $connected @{ properties = @{ aadProfile = @{ adminGroupObjectIDs = @($GroupId) } } }
+        $deadline = [datetime]::UtcNow.AddSeconds($TimeoutSeconds)
+        while ($connected.properties.connectivityStatus -ne 'Connected') {
+            if ([datetime]::UtcNow -ge $deadline) { throw 'AKS exists but Azure Arc is not connected.' }
+            Start-Sleep -Seconds 15
+            $connected = Get-LocalBoxResource $ClusterId
+        }
+    }
+    Sync-LocalBoxAksProxyRole -ClusterId $ClusterId -GroupObjectId $GroupId -WhatIf:$WhatIfPreference
+    Sync-LocalBoxMetalLb -ClusterId $ClusterId -Plan $MetalLbPlan -RuntimeObjectId $RuntimeObjectId `
+        -TimeoutSeconds $TimeoutSeconds -WhatIf:$WhatIfPreference
+}
+
 function Invoke-LocalBoxPreparation {
     [CmdletBinding(SupportsShouldProcess)]
     param([hashtable]$Settings)
@@ -997,6 +1049,7 @@ function Invoke-LocalBoxPreparation {
     $profile = Join-Path ([IO.Path]::GetTempPath()) "microhack-az-$([guid]::NewGuid())"
     $lock = [Threading.Mutex]::new($false, 'Global\MicroHackLocalBoxPreparation')
     $locked = $false
+    $aksVerificationPending = $false
     try {
         $locked = $lock.WaitOne(0)
         if (-not $locked) { throw 'Another LocalBox preparation is running.' }
@@ -1090,7 +1143,18 @@ function Invoke-LocalBoxPreparation {
             agentPoolProfiles = @(@{ count = $Settings.NodeCount; vmSize = $Settings.NodeVmSize })
         } }
         if ($Settings.KubernetesVersion) { $aksExpected.properties.kubernetesVersion = $Settings.KubernetesVersion }
+        $aksDeploymentArguments = @{
+            SubscriptionId = $Settings.SubscriptionId; ResourceGroupName = $Settings.ResourceGroupName
+            ClusterName = $Settings.AksClusterName; CustomLocationId = $custom.id; Location = $location
+        }
         $existingAks = @((Invoke-LocalBoxAz @('resource', 'list', '--resource-group', $Settings.ResourceGroupName)) | Where-Object id -ieq $aksId)
+        if (-not $Settings.SkipAks -and $existingAks.Count -and -not $Settings.SequentialProvisioning -and -not $WhatIfPreference) {
+            $deployment = Get-LocalBoxAksDeployment @aksDeploymentArguments
+            if ($deployment -and $deployment.properties.provisioningState -in @('Accepted', 'Running')) {
+                $aksVerificationPending = $true
+                Write-Host "Resuming accepted AKS deployment $($deployment.name); VM image import can overlap it. No AKS create will be repeated."
+            }
+        }
         if (-not $Settings.SkipAks -and -not $existingAks.Count) {
             $arguments = @('aksarc', 'create') + $common + @('--name', $Settings.AksClusterName, '--vnet-ids', $networks[1].Id,
                 '--aad-admin-group-object-ids', $groupId, '--generate-ssh-keys', '--control-plane-ip', $config.AKSControlPlaneIP,
@@ -1100,25 +1164,38 @@ function Invoke-LocalBoxPreparation {
                 Write-Host "Validating AKS on Azure Local $($Settings.AksClusterName)..."
                 Invoke-LocalBoxAz ($arguments + @('--validate')) -TimeoutSeconds $timeout -NoOutput
                 Write-Host "Creating AKS on Azure Local $($Settings.AksClusterName)..."
-                Invoke-LocalBoxAz $arguments -TimeoutSeconds $timeout -NoOutput
+                if (-not $Settings.SequentialProvisioning) {
+                    # Azure provisions asynchronously; local CLI commands still run serially.
+                    $aksVerificationPending = $true
+                    $previousDeployment = Get-LocalBoxAksDeployment @aksDeploymentArguments
+                    try {
+                        Invoke-LocalBoxAz ($arguments + @('--no-wait')) -TimeoutSeconds $timeout -NoOutput
+                    }
+                    catch {
+                        $failure = $_
+                        if ($failure.Exception.Message -notmatch '\(ResourceNotFound\)' -or
+                            $failure.Exception.Message -notmatch [regex]::Escape("Microsoft.Kubernetes/connectedClusters/$($Settings.AksClusterName)")) {
+                            throw
+                        }
+                        # aksarc can read the child before its no-wait ARM deployment creates it.
+                        $submitted = Get-LocalBoxAksDeployment @aksDeploymentArguments
+                        if (-not $submitted -or ($previousDeployment -and
+                            $submitted.properties.correlationId -eq $previousDeployment.properties.correlationId)) { throw $failure }
+                        Write-Warning "aksarc reported ResourceNotFound after submission, but a new matching ARM deployment $($submitted.name) is $($submitted.properties.provisioningState). No create is retried; full AKS readiness remains required."
+                    }
+                    Write-Host "AKS creation submitted at $([datetime]::UtcNow.ToString('o')); provisioning will overlap VM image import. AKS readiness is not yet verified."
+                }
+                else {
+                    Invoke-LocalBoxAz $arguments -TimeoutSeconds $timeout -NoOutput
+                }
             }
         }
-        if (-not $Settings.SkipAks -and -not $WhatIfPreference) {
-            $instance = Wait-LocalBoxResource $instanceId -TimeoutSeconds $timeout
-            Assert-LocalBoxProperties $instance $aksExpected
-            $connected = Wait-LocalBoxResource $aksId -TimeoutSeconds $timeout
-            Assert-LocalBoxProperties $connected @{ properties = @{ aadProfile = @{ adminGroupObjectIDs = @($groupId) } } }
-            $deadline = [datetime]::UtcNow.AddSeconds($timeout)
-            while ($connected.properties.connectivityStatus -ne 'Connected') {
-                if ([datetime]::UtcNow -ge $deadline) { throw 'AKS exists but Azure Arc is not connected.' }
-                Start-Sleep -Seconds 15
-                $connected = Get-LocalBoxResource $aksId
-            }
+        $aksCompletion = @{
+            ClusterId = $aksId; Expected = $aksExpected; GroupId = $groupId
+            MetalLbPlan = $metalLb; RuntimeObjectId = $Settings.KubernetesRuntimeObjectId; TimeoutSeconds = $timeout
         }
-        if (-not $Settings.SkipAks) {
-            Sync-LocalBoxAksProxyRole -ClusterId $aksId -GroupObjectId $groupId -WhatIf:$WhatIfPreference
-            Sync-LocalBoxMetalLb -ClusterId $aksId -Plan $metalLb -RuntimeObjectId $Settings.KubernetesRuntimeObjectId `
-                -TimeoutSeconds $timeout -WhatIf:$WhatIfPreference
+        if (-not $Settings.SkipAks -and -not $aksVerificationPending) {
+            Complete-LocalBoxAksPreparation @aksCompletion -WhatIf:$WhatIfPreference
         }
         $provider = Invoke-LocalBoxAz @('provider', 'show', '--namespace', 'Microsoft.EdgeMarketplace')
         if ($provider.registrationState -ne 'Registered') { throw 'Ask the subscription administrator to register Microsoft.EdgeMarketplace before importing the image.' }
@@ -1129,10 +1206,15 @@ function Invoke-LocalBoxPreparation {
             } }
         }
         if ($Settings.ImageVersion -ne 'latest') { $imageExpected.properties.version = @{ name = $Settings.ImageVersion } }
-        Write-Host "Preparing VM image $($Settings.ImageName); download can take several hours..."
+        Write-Host "Preparing VM image $($Settings.ImageName) at $([datetime]::UtcNow.ToString('o')); download can take several hours..."
         $image = Sync-LocalBoxImage -Id $imageId -Expected $imageExpected -ClusterId $cluster[0].id -TimeoutSeconds $timeout -CreateArguments (@('stack-hci-vm', 'image', 'create') + $common + @(
             '--name', $Settings.ImageName, '--os-type', 'Windows', '--publisher', 'microsoftwindowsserver', '--offer', 'windowsserver',
             '--sku', '2025-datacenter-azure-edition-smalldisk', '--storage-path-id', $storageId))
+        if ($aksVerificationPending) {
+            Write-Host "VM image import completed at $([datetime]::UtcNow.ToString('o')); joining AKS provisioning and verifying Arc connectivity and MetalLB."
+            Complete-LocalBoxAksPreparation @aksCompletion -WhatIf:$WhatIfPreference
+            $aksVerificationPending = $false
+        }
         $referenceVm = Sync-LocalBoxReferenceVm -Settings $Settings -Location $location -CustomLocationId $custom.id `
             -ImageId $imageId -NetworkId $networks[0].Id -StorageId $storageId -WhatIf:$WhatIfPreference
         $manifest = @{
@@ -1159,6 +1241,12 @@ function Invoke-LocalBoxPreparation {
         if ($Settings.SkipAks) { Write-Warning 'AKS was explicitly skipped. Rerun with an admin-group ID before full health validation; this environment is not event-ready.' }
         Write-Host 'Preparation finished. Run test-sovereign-cloud.ps1 before declaring the environment ready.'
     }
+    catch {
+        if ($aksVerificationPending) {
+            Write-Warning 'Asynchronous AKS creation was attempted and readiness has not been verified. The Azure operation may still be running even though preparation failed. No resources were rolled back; inspect AKS and image provisioning state before retrying.'
+        }
+        throw
+    }
     finally {
         $env:AZURE_CONFIG_DIR = $previousConfig
         $env:AZURE_EXTENSION_DIR = $previousExtensions
@@ -1173,7 +1261,8 @@ if ($MyInvocation.InvocationName -ne '.') {
     $settings = @{
         SubscriptionId = $SubscriptionId; ResourceGroupName = $ResourceGroupName; ConfigPath = $ConfigPath
         AksAdminGroupObjectId = $AksAdminGroupObjectId; KubernetesRuntimeObjectId = $KubernetesRuntimeObjectId
-        SkipAks = [bool]$SkipAks; NodeCredential = $NodeCredential; VmSwitchName = $VmSwitchName
+        SkipAks = [bool]$SkipAks; SequentialProvisioning = [bool]$SequentialProvisioning
+        NodeCredential = $NodeCredential; VmSwitchName = $VmSwitchName
         IncludeReferenceVm = [bool]$IncludeReferenceVm; ReferenceVmCredential = $ReferenceVmCredential
         ImageName = $ImageName; ImageVersion = $ImageVersion; VmPoolStart = $VmPoolStart; VmPoolEnd = $VmPoolEnd
         AksClusterName = $AksClusterName; KubernetesVersion = $KubernetesVersion; NodeVmSize = $NodeVmSize

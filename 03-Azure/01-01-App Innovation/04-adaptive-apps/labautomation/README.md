@@ -104,7 +104,7 @@ availability checks. Shared setup does not request quota increases.
 | Resource | Configuration |
 | --- | --- |
 | `aks-adaptive-apps` | Two D4s v5 Ubuntu nodes, OIDC/workload identity, managed Istio, free control-plane tier, one surge node and standard load-balancer egress |
-| `vm-adaptive-apps-k3s` | Private D4s v5 Ubuntu 22.04 VM, 64-GiB Standard SSD, K3s |
+| `vm-adaptive-apps-k3s` | Private D4s v5 Ubuntu 22.04 VM, 64-GiB Standard SSD, K3s `v1.33.13+k3s1` |
 | `vnet-adaptive-apps` | K3s subnet `10.42.0.0/24`, Bastion subnet `10.42.1.0/26` |
 | `bas-adaptive-apps` | Standard Bastion, native tunneling, two scale units, static Standard public IP |
 | `natgw-adaptive-apps` | Explicit outbound connectivity through a static Standard public IP |
@@ -112,7 +112,20 @@ availability checks. Shared setup does not request quota increases.
 | `acad<stable hash>` | Unique Standard ACR, anonymous recipe pull enabled, admin credentials disabled; no recipes published |
 
 K3s uses pod/service CIDRs `10.52.0.0/16` and `10.53.0.0/16`, avoiding the
-VNet range. Run Command starts an existing K3s installation rather than wiping it.
+VNet range. Both the hosted installer and manual preparation default to the exact
+release `v1.33.13+k3s1`, not the moving `stable` channel, and disable Traefik.
+This keeps Kubernetes within Contour 1.32.0's tested range and avoids newer K3s
+releases' separate Gateway API CRD owner and incompatible API versions.
+Validate Radius end to end before changing the pin.
+
+Run Command starts an existing K3s installation only if its version matches the
+pin. A mismatch fails before guest configuration or service changes and is
+reported by the deployment hook; it never automatically upgrades, downgrades or
+wipes the cluster. Use a fresh lab VM for an incompatible installation. A matching
+version alone does not repair pre-existing Gateway API CRD ownership conflicts.
+`K3S_VERSION` can override the exact release in the guest installer environment,
+but exporting it on the worker does not forward it through Run Command; the
+active hosted hook uses the script's default.
 The VM password uses `New-MhhStablePassword`, so reruns do not silently rotate it.
 It is never returned to participants; kubeconfig retrieval uses VM Run Command
 and Kubernetes API access uses Bastion.

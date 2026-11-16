@@ -86,7 +86,7 @@ bash resources/prepare-k3s-azure-vm.sh
 The default `provision` mode:
 
 1. Reconciles networking, Bastion, the private VM, and least-privilege NSG rules.
-2. Installs K3s through Run Command with Traefik disabled.
+2. Installs K3s `v1.33.13+k3s1` through Run Command with Traefik disabled.
 3. Retrieves kubeconfig in bounded base64 chunks without printing cluster credentials.
 4. Writes `~/.kube/adaptive-apps-k3s.yaml` with mode `0600`.
 5. Rewrites the API endpoint to `https://127.0.0.1:16443`.
@@ -101,10 +101,27 @@ Useful optional variables:
 | `K3S_SUBNET_NAME` / `K3S_SUBNET_PREFIX` | `snet-k3s` / `10.42.0.0/24` |
 | `BASTION_SUBNET_PREFIX` | `10.42.1.0/26` |
 | `K3S_VM_NAME` / `K3S_VM_SIZE` | `vm-adaptive-apps-k3s` / `Standard_D4s_v5` |
+| `K3S_VERSION` | `v1.33.13+k3s1` (exact release, not a channel) |
 | `BASTION_NAME` | `bas-adaptive-apps` |
 | `BASTION_PUBLIC_IP_NAME` | `pip-adaptive-apps-bastion` |
 | `K3S_LOCAL_PORT` | `16443` |
 | `K3S_KUBECONFIG` | `~/.kube/adaptive-apps-k3s.yaml` |
+
+The exact K3s pin keeps Kubernetes within the tested range for Radius v0.60.0's
+bundled Contour 1.32.0. It also avoids newer K3s releases' separate
+`gateway-api-crd` Helm release, which conflicts with Contour's Gateway API CRD
+ownership and can stop serving API versions that Contour requires. Keep Traefik
+disabled so Radius can install its compatible Contour and Gateway API CRDs.
+Validate the complete Radius installation before using a different `K3S_VERSION`.
+
+Provisioning reuses an existing K3s installation only when its version exactly
+matches `K3S_VERSION`. A mismatch fails before rewriting the guest's K3s
+configuration or restarting its service; it never upgrades or downgrades the
+cluster automatically. The script may already have reconciled Azure resources
+before this guest check. For an incompatible existing cluster, use a fresh lab
+VM rather than downgrading in place. Changing the pin does not repair an existing
+Gateway API CRD ownership conflict. Connect/status/disconnect do not enforce the
+pin and remain available for troubleshooting.
 
 Use nonoverlapping CIDRs that comply with the subscription's network policy. The script
 will not resize or move existing subnets. It also refuses to reuse an older K3s VM that

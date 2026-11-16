@@ -108,6 +108,9 @@ try {
     $guest = Invoke-AdaptiveAz -Arguments @('vm', 'run-command', 'invoke', '--resource-group', $ResourceGroupName,
         '--name', 'vm-adaptive-apps-k3s', '--command-id', 'RunShellScript',
         '--scripts', "@$(Join-Path $PSScriptRoot 'install-k3s.sh')")
+    if (($guest.value.message -join "`n") -match '(?m)^K3S_VERSION_MISMATCH: ([^\r\n]+)') {
+        throw $Matches[1]
+    }
     if (($guest.value.message -join "`n") -notmatch '(?m)^ADAPTIVE_K3S_READY\r?$') {
         throw 'K3s Run Command did not return its readiness marker. Inspect VM Run Command and NAT outbound; credentials were not emitted.'
     }

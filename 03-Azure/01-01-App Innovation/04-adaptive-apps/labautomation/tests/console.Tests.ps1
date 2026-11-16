@@ -464,6 +464,7 @@ Describe 'Infrastructure-only participant hook' {
     }
     It 'fails closed on <Failure> without declaring infrastructure ready' -ForEach @(
         @{ Failure = 'K3s'; Error = '*readiness marker*' }
+        @{ Failure = 'K3s version'; Error = '*Existing K3s version v1.37.2+k3s1 does not match required v1.33.13+k3s1*' }
         @{ Failure = 'AKS exit'; Error = '*AKS node readiness failed*' }
         @{ Failure = 'AKS missing exit'; Error = '*AKS node readiness failed*' }
         @{ Failure = 'AKS state'; Error = '*AKS node readiness failed*' }
@@ -472,6 +473,7 @@ Describe 'Infrastructure-only participant hook' {
     ) {
         switch ($Failure) {
             'K3s' { $script:guestMarker = 'not-ready' }
+            'K3s version' { $script:guestMarker = 'K3S_VERSION_MISMATCH: Existing K3s version v1.37.2+k3s1 does not match required v1.33.13+k3s1. Automatic version changes are not supported. Use a fresh lab VM.' }
             'AKS exit' { $script:aksResult = '{"provisioningState":"Succeeded","exitCode":1}' }
             'AKS missing exit' { $script:aksResult = '{"provisioningState":"Succeeded"}' }
             'AKS state' { $script:aksResult = '{"provisioningState":"Failed","exitCode":0}' }

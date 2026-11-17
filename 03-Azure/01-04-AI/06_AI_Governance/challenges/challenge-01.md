@@ -1,4 +1,4 @@
-# Challenge 1 — Onboard a New LLM Backend
+# Challenge 1: Onboard a New LLM Backend
 
 **[Home](../README.md)** - [Next Challenge →](challenge-02.md)
 

@@ -1357,6 +1357,208 @@ resource apimLoggerPiiUsageEventHub 'Microsoft.ApiManagement/service/loggers@202
   ]
 }
 
+// Referenced by the ai-usage fragment (token usage events).
+resource apimLoggerUsageEventHub 'Microsoft.ApiManagement/service/loggers@2023-09-01-preview' = {
+  parent: apim
+  name: 'usage-eventhub-logger'
+  properties: {
+    loggerType: 'azureEventHub'
+    description: 'LLM usage events'
+    credentials: {
+      endpointAddress: '${eventHubNamespace}.servicebus.windows.net'
+      identityClientId: apimMI.properties.clientId
+      name: eventHubName
+    }
+    isBuffered: true
+  }
+  dependsOn: [
+    eventHub
+    roleAssignmentApimMiEventHubSender
+  ]
+}
+
+// ===== Hub: APIM observability (Application Insights + Azure Monitor) =====
+resource apimLoggerAzureMonitor 'Microsoft.ApiManagement/service/loggers@2023-09-01-preview' = {
+  parent: apim
+  name: 'azuremonitor'
+  properties: {
+    loggerType: 'azureMonitor'
+    isBuffered: false
+    description: 'Azure Monitor logger for Log Analytics'
+  }
+}
+
+resource apimDiagnosticAppInsights 'Microsoft.ApiManagement/service/diagnostics@2023-09-01-preview' = {
+  parent: apim
+  name: 'applicationinsights'
+  properties: {
+    alwaysLog: 'allErrors'
+    httpCorrelationProtocol: 'W3C'
+    verbosity: 'information'
+    logClientIp: true
+    loggerId: apimLoggerAppInsights.id
+    metrics: true
+    sampling: {
+      samplingType: 'fixed'
+      percentage: 100
+    }
+  }
+}
+
+resource apimDiagnosticAzureMonitor 'Microsoft.ApiManagement/service/diagnostics@2023-09-01-preview' = {
+  parent: apim
+  name: 'azuremonitor'
+  properties: {
+    alwaysLog: 'allErrors'
+    verbosity: 'information'
+    logClientIp: true
+    loggerId: apimLoggerAzureMonitor.id
+    sampling: {
+      samplingType: 'fixed'
+      percentage: 100
+    }
+  }
+}
+
+// Per-API diagnostics: Application Insights (with metrics) and Azure Monitor with
+// LLM request/response logging, for every API the lab publishes.
+var diagnosticApis = [
+  apiUniversalLlm.name
+  apiUnifiedAi.name
+  apiAzureOpenAi.name
+]
+
+resource apiDiagnosticsAppInsights 'Microsoft.ApiManagement/service/apis/diagnostics@2023-09-01-preview' = [for apiName in diagnosticApis: {
+  name: '${apim.name}/${apiName}/applicationinsights'
+  properties: {
+    alwaysLog: 'allErrors'
+    httpCorrelationProtocol: 'W3C'
+    verbosity: 'information'
+    logClientIp: true
+    loggerId: apimLoggerAppInsights.id
+    metrics: true
+    sampling: {
+      samplingType: 'fixed'
+      percentage: 100
+    }
+    frontend: {
+      request: { body: { bytes: 0 } }
+      response: { body: { bytes: 0 } }
+    }
+    backend: {
+      request: { body: { bytes: 0 } }
+      response: { body: { bytes: 0 } }
+    }
+  }
+  dependsOn: [
+    apimDiagnosticAppInsights
+  ]
+}]
+
+resource apiDiagnosticsAzureMonitor 'Microsoft.ApiManagement/service/apis/diagnostics@2024-06-01-preview' = [for apiName in diagnosticApis: {
+  name: '${apim.name}/${apiName}/azuremonitor'
+  properties: {
+    alwaysLog: 'allErrors'
+    verbosity: 'information'
+    logClientIp: true
+    loggerId: apimLoggerAzureMonitor.id
+    sampling: {
+      samplingType: 'fixed'
+      percentage: 100
+    }
+    frontend: {
+      request: { body: { bytes: 0 } }
+      response: { body: { bytes: 0 } }
+    }
+    backend: {
+      request: { body: { bytes: 0 } }
+      response: { body: { bytes: 0 } }
+    }
+    largeLanguageModel: {
+      logs: 'enabled'
+      requests: {
+        messages: 'all'
+        maxSizeInBytes: 262144
+      }
+      responses: {
+        messages: 'all'
+        maxSizeInBytes: 262144
+      }
+    }
+  }
+  dependsOn: [
+    apimDiagnosticAzureMonitor
+  ]
+}]
+
+// Gateway logs (incl. LLM logs) and metrics to the hub Log Analytics workspace.
+resource apimDiagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  scope: apim
+  name: 'apimDiagnosticSettings'
+  properties: {
+    workspaceId: laHub.id
+    logAnalyticsDestinationType: 'Dedicated'
+    logs: [
+      {
+        categoryGroup: 'allLogs'
+        enabled: true
+      }
+    ]
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
+      }
+    ]
+  }
+}
+
+// ===== Hub: additional gateway policy fragments =====
+// Hub-level fragments that no challenge deploys. The routing/authorization/model
+// fragments are intentionally left to challenge 1 (llm-backend-onboarding).
+resource policyFragmentAiUsage 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
+  parent: apim
+  name: 'ai-usage'
+  properties: {
+    format: 'rawxml'
+    description: 'Emits LLM token usage events to Event Hub'
+    value: loadTextContent('../../challenges/bicep/infra/modules/apim/policies/frag-ai-usage.xml')
+  }
+  dependsOn: [
+    apimLoggerUsageEventHub
+  ]
+}
+
+resource policyFragmentRaiseThrottlingEvents 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
+  parent: apim
+  name: 'raise-throttling-events'
+  properties: {
+    format: 'rawxml'
+    description: 'Raises throttling events when a backend or product limit is hit'
+    value: loadTextContent('../../challenges/bicep/infra/modules/apim/policies/frag-raise-throttling-events.xml')
+  }
+}
+
+resource policyFragmentAiFoundryCompatibility 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
+  parent: apim
+  name: 'ai-foundry-compatibility'
+  properties: {
+    format: 'rawxml'
+    description: 'Normalizes Azure OpenAI and Foundry request/response shapes'
+    value: loadTextContent('../../challenges/bicep/infra/modules/apim/policies/frag-ai-foundry-compatibility.xml')
+  }
+}
+
+resource policyFragmentStripBackendHeaders 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
+  parent: apim
+  name: 'strip-backend-headers'
+  properties: {
+    format: 'rawxml'
+    description: 'Removes backend-identifying headers from responses'
+    value: loadTextContent('../../challenges/bicep/infra/modules/apim/policies/frag-strip-backend-headers.xml')
+  }
+}
+
 // ===== Spoke: Azure AI Foundry Account (AIServices) =====
 resource spokeFoundryAccount 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' = {
   name: spokeFoundryAccountName

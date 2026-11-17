@@ -1,4 +1,4 @@
-# Challenge 5 — PII Anonymization, Blocking & Analytics
+# Challenge 5: PII Anonymization, Blocking & Analytics
 
 **[Home](../README.md)** - [← Previous Challenge](challenge-04.md) - [Next Challenge →](challenge-06.md)
 

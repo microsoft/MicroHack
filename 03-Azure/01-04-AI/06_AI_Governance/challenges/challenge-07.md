@@ -1,4 +1,4 @@
-# Challenge 7 — Build a Governed Hosted Agent with AGT
+# Challenge 7: Build a Governed Hosted Agent with AGT
 
 **[Home](../README.md)** - [← Previous Challenge](challenge-06.md) - [Next Challenge →](challenge-08.md)
 

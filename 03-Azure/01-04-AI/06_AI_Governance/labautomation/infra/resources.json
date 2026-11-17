@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.41.2.15936",
-      "templateHash": "1413310816187321949"
+      "version": "0.49.2.45890",
+      "templateHash": "18148269076609345143"
     }
   },
   "parameters": {
@@ -68,6 +68,10 @@
     "$fxv#2": "<fragment>\n    <!-- Replace placeholders with original PII -->\n    <set-variable name=\"piiDeanonymizedContentOutput\" value=\"@{\n        var content = context.Variables.GetValueOrDefault<string>(\"piiDeanonymizeContentInput\");\n        \n        // Pre-process content to replace common encoded symbols\n        content = System.Text.RegularExpressions.Regex.Replace(content, @\"\\\\u003c\", \"<\");\n        content = System.Text.RegularExpressions.Regex.Replace(content, @\"\\\\u003e\", \">\");\n        \n        var mappings = JArray.Parse(\n            context.Variables.GetValueOrDefault<string>(\"piiMappings\"));\n        \n        foreach (var mapping in mappings) {\n            var original = mapping[\"original\"].ToString();\n            var placeholder = mapping[\"placeholder\"].ToString();\n            content = content.Replace(placeholder, original);\n        }\n        return content;\n    }\" />\n</fragment>",
     "$fxv#3": "<fragment>\n    <!-- Save PII anonymization/deanonymization state to Event Hub using native log-to-eventhub policy -->\n    <choose>\n        <when condition=\"@(context.Variables.GetValueOrDefault<string>(\"piiStateSavingEnabled\") == \"true\")\">\n            <!-- Capture context information -->\n            <set-variable name=\"piiOperationId\" value=\"@(Guid.NewGuid().ToString())\" />\n            <set-variable name=\"piiOperationTimestamp\" value=\"@(DateTime.UtcNow.ToString(\"o\"))\" />\n            <set-variable name=\"piiApiName\" value=\"@(context.Api.Name ?? \"unknown\")\" />\n            <set-variable name=\"piiApiId\" value=\"@(context.Api.Id ?? \"unknown\")\" />\n            <set-variable name=\"piiProductName\" value=\"@(context.Product?.Name ?? \"unknown\")\" />\n            <set-variable name=\"piiProductId\" value=\"@(context.Product?.Id ?? \"unknown\")\" />\n            <set-variable name=\"piiSubscriptionName\" value=\"@(context.Subscription?.Name ?? \"unknown\")\" />\n            <set-variable name=\"piiSubscriptionId\" value=\"@(context.Subscription?.Id ?? \"unknown\")\" />\n            <set-variable name=\"piiOperationName\" value=\"@(context.Operation.Name ?? \"unknown\")\" />\n            <set-variable name=\"targetDeployment\" value=\"@(context.Variables.GetValueOrDefault<string>(\"requestedModel\") ?? \"unknown\")\" />\n            \n            <!-- Log to Event Hub using native policy -->\n            <log-to-eventhub logger-id=\"pii-usage-eventhub-logger\">@{\n                var eventData = new JObject();\n                \n                // Operation metadata\n                eventData[\"id\"] = context.Variables.GetValueOrDefault<string>(\"piiOperationId\");\n                eventData[\"timestamp\"] = context.Variables.GetValueOrDefault<string>(\"piiOperationTimestamp\");\n                eventData[\"type\"] = \"PII_Processing\";\n                eventData[\"targetDeployment\"] = context.Variables.GetValueOrDefault<string>(\"targetDeployment\");\n                // Enhanced API and subscription context with content\n                eventData[\"context\"] = new JObject {\n                    [\"api\"] = new JObject {\n                        [\"id\"] = context.Variables.GetValueOrDefault<string>(\"piiApiId\"),\n                        [\"name\"] = context.Variables.GetValueOrDefault<string>(\"piiApiName\"),\n                        [\"operation\"] = new JObject {\n                            [\"id\"] = context.Operation.Id ?? \"unknown\",\n                            [\"name\"] = context.Variables.GetValueOrDefault<string>(\"piiOperationName\"),\n                            [\"method\"] = context.Operation.Method ?? \"unknown\",\n                            [\"urlTemplate\"] = context.Operation.UrlTemplate ?? \"unknown\"\n                        },\n                        [\"content\"] = new JObject {\n                            [\"originalRequest\"] = context.Variables.GetValueOrDefault<string>(\"piiInputContent\"),\n                            [\"anonymizedRequest\"] = context.Variables.GetValueOrDefault<string>(\"piiAnonymizedContent\"),\n                            [\"originalResponse\"] = context.Variables.GetValueOrDefault<string>(\"originalResponse\"),\n                            [\"deanonymizedResponse\"] = context.Variables.GetValueOrDefault<string>(\"piiDeanonymizedContentOutput\")\n                        }\n                    },\n                    [\"product\"] = new JObject {\n                        [\"id\"] = context.Variables.GetValueOrDefault<string>(\"piiProductId\"),\n                        [\"name\"] = context.Variables.GetValueOrDefault<string>(\"piiProductName\")\n                    },\n                    [\"subscription\"] = new JObject {\n                        [\"id\"] = context.Variables.GetValueOrDefault<string>(\"piiSubscriptionId\"),\n                        [\"name\"] = context.Variables.GetValueOrDefault<string>(\"piiSubscriptionName\")\n                    }\n                };\n                \n                // Process information\n                eventData[\"process\"] = new JObject {\n                    [\"anonymizationEnabled\"] = context.Variables.GetValueOrDefault<string>(\"piiAnonymizationEnabled\") == \"true\",\n                    [\"confidenceThreshold\"] = context.Variables.GetValueOrDefault<double>(\"piiConfidenceThreshold\", 0.8),\n                    [\"entityCategoryExclusions\"] = context.Variables.GetValueOrDefault<string>(\"piiEntityCategoryExclusions\", \"\"),\n                    [\"deanonymizationPerformed\"] = context.Variables.ContainsKey(\"piiDeanonymizedContentOutput\")\n                };\n                \n                // Results summary\n                var mappings = new JArray();\n                if (context.Variables.ContainsKey(\"piiMappings\")) {\n                    try {\n                        mappings = JArray.Parse(context.Variables.GetValueOrDefault<string>(\"piiMappings\"));\n                        eventData[\"entityCount\"] = mappings.Count;\n                        \n                        // Group entities by category for reporting\n                        var categories = new Dictionary<string, int>();\n                        foreach (var mapping in mappings) {\n                            var placeholder = mapping[\"placeholder\"].ToString();\n                            var category = placeholder.TrimStart('<').Split('_')[0];\n                            \n                            if (!categories.ContainsKey(category)) {\n                                categories[category] = 0;\n                            }\n                            categories[category]++;\n                        }\n                        \n                        var categoryDetails = new JObject();\n                        foreach (var category in categories) {\n                            categoryDetails[category.Key] = category.Value;\n                        }\n                        eventData[\"entityCategories\"] = categoryDetails;\n                        \n                        // Include mappings for detailed audit (can be removed if too verbose)\n                        eventData[\"mappings\"] = mappings;\n                    }\n                    catch (Exception ex) {\n                        eventData[\"error\"] = \"Failed to process mappings: \" + ex.Message;\n                    }\n                }\n                \n                // Content length metrics (not the actual content)\n                if (context.Variables.ContainsKey(\"piiInputContent\")) {\n                    eventData[\"metrics\"] = new JObject {\n                        [\"inputContentLength\"] = context.Variables.GetValueOrDefault<string>(\"piiInputContent\", \"\").Length\n                    };\n                    \n                    if (context.Variables.ContainsKey(\"piiAnonymizedContent\")) {\n                        eventData[\"metrics\"][\"anonymizedContentLength\"] = \n                            context.Variables.GetValueOrDefault<string>(\"piiAnonymizedContent\", \"\").Length;\n                    }\n                    \n                    // Add deanonymization metrics\n                    if (context.Variables.ContainsKey(\"piiDeanonymizeContentInput\")) {\n                        eventData[\"metrics\"][\"deanonymizeInputLength\"] = \n                            context.Variables.GetValueOrDefault<string>(\"piiDeanonymizeContentInput\", \"\").Length;\n                    }\n                    \n                    if (context.Variables.ContainsKey(\"piiDeanonymizedContentOutput\")) {\n                        eventData[\"metrics\"][\"deanonymizedOutputLength\"] = \n                            context.Variables.GetValueOrDefault<string>(\"piiDeanonymizedContentOutput\", \"\").Length;\n                    }\n                }\n                \n                // Add deanonymization flow details\n                eventData[\"deanonymization\"] = new JObject {\n                    [\"performed\"] = context.Variables.ContainsKey(\"piiDeanonymizedContentOutput\"),\n                    [\"inputSource\"] = context.Variables.ContainsKey(\"piiDeanonymizeContentInput\") ? \"present\" : \"missing\",\n                    [\"status\"] = context.Variables.ContainsKey(\"piiDeanonymizedContentOutput\") ? \"completed\" : \"not_performed\",\n                    [\"timestamp\"] = DateTime.UtcNow.ToString(\"o\")\n                };\n                \n                // Track end-to-end flow\n                eventData[\"processingFlow\"] = new JObject {\n                    [\"anonymization\"] = new JObject {\n                        [\"performed\"] = context.Variables.ContainsKey(\"piiAnonymizedContent\"),\n                        [\"entityCount\"] = context.Variables.ContainsKey(\"piiMappings\") ? \n                            JArray.Parse(context.Variables.GetValueOrDefault<string>(\"piiMappings\")).Count : 0\n                    },\n                    [\"deanonymization\"] = new JObject {\n                        [\"performed\"] = context.Variables.ContainsKey(\"piiDeanonymizedContentOutput\"),\n                        [\"success\"] = context.Variables.ContainsKey(\"piiDeanonymizedContentOutput\")\n                    }\n                };\n                \n                return eventData.ToString();\n            }</log-to-eventhub>\n        </when>\n    </choose>\n</fragment>\n",
     "$fxv#4": "<policies>\n    <inbound>\n        <base />\n        <!-- The fragment fills availableFilteredModels, honouring the access\n             contract's allowedModels. Challenge 1 replaces the fragment with one\n             generated from the real deployments; this operation is unaffected. -->\n        <include-fragment fragment-id=\"get-available-models\" />\n        <return-response>\n            <set-status code=\"200\" reason=\"OK\" />\n            <set-header name=\"Content-Type\" exists-action=\"override\">\n                <value>application/json</value>\n            </set-header>\n            <set-body>@{\n                JArray models = JArray.Parse((string)context.Variables[\"availableFilteredModels\"]);\n                return new JObject(new JProperty(\"object\", \"list\"), new JProperty(\"data\", models)).ToString();\n            }</set-body>\n        </return-response>\n    </inbound>\n    <backend><base /></backend>\n    <outbound><base /></outbound>\n    <on-error><base /></on-error>\n</policies>\n",
+    "$fxv#5": "<fragment>\n    <!-- Log OpenAI usage to EventHub -->\n    <choose>\n        <when condition=\"@(context.Response.StatusCode == 200)\">\n            <log-to-eventhub logger-id=\"usage-eventhub-logger\">@{\n            return new JObject(\n                new JProperty(\"id\", (string)context.Variables.GetValueOrDefault<string>(\"idPrefix\", \"ai\") + \"-\" + Guid.NewGuid().ToString()),\n                new JProperty(\"timestamp\", DateTime.UtcNow.ToString()),\n                new JProperty(\"appId\", (string)context.Variables.GetValueOrDefault<string>(\"appId\", \"NA\")),\n                new JProperty(\"subscriptionId\", context.Subscription?.Id?.ToString() ?? \"Portal-Admin\"),\n                new JProperty(\"productName\", context.Product?.Name?.ToString() ?? \"Portal-Admin\"),\n                new JProperty(\"targetService\", (string)context.Variables.GetValueOrDefault<string>(\"targetService\", \"NA\")),\n                new JProperty(\"model\", (string)context.Variables.GetValueOrDefault<string>(\"model\", \"NA\")),\n                new JProperty(\"gatewayName\", context.Deployment?.ServiceName ?? \"NA\"),\n                new JProperty(\"gatewayRegion\", context.Deployment?.Region ?? \"NA\"),\n                new JProperty(\"aiGatewayId\", context.Deployment?.Gateway?.Id ?? \"NA\"),\n                new JProperty(\"RequestIp\", context.Request?.IpAddress ?? \"NA\"),\n                new JProperty(\"operationName\", context.Operation?.Name ?? \"NA\"),\n                new JProperty(\"sessionId\", (string)context.Variables.GetValueOrDefault<string>(\"sessionId\", \"NA\")),\n                new JProperty(\"endUserId\", (string)context.Variables.GetValueOrDefault<string>(\"endUserId\", \"NA\")),\n                new JProperty(\"backendId\", (string)context.Variables.GetValueOrDefault<string>(\"backendId\", \"NA\")),\n                new JProperty(\"routeLocation\", (string)context.Variables.GetValueOrDefault<string>(\"routeLocation\", \"NA\")),\n                new JProperty(\"routeName\", (string)context.Variables.GetValueOrDefault<string>(\"routeName\", \"NA\")),\n                new JProperty(\"deploymentName\", (string)context.Variables.GetValueOrDefault<string>(\"deploymentName\", \"NA\")),\n                new JProperty(\"promptTokens\", (int)context.Variables.GetValueOrDefault<int>(\"promptTokens\", 1)),\n                new JProperty(\"responseTokens\", (int)context.Variables.GetValueOrDefault<int>(\"responseTokens\", 0)),\n                new JProperty(\"totalTokens\", (int)context.Variables.GetValueOrDefault<int>(\"totalTokens\", 1))\n        ).ToString();\n        }</log-to-eventhub>\n        </when>\n    </choose>\n</fragment>",
+    "$fxv#6": "<fragment>\n    <choose>\n        <when condition=\"@(context.Response.StatusCode == 429)\">\n            <emit-metric name=\"AI Throttling\" value=\"1\" namespace=\"throttling-events\">\n                <!-- ID of the operation being used -->\n                <dimension name=\"Operation ID\" />\n\n                <!-- Use case or agentic platform name-->\n                <dimension name=\"productName\" value=\"@(context.Product?.Name?.ToString() ?? \"Portal-Admin\")\" />\n                \n                <!-- Target model or deployment name -->\n                <dimension name=\"deploymentName\" value=\"@((string)context.Variables.GetValueOrDefault<string>(\"requestedModel\", \"NA\"))\" />\n                \n                <!-- This can be your agent Id or APIM subscription id-->\n                <dimension name=\"appId\" value=\"@((string)context.Variables.GetValueOrDefault<string>(\"appId\", context.Subscription?.Id ?? \"Portal-Admin-Sub\"))\" />\n            </emit-metric>\n        </when>\n    </choose>\n</fragment>",
+    "$fxv#7": "<fragment>\n    <cors allow-credentials=\"true\">\n        <allowed-origins>\n            <origin>https://ai.azure.com</origin>\n        </allowed-origins>\n        <allowed-methods>\n            <method>GET</method>\n            <method>POST</method>\n            <method>PUT</method>\n            <method>DELETE</method>\n            <method>OPTIONS</method>\n        </allowed-methods>\n        <allowed-headers>\n            <header>*</header>\n        </allowed-headers>\n        <expose-headers>\n            <header>*</header>\n        </expose-headers>\n    </cors>\n</fragment>",
+    "$fxv#8": "<fragment>\n    <!--\n        Fragment: Strip Backend Headers\n        Purpose: Removes headers that should not be forwarded to AI backends. These headers\n                 are added by browsers (sec-*, Sec-Fetch-*), the Azure portal \"Test\" pane\n                 (Referer, Max-Forwards, Cache-Control), and the Azure App Service / ARR\n                 front-end that hosts APIM (X-ARR-*, X-Forwarded-*, X-AppService-*,\n                 DISGUISED-HOST, CLIENT-IP, WAS-DEFAULT-HOSTNAME, X-SITE-DEPLOYMENT-ID,\n                 X-Original-URL, X-WAWS-Unencoded-URL, X-Azure-JA4-Fingerprint, etc.).\n\n                 Forwarding them to AI backends:\n                   - Increases request size and CPU cost on the backend\n                   - Leaks internal infrastructure details (host names, deployment ids,\n                     client IPs, TLS versions, fingerprints)\n                   - Can interfere with backend caching / routing logic\n                   - Adds noise to backend telemetry\n\n                 Headers explicitly preserved (NOT stripped):\n                   - Content-Type, Content-Length, Accept, Accept-Encoding\n                   - Authorization, api-key, Ocp-Apim-Subscription-Key (auth)\n                   - User-Agent, traceparent, tracestate (tracing)\n                   - x-ms-*, openai-*, anthropic-* (AI backend specific)\n\n        Usage: Include in the inbound section of an API policy AFTER backend authentication\n               headers have been set (e.g. after set-backend-authorization fragment), and\n               BEFORE the request is forwarded to the backend.\n\n        Configuration:\n            - stripBackendHeaders (bool, default: true) - set to false to disable stripping\n              for debugging purposes. Example to disable in a product policy:\n                  <set-variable name=\"stripBackendHeaders\" value=\"@(false)\" />\n    -->\n    <choose>\n        <when condition=\"@(context.Variables.GetValueOrDefault<bool>(\"stripBackendHeaders\", true))\">\n            <!-- Browser / user-agent client hints -->\n            <set-header name=\"Accept-Language\" exists-action=\"delete\" />\n            <set-header name=\"Cache-Control\" exists-action=\"delete\" />\n            <set-header name=\"Referer\" exists-action=\"delete\" />\n            <set-header name=\"Origin\" exists-action=\"delete\" />\n            <set-header name=\"sec-ch-ua\" exists-action=\"delete\" />\n            <set-header name=\"sec-ch-ua-mobile\" exists-action=\"delete\" />\n            <set-header name=\"sec-ch-ua-platform\" exists-action=\"delete\" />\n            <set-header name=\"Sec-Fetch-Site\" exists-action=\"delete\" />\n            <set-header name=\"Sec-Fetch-Mode\" exists-action=\"delete\" />\n            <set-header name=\"Sec-Fetch-Dest\" exists-action=\"delete\" />\n            <set-header name=\"Sec-Fetch-User\" exists-action=\"delete\" />\n            <set-header name=\"Upgrade-Insecure-Requests\" exists-action=\"delete\" />\n            <set-header name=\"DNT\" exists-action=\"delete\" />\n\n            <!-- Azure portal test-pane / proxy artifacts -->\n            <set-header name=\"Max-Forwards\" exists-action=\"delete\" />\n            <set-header name=\"Request-Id\" exists-action=\"delete\" />\n            <set-header name=\"Request-Context\" exists-action=\"delete\" />\n\n            <!-- ARR / App Service front-end headers (leak internal infra details) -->\n            <set-header name=\"X-ARR-LOG-ID\" exists-action=\"delete\" />\n            <set-header name=\"X-ARR-SSL\" exists-action=\"delete\" />\n            <set-header name=\"CLIENT-IP\" exists-action=\"delete\" />\n            <set-header name=\"DISGUISED-HOST\" exists-action=\"delete\" />\n            <set-header name=\"WAS-DEFAULT-HOSTNAME\" exists-action=\"delete\" />\n            <set-header name=\"X-SITE-DEPLOYMENT-ID\" exists-action=\"delete\" />\n            <set-header name=\"X-AppService-Proto\" exists-action=\"delete\" />\n            <set-header name=\"X-Original-URL\" exists-action=\"delete\" />\n            <set-header name=\"X-WAWS-Unencoded-URL\" exists-action=\"delete\" />\n            <set-header name=\"X-Azure-JA4-Fingerprint\" exists-action=\"delete\" />\n\n            <!-- Forwarded-* family (we don't want backends to see client IP / TLS info) -->\n            <set-header name=\"X-Forwarded-For\" exists-action=\"delete\" />\n            <set-header name=\"X-Forwarded-Proto\" exists-action=\"delete\" />\n            <set-header name=\"X-Forwarded-Host\" exists-action=\"delete\" />\n            <set-header name=\"X-Forwarded-Port\" exists-action=\"delete\" />\n            <set-header name=\"X-Forwarded-TlsVersion\" exists-action=\"delete\" />\n            <set-header name=\"Forwarded\" exists-action=\"delete\" />\n            <set-header name=\"Via\" exists-action=\"delete\" />\n        </when>\n    </choose>\n</fragment>\n",
     "hubFoundryAccountName": "[format('aif-hub-{0}{1}', parameters('resourceToken'), parameters('foundryNameSuffix'))]",
     "hubFoundryProjectName": "citadel-hub-project",
     "apimName": "[format('apim-citadel-{0}', parameters('resourceToken'))]",
@@ -170,6 +174,11 @@
         "weight": 100,
         "supportedModels": "[variables('llmSupportedModels')]"
       }
+    ],
+    "diagnosticApis": [
+      "universal-llm-api",
+      "unified-ai-api",
+      "azure-openai-api"
     ]
   },
   "resources": [
@@ -1409,6 +1418,274 @@
         "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('apimMIName'))]",
         "[resourceId('Microsoft.EventHub/namespaces/eventhubs', variables('eventHubNamespace'), variables('eventHubName'))]",
         "[extensionResourceId(resourceId('Microsoft.EventHub/namespaces', variables('eventHubNamespace')), 'Microsoft.Authorization/roleAssignments', guid(resourceId('Microsoft.EventHub/namespaces', variables('eventHubNamespace')), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('apimMIName')), 'AzureEventHubsDataSender'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/loggers",
+      "apiVersion": "2023-09-01-preview",
+      "name": "[format('{0}/{1}', variables('apimName'), 'usage-eventhub-logger')]",
+      "properties": {
+        "loggerType": "azureEventHub",
+        "description": "LLM usage events",
+        "credentials": {
+          "endpointAddress": "[format('{0}.servicebus.windows.net', variables('eventHubNamespace'))]",
+          "identityClientId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('apimMIName')), '2023-01-31').clientId]",
+          "name": "[variables('eventHubName')]"
+        },
+        "isBuffered": true
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', variables('apimName'))]",
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('apimMIName'))]",
+        "[resourceId('Microsoft.EventHub/namespaces/eventhubs', variables('eventHubNamespace'), variables('eventHubName'))]",
+        "[extensionResourceId(resourceId('Microsoft.EventHub/namespaces', variables('eventHubNamespace')), 'Microsoft.Authorization/roleAssignments', guid(resourceId('Microsoft.EventHub/namespaces', variables('eventHubNamespace')), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('apimMIName')), 'AzureEventHubsDataSender'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/loggers",
+      "apiVersion": "2023-09-01-preview",
+      "name": "[format('{0}/{1}', variables('apimName'), 'azuremonitor')]",
+      "properties": {
+        "loggerType": "azureMonitor",
+        "isBuffered": false,
+        "description": "Azure Monitor logger for Log Analytics"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', variables('apimName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/diagnostics",
+      "apiVersion": "2023-09-01-preview",
+      "name": "[format('{0}/{1}', variables('apimName'), 'applicationinsights')]",
+      "properties": {
+        "alwaysLog": "allErrors",
+        "httpCorrelationProtocol": "W3C",
+        "verbosity": "information",
+        "logClientIp": true,
+        "loggerId": "[resourceId('Microsoft.ApiManagement/service/loggers', variables('apimName'), 'appinsights-logger')]",
+        "metrics": true,
+        "sampling": {
+          "samplingType": "fixed",
+          "percentage": 100
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', variables('apimName'))]",
+        "[resourceId('Microsoft.ApiManagement/service/loggers', variables('apimName'), 'appinsights-logger')]"
+      ]
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/diagnostics",
+      "apiVersion": "2023-09-01-preview",
+      "name": "[format('{0}/{1}', variables('apimName'), 'azuremonitor')]",
+      "properties": {
+        "alwaysLog": "allErrors",
+        "verbosity": "information",
+        "logClientIp": true,
+        "loggerId": "[resourceId('Microsoft.ApiManagement/service/loggers', variables('apimName'), 'azuremonitor')]",
+        "sampling": {
+          "samplingType": "fixed",
+          "percentage": 100
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', variables('apimName'))]",
+        "[resourceId('Microsoft.ApiManagement/service/loggers', variables('apimName'), 'azuremonitor')]"
+      ]
+    },
+    {
+      "copy": {
+        "name": "apiDiagnosticsAppInsights",
+        "count": "[length(variables('diagnosticApis'))]"
+      },
+      "type": "Microsoft.ApiManagement/service/apis/diagnostics",
+      "apiVersion": "2023-09-01-preview",
+      "name": "[format('{0}/{1}/applicationinsights', variables('apimName'), variables('diagnosticApis')[copyIndex()])]",
+      "properties": {
+        "alwaysLog": "allErrors",
+        "httpCorrelationProtocol": "W3C",
+        "verbosity": "information",
+        "logClientIp": true,
+        "loggerId": "[resourceId('Microsoft.ApiManagement/service/loggers', variables('apimName'), 'appinsights-logger')]",
+        "metrics": true,
+        "sampling": {
+          "samplingType": "fixed",
+          "percentage": 100
+        },
+        "frontend": {
+          "request": {
+            "body": {
+              "bytes": 0
+            }
+          },
+          "response": {
+            "body": {
+              "bytes": 0
+            }
+          }
+        },
+        "backend": {
+          "request": {
+            "body": {
+              "bytes": 0
+            }
+          },
+          "response": {
+            "body": {
+              "bytes": 0
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service/apis', variables('apimName'), 'azure-openai-api')]",
+        "[resourceId('Microsoft.ApiManagement/service', variables('apimName'))]",
+        "[resourceId('Microsoft.ApiManagement/service/diagnostics', variables('apimName'), 'applicationinsights')]",
+        "[resourceId('Microsoft.ApiManagement/service/loggers', variables('apimName'), 'appinsights-logger')]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', variables('apimName'), 'unified-ai-api')]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', variables('apimName'), 'universal-llm-api')]"
+      ]
+    },
+    {
+      "copy": {
+        "name": "apiDiagnosticsAzureMonitor",
+        "count": "[length(variables('diagnosticApis'))]"
+      },
+      "type": "Microsoft.ApiManagement/service/apis/diagnostics",
+      "apiVersion": "2024-06-01-preview",
+      "name": "[format('{0}/{1}/azuremonitor', variables('apimName'), variables('diagnosticApis')[copyIndex()])]",
+      "properties": {
+        "alwaysLog": "allErrors",
+        "verbosity": "information",
+        "logClientIp": true,
+        "loggerId": "[resourceId('Microsoft.ApiManagement/service/loggers', variables('apimName'), 'azuremonitor')]",
+        "sampling": {
+          "samplingType": "fixed",
+          "percentage": 100
+        },
+        "frontend": {
+          "request": {
+            "body": {
+              "bytes": 0
+            }
+          },
+          "response": {
+            "body": {
+              "bytes": 0
+            }
+          }
+        },
+        "backend": {
+          "request": {
+            "body": {
+              "bytes": 0
+            }
+          },
+          "response": {
+            "body": {
+              "bytes": 0
+            }
+          }
+        },
+        "largeLanguageModel": {
+          "logs": "enabled",
+          "requests": {
+            "messages": "all",
+            "maxSizeInBytes": 262144
+          },
+          "responses": {
+            "messages": "all",
+            "maxSizeInBytes": 262144
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service/apis', variables('apimName'), 'azure-openai-api')]",
+        "[resourceId('Microsoft.ApiManagement/service', variables('apimName'))]",
+        "[resourceId('Microsoft.ApiManagement/service/diagnostics', variables('apimName'), 'azuremonitor')]",
+        "[resourceId('Microsoft.ApiManagement/service/loggers', variables('apimName'), 'azuremonitor')]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', variables('apimName'), 'unified-ai-api')]",
+        "[resourceId('Microsoft.ApiManagement/service/apis', variables('apimName'), 'universal-llm-api')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Insights/diagnosticSettings",
+      "apiVersion": "2021-05-01-preview",
+      "scope": "[resourceId('Microsoft.ApiManagement/service', variables('apimName'))]",
+      "name": "apimDiagnosticSettings",
+      "properties": {
+        "workspaceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('laName'))]",
+        "logAnalyticsDestinationType": "Dedicated",
+        "logs": [
+          {
+            "categoryGroup": "allLogs",
+            "enabled": true
+          }
+        ],
+        "metrics": [
+          {
+            "category": "AllMetrics",
+            "enabled": true
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', variables('apimName'))]",
+        "[resourceId('Microsoft.OperationalInsights/workspaces', variables('laName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/policyFragments",
+      "apiVersion": "2023-09-01-preview",
+      "name": "[format('{0}/{1}', variables('apimName'), 'ai-usage')]",
+      "properties": {
+        "format": "rawxml",
+        "description": "Emits LLM token usage events to Event Hub",
+        "value": "[variables('$fxv#5')]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', variables('apimName'))]",
+        "[resourceId('Microsoft.ApiManagement/service/loggers', variables('apimName'), 'usage-eventhub-logger')]"
+      ]
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/policyFragments",
+      "apiVersion": "2023-09-01-preview",
+      "name": "[format('{0}/{1}', variables('apimName'), 'raise-throttling-events')]",
+      "properties": {
+        "format": "rawxml",
+        "description": "Raises throttling events when a backend or product limit is hit",
+        "value": "[variables('$fxv#6')]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', variables('apimName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/policyFragments",
+      "apiVersion": "2023-09-01-preview",
+      "name": "[format('{0}/{1}', variables('apimName'), 'ai-foundry-compatibility')]",
+      "properties": {
+        "format": "rawxml",
+        "description": "Normalizes Azure OpenAI and Foundry request/response shapes",
+        "value": "[variables('$fxv#7')]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', variables('apimName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/policyFragments",
+      "apiVersion": "2023-09-01-preview",
+      "name": "[format('{0}/{1}', variables('apimName'), 'strip-backend-headers')]",
+      "properties": {
+        "format": "rawxml",
+        "description": "Removes backend-identifying headers from responses",
+        "value": "[variables('$fxv#8')]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service', variables('apimName'))]"
       ]
     },
     {

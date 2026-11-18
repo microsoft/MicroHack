@@ -423,88 +423,42 @@ resource roleAssignmentApimMiEventHubSender 'Microsoft.Authorization/roleAssignm
 }
 
 // ===== Phase 4: APIM Policy Fragments =====
-// Policy fragment: Extract available models from deployment list
-resource policyFragmentGetAvailableModels 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
-  parent: apim
-  name: 'get-available-models'
-  properties: {
-    format: 'rawxml'
-    description: 'Sets availableModels/availableFilteredModels for the list-models operation'
-    value: loadTextContent('policies/frag-get-available-models-lab.xml')
+// The routing fragments (set-backend-pools, set-backend-authorization,
+// set-target-backend-pool, set-llm-requested-model, set-llm-usage,
+// validate-model-access, get-available-models, metadata-config,
+// responses-id-*) are generated from llmBackendConfig by the same modules
+// notebook 1 runs, so the hub matches a full Citadel deployment from the start
+// and notebook 1 simply updates them in place.
+module llmBackends '../../challenges/bicep/infra/llm-backend-onboarding/modules/llm-backends.bicep' = {
+  name: 'llm-backends-${resourceToken}'
+  params: {
+    apimServiceName: apim.name
+    managedIdentityClientId: apimMI.properties.clientId
+    llmBackendConfig: llmBackendConfig
+    configureCircuitBreaker: true
   }
 }
 
-// Policy fragment: Validate model access per subscription (DISABLED - XML syntax pending)
-/*
-resource policyFragmentValidateModelAccess 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
-  parent: apim
-  name: 'validate-model-access'
-  properties: {
-    format: 'xml'
-    value: '<fragment><!-- Validate requested model against subscription allowedModels list --><choose><when condition="@{string requestedModel = context.Request.BodyAsString; string allowedModels = context.Product.Name; !allowedModels.Contains(requestedModel)}"><set-status code="403" reason="Model not allowed for this subscription"/></when></choose></fragment>'
+module llmBackendPools '../../challenges/bicep/infra/llm-backend-onboarding/modules/llm-backend-pools.bicep' = {
+  name: 'llm-backend-pools-${resourceToken}'
+  params: {
+    apimServiceName: apim.name
+    backendDetails: llmBackends.outputs.backendDetails
   }
 }
-*/
 
-// Policy fragment: Set backend pools for model routing (DISABLED)
-/*
-resource policyFragmentSetBackendPools 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
-  parent: apim
-  name: 'set-backend-pools'
-  properties: {
-    format: 'xml'
-    value: '<fragment><!-- Define backend pools for routing based on model type --><set-variable name="selectedBackend" value="backend-hub-foundry"/></fragment>'
+module llmPolicyFragments '../../challenges/bicep/infra/llm-backend-onboarding/modules/llm-policy-fragments.bicep' = {
+  name: 'llm-policy-fragments-${resourceToken}'
+  params: {
+    apimServiceName: apim.name
+    policyFragmentConfig: llmBackendPools.outputs.policyFragmentConfig
+    managedIdentityClientId: apimMI.properties.clientId
+    llmBackendConfig: llmBackendConfig
   }
+  dependsOn: [
+    apimNamedValueUamiClientId
+  ]
 }
-*/
-
-// Policy fragment: Set backend authorization (DISABLED - XML syntax pending)
-/*
-resource policyFragmentSetBackendAuthorization 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
-  parent: apim
-  name: 'set-backend-authorization'
-  properties: {
-    format: 'xml'
-    value: '<fragment><!-- Acquire managed identity token for hub Foundry backend --><set-variable name="hubFoundryAccessToken" value="@{var ma = new ManagedIdentity(); return ma.GetToken("https://${hubFoundryAccountName}.openai.azure.com/"); }"/></fragment>'
-  }
-}
-*/
-
-// Policy fragment: Set target backend pool (DISABLED - requires authorization to work)
-/*
-resource policyFragmentSetTargetBackendPool 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
-  parent: apim
-  name: 'set-target-backend-pool'
-  properties: {
-    format: 'xml'
-    value: '<fragment><!-- Route to selected backend --><set-backend-service base-id="backend-hub-foundry" backend-id="backend-hub-foundry"/></fragment>'
-  }
-}
-*/
-
-// Policy fragment: Extract LLM requested model (DISABLED)
-/*
-resource policyFragmentSetLlmRequestedModel 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
-  parent: apim
-  name: 'set-llm-requested-model'
-  properties: {
-    format: 'xml'
-    value: '<fragment><!-- Extract model from request path or body --><set-variable name="requestedModel" value="@{var path = context.Request.Url.Path; var model = path.Split(new[]{"/"}, System.StringSplitOptions.None)[3]; return model; }"/></fragment>'
-  }
-}
-*/
-
-// Policy fragment: Track LLM usage (DISABLED)
-/*
-resource policyFragmentSetLlmUsage 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
-  parent: apim
-  name: 'set-llm-usage'
-  properties: {
-    format: 'xml'
-    value: '<fragment><!-- Log usage to Application Insights --><trace severity="information" message="@{return "LLM Usage: Model=" + context.Variables["requestedModel"] + ", Product=" + context.Product.Name; }"/></fragment>'
-  }
-}
-*/
 
 // ===== Phase 4: PII policy fragments (challenge 5) =====
 // These are the real fragments from the workshop, not placeholders. Challenge 5
@@ -585,7 +539,7 @@ resource apiUniversalLlmOpGetModels 'Microsoft.ApiManagement/service/apis/operat
 // Universal LLM API: Operation policy - GET /models/models
 // Delegates to the get-available-models fragment rather than hardcoding the list,
 // so the response honours each access contract's allowedModels and stays correct
-// once challenge 1 replaces the fragment with one generated from real deployments.
+// once challenge 1 regenerates it from real deployments.
 // Shape is the OpenAI list form { "object": "list", "data": [...] } that the
 // notebooks parse; a bare array causes discovery to silently find zero models.
 resource apiUniversalLlmOpGetModelsPolicy 'Microsoft.ApiManagement/service/apis/operations/policies@2023-09-01-preview' = {
@@ -596,7 +550,7 @@ resource apiUniversalLlmOpGetModelsPolicy 'Microsoft.ApiManagement/service/apis/
     value: loadTextContent('policies/op-universal-llm-get-models.xml')
   }
   dependsOn: [
-    policyFragmentGetAvailableModels
+    llmPolicyFragments
   ]
 }
 
@@ -1291,6 +1245,46 @@ resource policyFragmentStripBackendHeaders 'Microsoft.ApiManagement/service/poli
     format: 'rawxml'
     description: 'Removes backend-identifying headers from responses'
     value: loadTextContent('../../challenges/bicep/infra/modules/apim/policies/frag-strip-backend-headers.xml')
+  }
+}
+
+resource policyFragmentCentralCacheManager 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
+  parent: apim
+  name: 'central-cache-manager'
+  properties: {
+    format: 'rawxml'
+    description: 'Caches metadata configuration for Unified AI API performance'
+    value: loadTextContent('../../challenges/bicep/infra/modules/apim/policies/frag-central-cache-manager.xml')
+  }
+}
+
+resource policyFragmentRequestProcessor 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
+  parent: apim
+  name: 'request-processor'
+  properties: {
+    format: 'rawxml'
+    description: 'Analyzes incoming Unified AI requests to extract routing context'
+    value: loadTextContent('../../challenges/bicep/infra/modules/apim/policies/frag-request-processor.xml')
+  }
+}
+
+resource policyFragmentPathBuilder 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
+  parent: apim
+  name: 'path-builder'
+  properties: {
+    format: 'rawxml'
+    description: 'Reconstructs backend URI paths for Unified AI API routing'
+    value: loadTextContent('../../challenges/bicep/infra/modules/apim/policies/frag-path-builder.xml')
+  }
+}
+
+resource policyFragmentSetResponseHeaders 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
+  parent: apim
+  name: 'set-response-headers'
+  properties: {
+    format: 'rawxml'
+    description: 'Adds UAIG-* response headers when enableResponseHeaders is true'
+    value: loadTextContent('../../challenges/bicep/infra/modules/apim/policies/frag-set-response-headers.xml')
   }
 }
 

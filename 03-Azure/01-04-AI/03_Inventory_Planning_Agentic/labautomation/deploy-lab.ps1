@@ -228,7 +228,12 @@ $deploymentUri = "/subscriptions/$SubscriptionId/resourceGroups/$effectiveRG" +
     "?api-version=2025-04-01-preview"
 
 $existingDeploy = Invoke-MhhArm -Method GET -Path $deploymentUri -AllowNotFound
-if ($existingDeploy.StatusCode -ne 200) {
+$existingDeployState = if ($existingDeploy.StatusCode -eq 200) {
+    (($existingDeploy.Content | ConvertFrom-Json).properties.provisioningState)
+} else {
+    $null
+}
+if ($existingDeployState -ne "Succeeded") {
     $deploymentBody = @{
         sku        = @{ name = "GlobalStandard"; capacity = 100 }
         properties = @{
@@ -236,12 +241,23 @@ if ($existingDeploy.StatusCode -ne 200) {
         }
     } | ConvertTo-Json -Depth 10
 
-    try {
-        Invoke-MhhArm -Method PUT -Path $deploymentUri -Payload $deploymentBody | Out-Null
-        Write-Host "[OK]    Model deployment '$modelDeployment' initiated."
-    } catch {
-        Write-Host "[WARN]  Model deployment: $_ — may already exist, continuing."
+    Invoke-MhhArm -Method PUT -Path $deploymentUri -Payload $deploymentBody | Out-Null
+    Write-Host "[INFO]  Model deployment '$modelDeployment' provisioning..."
+    $elapsed = 0
+    do {
+        Start-Sleep -Seconds 10; $elapsed += 10
+        $deploymentResponse = Invoke-MhhArm -Method GET -Path $deploymentUri -AllowNotFound
+        $deployment = if ($deploymentResponse.StatusCode -eq 200) {
+            $deploymentResponse.Content | ConvertFrom-Json
+        } else {
+            $null
+        }
+        $deploymentState = if ($deployment) { $deployment.properties.provisioningState } else { "Creating" }
+    } while (($deploymentState -notin @("Succeeded", "Failed", "Canceled")) -and ($elapsed -lt 240))
+    if ($deploymentState -ne "Succeeded") {
+        throw "Model deployment '$modelDeployment' did not become ready (state: $deploymentState, wait: ${elapsed}s): $($deployment | ConvertTo-Json -Depth 10 -Compress)"
     }
+    Write-Host "[OK]    Model deployment '$modelDeployment' ready."
 } else {
     Write-Host "[OK]    Model deployment already exists — skipping."
 }
@@ -357,36 +373,42 @@ if ($existingCosmos.StatusCode -ne 200) {
     Write-Host "[OK]    Cosmos account '$cosmosName' ready."
 } else {
     Write-Host "[OK]    Cosmos account already exists — skipping."
-    # Reconcile (best-effort): if a prior run (or the MCAPS policy) left the
-    # endpoint disabled, re-enable it now that the exemption tag is in place.
-    # Wait for any in-flight operation to settle, then PUT (a bare PATCH can hit
-    # an ETag 412); retry transient "operation in progress" 412s. Never abort the
-    # run on this — a fresh account is already created reachable above.
-    $curProps = ($existingCosmos.Content | ConvertFrom-Json).properties
-    if ($curProps.publicNetworkAccess -ne "Enabled") {
-        $waited = 0
-        while ($curProps.provisioningState -ne "Succeeded" -and $waited -lt 180) {
-            Start-Sleep -Seconds 10; $waited += 10
-            $curProps = (Invoke-MhhArm -Method GET -Path "${cosmosBase}?api-version=$cosmosApi").Content |
-                ConvertFrom-Json | Select-Object -ExpandProperty properties
-        }
-        $reconciled = $false
-        for ($try = 1; $try -le 6 -and -not $reconciled; $try++) {
-            $rec = Invoke-AzRestMethod -Method PUT `
-                -Uri "https://management.azure.com${cosmosBase}?api-version=$cosmosApi" -Payload $cosmosBody
-            if ($rec.StatusCode -ge 200 -and $rec.StatusCode -lt 300) {
-                $reconciled = $true
-                Write-Host "[OK]    Re-enabled public network access on existing Cosmos account."
-            } elseif ($rec.StatusCode -eq 412) {
-                Start-Sleep -Seconds 15   # exclusive lock held by another operation — retry
-            } else {
-                Write-Host "[WARN]  Could not re-enable Cosmos public access (HTTP $($rec.StatusCode)); continuing."
-                break
-            }
-        }
-        if (-not $reconciled) { Write-Host "[WARN]  Cosmos public access still not reconciled after retries; continuing." }
-    }
 }
+
+# The policy exemption can be evaluated asynchronously. Verify the effective
+# public-network setting for both new and existing accounts, and repair it while
+# the account is idle. A successful control-plane create with a disabled endpoint
+# is still an unusable lab, so do not return a Cosmos credential until this passes.
+$cosmosReachable = $false
+for ($try = 1; $try -le 10 -and -not $cosmosReachable; $try++) {
+    $current = (Invoke-MhhArm -Method GET -Path "${cosmosBase}?api-version=$cosmosApi").Content |
+        ConvertFrom-Json
+    $curProps = $current.properties
+    if ($curProps.provisioningState -eq "Failed") {
+        throw "Cosmos account '$cosmosName' entered Failed state."
+    }
+    if ($curProps.provisioningState -eq "Succeeded" -and
+        $curProps.publicNetworkAccess -eq "Enabled") {
+        $cosmosReachable = $true
+        break
+    }
+    if ($curProps.provisioningState -eq "Succeeded" -and
+        $curProps.publicNetworkAccess -ne "Enabled") {
+        $rec = Invoke-AzRestMethod -Method PUT `
+            -Uri "https://management.azure.com${cosmosBase}?api-version=$cosmosApi" `
+            -Payload $cosmosBody
+        if ($rec.StatusCode -ge 200 -and $rec.StatusCode -lt 300) {
+            Write-Host "[INFO]  Re-enabled Cosmos public network access; verifying..."
+        } elseif ($rec.StatusCode -notin @(409, 412, 429, 500, 502, 503, 504)) {
+            throw "Could not re-enable Cosmos public access (HTTP $($rec.StatusCode)): $($rec.Content)"
+        }
+    }
+    Start-Sleep -Seconds 15
+}
+if (-not $cosmosReachable) {
+    throw "Cosmos account '$cosmosName' did not become reachable within 150s."
+}
+Write-Host "[OK]    Cosmos account public endpoint verified."
 
 # Database
 $dbUri = "$cosmosBase/sqlDatabases/${cosmosDb}?api-version=$cosmosApi"

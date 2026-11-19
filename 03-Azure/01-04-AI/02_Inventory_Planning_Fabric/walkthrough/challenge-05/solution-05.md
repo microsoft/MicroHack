@@ -1,78 +1,102 @@
-# Challenge 5 — Solution: Orchestrate the Loop (Stretch)
+# Challenge 5 - Solution: Run and Publish the Hosted Assistant
 
-**[← Previous](../challenge-04/solution-04.md)** - [Home](../../README.md)
+**[Previous](../challenge-04/solution-04.md)** - [Home](../../README.md)
 
-**Duration:** ~45 minutes (optional)
+## Participant deployment
 
-## Goal
+Participants follow the [deployment guide](../../orchestrator/README.md): sign in to
+Cloud Shell in a standalone private browser using the lab username/TAP, download only
+this lab's folder from `microsoft/MicroHack` (a sparse checkout, about 8 MB, no branch
+needed unless you give them a release tag), and run
+`./Start-ParticipantDeployment.ps1 -ResourceGroupName '<ResourceGroupName>' -VerifyHosted`.
+The script finds the subscription, Foundry project and Fabric IQ connection itself;
+`-SubscriptionId`, `-ProjectEndpoint` and `-FabricIQConnectionName` are only needed to
+override that. Coach details and troubleshooting are in the
+[facilitator guide](../../orchestrator/FACILITATOR.md#troubleshooting-for-coaches).
 
-Chain the three agents in a Foundry **Workflow** (Sequential template) with a human approval gate on the last node, run the loop from one prompt, and read the node-by-node trace.
+The participant does not install anything on their computer. Cloud Shell uses
+its existing Python for SDK tooling, bootstraps azd/extensions if needed, and
+reuses Azure CLI authentication; the application builds remotely in Foundry.
+The helper resolves concrete saved specialist versions, reuses the connection,
+creates the `inventory-fabric-iq` toolbox from it, and deploys into the existing project. Never put the TAP in shell commands.
 
-> The visual designer is supported in the portal until **30 November 2026**; Foundry retires in-portal workflows on **1 December 2026**.
+Contributor on the RG plus Foundry User on the account/project is the expected
+participant permission combination. Facilitators/platform administrators prepare
+provider registration, roles, licenses and tenant policy; attendees need not be
+Owner. They can predeploy as a contingency, not as proof of self-deployment.
+The hosted assistant's own runtime identity needs no extra role assignment: the deploy
+helper bundles the pinned specialists at deploy time.
+Do not recreate the retired workflow kind.
 
-## Solution walkthrough
+The [archived canvas exercise](../../archive/visual-workflow-exercise.md) is historical
+only. The workflow designer retires on 1 December 2026, and the old Foundry Fabric
+Data Agent connector retires earlier, on 6 November 2026. The replacement connector
+still uses the existing published Lakehouse Data Agent.
 
-### Why it is simpler than it looks
+## Expected execution
 
-All nodes run in **one shared conversation** (`System.ConversationId`), so each agent reads the previous agent's reply from the conversation history. **No data wiring between nodes is needed.** The only node that needs configuration is the last one.
+Each stage runs the participant's saved specialist **instructions and model**
+and queries the published Data Agent through the toolbox. For the seed data a
+correct first proposal covers P004, P005 and P006 at Portland and Seattle with
+unit costs **$95 / $140 / $85**; quantities and the number of lines vary between runs
+(one run proposed only P004 at Seattle, which is also valid). The trace shows
+`invoke_agent` → `workflow.run` → `executor.process` for each of the three stages, with
+`POST .../openai/v1/responses` calls underneath for the model and Fabric lookups. In the
+portal's span tree the Fabric call is not labelled `tools/call ...DataAgent...`; that name
+appears in Application Insights.
 
-### The finished workflow
+The actual Agent Framework graph is fixed:
 
-| Node | Agent | Settings |
-|------|-------|----------|
-| 1 | `demand-sensing-agent` | Defaults |
-| 2 | `inventory-optimisation-agent` | Defaults |
-| 3 | `replenishment-action-agent` | **Input message** = `Local.LatestMessage` (default) · **Allow multi-turn conversation** = on · **Loop condition** = formula below |
-
-```powerfx
-And(
-  IsBlank(Find("submitted to ERP", Last(Local.LatestMessage).Text)),
-  IsBlank(Find("Order cancelled", Last(Local.LatestMessage).Text))
-)
+```text
+demand -> optimisation -> replenishment -> validated proposal
+next user turn -> exact proposal/revision approval -> simulated confirmation
 ```
 
-The node keeps waiting for the human **while** the formula is true. `MODIFY` re-presents the proposal (neither phrase present), while `YES` (`✅ … submitted to ERP.`) or `NO` (`❌ Order cancelled…`) ends the node. `Find` is case-sensitive, so the Challenge 4 confirmation wording must stay exactly as written.
+Specialist failures, malformed JSON or missing costs must not create a proposal.
+The host stores the proposal in the scoped conversation session. It does not
+retain a process-global graph or wait in a worker for human input.
 
-### What a good run looks like
+## Approval checks
 
-```
-workflow run (inventory-planning-workflow)
-├── node: demand-sensing-agent
-│   └── tool_call: Fabric IQ (stock + velocity)
-│   → "Outdoor power tools critically exposed at Portland/Seattle."
-├── node: inventory-optimisation-agent
-│   └── tool_call: Fabric IQ (reorder point + demand)
-│   → recommendation table with CRITICAL items
-└── node: replenishment-action-agent   (multi-turn)
-    ├── tool_call: Fabric IQ (unit costs: P004 $95, P005 $140, P006 $85)
-    ├── model_call → PO proposal + "Do you approve…?"
-    │   → user replies: YES
-    └── model_call → "✅ Purchase order PO-<date>-001 submitted to ERP."  (loop ends → End)
-```
+1. Run a heatwave scenario and identify the proposal ID and revision 1.
+2. Send `MODIFY <id> 1 1 50`; line 1 becomes 50 and the revision becomes 2.
+3. Send `YES <id> 1`; it is stale and must not submit.
+4. Send `YES <id> 2`; the response says **SIMULATED submission**, explicitly
+   not a real ERP write.
+5. Repeat the approval; no second submission occurs.
+6. Start a fresh proposal with `NEW` followed by a scenario, then cancel it.
+7. Check `STATUS`, a delayed continuation and an independent conversation.
 
-### Coaching tips
+The application, not an LLM's generated wording, decides whether approval was
+received. Decimal arithmetic calculates totals. A production ERP integration
+would require its own transactional approval/idempotency controls.
 
-- **Run the pre-flight check first.** Most failures come from an agent name that doesn't match or a changed confirmation phrase in `replenishment-action-agent`.
-- **Remind teams to Save after every change** — the designer doesn't save automatically, and only saves a valid workflow (template notes deleted, **End** node added). Refresh the page after saving before using **Preview**.
-- **Always retry in a new conversation.** A failed run leaves its messages in the shared conversation, which confuses the next attempt.
-- **Use the trace to locate a bad step**, then fix that agent in its own playground before re-running the workflow.
+## Publishing checks (coach)
 
-### Common issues
+Participants publish the **hosted assistant** (its latest active version) with **Just you**
+and test it in **Teams for web** and **Microsoft 365 Copilot for web**. Confirm the points
+in the [Challenge 5 preflight](../../labautomation/README.md#challenge-5-preflight) before
+the event, then use this procedure to rehearse or to help a stuck participant:
 
-| Symptom | Fix |
-|---|---|
-| Loop condition error *"Name isn't valid"* | Keep **Input message** = `Local.LatestMessage` (the default) on the replenishment node and re-paste the formula. |
-| **Save** fails | Delete the template's yellow notes and add an **End** node (**+ → Basics → End**). |
-| **Preview** disabled or chat won't accept input | **Save**, refresh the page, then open **Preview**. |
-| The run ends at the proposal without waiting | **Allow multi-turn conversation** is off on the replenishment node. |
-| The node never stops asking | The confirmation wording in the Challenge 4 instructions was changed; restore `submitted to ERP` / `Order cancelled`. |
-| A later agent has no data or asks for a table | An earlier node failed (often the collation-conflict query). Start a new conversation and name the SKU and stores in the prompt. |
-| `$20` unit costs | The replenishment agent skipped the Fabric cost lookup. Reply `NO` and re-run in a new conversation. |
-| A node uses the wrong model or skips its tool | Each node runs its underlying agent — confirm the agent is on `gpt-5.4-mini` with Fabric IQ connected. |
-| No **Workflows** option | Use the new Foundry portal (**Build**) and check the attendee has **Contributor** on the project. |
+1. Open a new Edge InPrivate / Chrome Incognito window and sign in with the **assigned lab
+   account**. Check the avatar and tenant in every app, including consent pages.
+2. [Teams for web](https://teams.cloud.microsoft/): stay in the browser if a desktop launch
+   is offered. Find the assistant under **Apps / Your agents** or its app link, then plan,
+   modify, send a stale approval, approve, repeat the approval and send `STATUS` in the
+   **same chat**.
+3. [Microsoft 365 Copilot for web](https://m365copilot.com/): open the assistant under
+   **Agents / Your agents** (labels vary), start a **new chat**, check it does not inherit the
+   Teams proposal, then plan, cancel and send `STATUS`.
+4. Accept the Fabric consent prompt if one appears, in the same private window and with the
+   lab account. Never paste a token into chat.
+5. If browser privacy settings block sign-in, apply the tenant-approved, site-specific cookie
+   and pop-up settings. Do not disable browser security globally, switch to a desktop client
+   or use an embedded browser, and do not count an API test as browser acceptance.
+6. Close the private windows afterwards. That resets browser sign-in, not server-side chat
+   history; use **new chat** for a fresh conversation.
 
-### Discussion points
+"Just you" is personal testing, not an organization-wide rollout. Rolling out to others needs
+**People in your organization** and Microsoft 365 admin approval.
 
-- **Deterministic workflow vs. three human-driven agents:** the workflow is faster and hands-free, but the human loses the natural checkpoints between steps. The approval gate becomes the *only* control point — so it matters even more.
-- **Where would you add guardrails** in a production version? (e.g. a spend cap that requires escalation, and an audit review of the trace.)
-- **After 1 December 2026:** point teams to the note at the end of the challenge — copy the workflow YAML, then use Microsoft Agent Framework (hosted agent), Azure Logic Apps, or A2A to reuse the same pattern in their own scenarios.
+Before release, also test two separate users and a user who has **no** Fabric access: each
+must get their own proposal state, and the user without access must be refused.

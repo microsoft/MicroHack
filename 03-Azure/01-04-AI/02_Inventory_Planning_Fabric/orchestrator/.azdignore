@@ -1,0 +1,9 @@
+.azure/
+.venv/
+.venv-tools/
+.env
+.env.*
+.git/
+__pycache__/
+tests/
+.foundry/

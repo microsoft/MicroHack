@@ -1,4 +1,4 @@
-# Challenge 2 — Universal LLM API Across Every Model
+# Challenge 2: Universal LLM API Across Every Model
 
 **[Home](../README.md)** - [← Previous Challenge](challenge-01.md) - [Next Challenge →](challenge-03.md)
 

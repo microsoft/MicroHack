@@ -1,4 +1,4 @@
-# Challenge 4 — Drive Access Contracts from Agent Frameworks
+# Challenge 4: Drive Access Contracts from Agent Frameworks
 
 **[Home](../README.md)** - [← Previous Challenge](challenge-03.md) - [Next Challenge →](challenge-05.md)
 

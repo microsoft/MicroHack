@@ -1,4 +1,4 @@
-# Challenge 6 — Unified AI API Across Providers
+# Challenge 6: Unified AI API Across Providers
 
 **[Home](../README.md)** - [← Previous Challenge](challenge-05.md) - [Next Challenge →](challenge-07.md)
 

@@ -1,4 +1,4 @@
-# Challenge 9 — HR MCP via APIM (Optional / Instructor-Led)
+# Challenge 9: HR MCP via APIM (Optional / Instructor-Led)
 
 **[Home](../README.md)** - [← Previous Challenge](challenge-08.md)
 

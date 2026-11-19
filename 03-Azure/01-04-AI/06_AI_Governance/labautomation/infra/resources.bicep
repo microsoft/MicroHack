@@ -423,88 +423,42 @@ resource roleAssignmentApimMiEventHubSender 'Microsoft.Authorization/roleAssignm
 }
 
 // ===== Phase 4: APIM Policy Fragments =====
-// Policy fragment: Extract available models from deployment list
-resource policyFragmentGetAvailableModels 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
-  parent: apim
-  name: 'get-available-models'
-  properties: {
-    format: 'rawxml'
-    description: 'Sets availableModels/availableFilteredModels for the list-models operation'
-    value: loadTextContent('policies/frag-get-available-models-lab.xml')
+// The routing fragments (set-backend-pools, set-backend-authorization,
+// set-target-backend-pool, set-llm-requested-model, set-llm-usage,
+// validate-model-access, get-available-models, metadata-config,
+// responses-id-*) are generated from llmBackendConfig by the same modules
+// notebook 1 runs, so the hub matches a full Citadel deployment from the start
+// and notebook 1 simply updates them in place.
+module llmBackends '../../challenges/bicep/infra/llm-backend-onboarding/modules/llm-backends.bicep' = {
+  name: 'llm-backends-${resourceToken}'
+  params: {
+    apimServiceName: apim.name
+    managedIdentityClientId: apimMI.properties.clientId
+    llmBackendConfig: llmBackendConfig
+    configureCircuitBreaker: true
   }
 }
 
-// Policy fragment: Validate model access per subscription (DISABLED - XML syntax pending)
-/*
-resource policyFragmentValidateModelAccess 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
-  parent: apim
-  name: 'validate-model-access'
-  properties: {
-    format: 'xml'
-    value: '<fragment><!-- Validate requested model against subscription allowedModels list --><choose><when condition="@{string requestedModel = context.Request.BodyAsString; string allowedModels = context.Product.Name; !allowedModels.Contains(requestedModel)}"><set-status code="403" reason="Model not allowed for this subscription"/></when></choose></fragment>'
+module llmBackendPools '../../challenges/bicep/infra/llm-backend-onboarding/modules/llm-backend-pools.bicep' = {
+  name: 'llm-backend-pools-${resourceToken}'
+  params: {
+    apimServiceName: apim.name
+    backendDetails: llmBackends.outputs.backendDetails
   }
 }
-*/
 
-// Policy fragment: Set backend pools for model routing (DISABLED)
-/*
-resource policyFragmentSetBackendPools 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
-  parent: apim
-  name: 'set-backend-pools'
-  properties: {
-    format: 'xml'
-    value: '<fragment><!-- Define backend pools for routing based on model type --><set-variable name="selectedBackend" value="backend-hub-foundry"/></fragment>'
+module llmPolicyFragments '../../challenges/bicep/infra/llm-backend-onboarding/modules/llm-policy-fragments.bicep' = {
+  name: 'llm-policy-fragments-${resourceToken}'
+  params: {
+    apimServiceName: apim.name
+    policyFragmentConfig: llmBackendPools.outputs.policyFragmentConfig
+    managedIdentityClientId: apimMI.properties.clientId
+    llmBackendConfig: llmBackendConfig
   }
+  dependsOn: [
+    apimNamedValueUamiClientId
+  ]
 }
-*/
-
-// Policy fragment: Set backend authorization (DISABLED - XML syntax pending)
-/*
-resource policyFragmentSetBackendAuthorization 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
-  parent: apim
-  name: 'set-backend-authorization'
-  properties: {
-    format: 'xml'
-    value: '<fragment><!-- Acquire managed identity token for hub Foundry backend --><set-variable name="hubFoundryAccessToken" value="@{var ma = new ManagedIdentity(); return ma.GetToken("https://${hubFoundryAccountName}.openai.azure.com/"); }"/></fragment>'
-  }
-}
-*/
-
-// Policy fragment: Set target backend pool (DISABLED - requires authorization to work)
-/*
-resource policyFragmentSetTargetBackendPool 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
-  parent: apim
-  name: 'set-target-backend-pool'
-  properties: {
-    format: 'xml'
-    value: '<fragment><!-- Route to selected backend --><set-backend-service base-id="backend-hub-foundry" backend-id="backend-hub-foundry"/></fragment>'
-  }
-}
-*/
-
-// Policy fragment: Extract LLM requested model (DISABLED)
-/*
-resource policyFragmentSetLlmRequestedModel 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
-  parent: apim
-  name: 'set-llm-requested-model'
-  properties: {
-    format: 'xml'
-    value: '<fragment><!-- Extract model from request path or body --><set-variable name="requestedModel" value="@{var path = context.Request.Url.Path; var model = path.Split(new[]{"/"}, System.StringSplitOptions.None)[3]; return model; }"/></fragment>'
-  }
-}
-*/
-
-// Policy fragment: Track LLM usage (DISABLED)
-/*
-resource policyFragmentSetLlmUsage 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
-  parent: apim
-  name: 'set-llm-usage'
-  properties: {
-    format: 'xml'
-    value: '<fragment><!-- Log usage to Application Insights --><trace severity="information" message="@{return "LLM Usage: Model=" + context.Variables["requestedModel"] + ", Product=" + context.Product.Name; }"/></fragment>'
-  }
-}
-*/
 
 // ===== Phase 4: PII policy fragments (challenge 5) =====
 // These are the real fragments from the workshop, not placeholders. Challenge 5
@@ -585,7 +539,7 @@ resource apiUniversalLlmOpGetModels 'Microsoft.ApiManagement/service/apis/operat
 // Universal LLM API: Operation policy - GET /models/models
 // Delegates to the get-available-models fragment rather than hardcoding the list,
 // so the response honours each access contract's allowedModels and stays correct
-// once challenge 1 replaces the fragment with one generated from real deployments.
+// once challenge 1 regenerates it from real deployments.
 // Shape is the OpenAI list form { "object": "list", "data": [...] } that the
 // notebooks parse; a bare array causes discovery to silently find zero models.
 resource apiUniversalLlmOpGetModelsPolicy 'Microsoft.ApiManagement/service/apis/operations/policies@2023-09-01-preview' = {
@@ -596,7 +550,7 @@ resource apiUniversalLlmOpGetModelsPolicy 'Microsoft.ApiManagement/service/apis/
     value: loadTextContent('policies/op-universal-llm-get-models.xml')
   }
   dependsOn: [
-    policyFragmentGetAvailableModels
+    llmPolicyFragments
   ]
 }
 
@@ -989,273 +943,8 @@ resource apiAzureOpenAiOpChatCompletionsPolicy 'Microsoft.ApiManagement/service/
   }
 }
 
-// ===== Phase 4: APIM Products (Access Contracts) =====
-// Product 1: LLM-Sales-Assistant-DEV
-resource productSalesAssistant 'Microsoft.ApiManagement/service/products@2023-09-01-preview' = {
-  parent: apim
-  name: 'llm-sales-assistant-dev'
-  properties: {
-    displayName: 'LLM-Sales-Assistant-DEV'
-    description: 'Access contract for Sales Assistant use case - Chat + embedding models (Notebook 3)'
-    state: 'published'
-    subscriptionRequired: true
-    approvalRequired: false
-    terms: 'Access to gpt-4.1, gpt-5.4-mini, text-embedding-3-large at 3000 TPM'
-  }
-}
-
-// Product 1: Add APIs
-resource productSalesAssistantApiUniversal 'Microsoft.ApiManagement/service/products/apis@2023-09-01-preview' = {
-  parent: productSalesAssistant
-  name: 'universal-llm-api'
-  properties: {}
-}
-
-// Product 2: LLM-HR-ChatAgent-DEV
-resource productHrChatAgent 'Microsoft.ApiManagement/service/products@2023-09-01-preview' = {
-  parent: apim
-  name: 'llm-hr-chatagent-dev'
-  properties: {
-    displayName: 'LLM-HR-ChatAgent-DEV'
-    description: 'Access contract for HR ChatAgent - High throughput agent use case (Notebooks 3, 4, 8, 9)'
-    state: 'published'
-    subscriptionRequired: true
-    approvalRequired: false
-    terms: 'Access to gpt-4.1, gpt-5.4-mini at 5000 TPM with 500K monthly quota'
-  }
-}
-
-// Product 2: Add APIs
-resource productHrChatAgentApiUniversal 'Microsoft.ApiManagement/service/products/apis@2023-09-01-preview' = {
-  parent: productHrChatAgent
-  name: 'universal-llm-api'
-  properties: {}
-}
-
-// Product 3: LLM-Support-Bot-DEV
-resource productSupportBot 'Microsoft.ApiManagement/service/products@2023-09-01-preview' = {
-  parent: apim
-  name: 'llm-support-bot-dev'
-  properties: {
-    displayName: 'LLM-Support-Bot-DEV'
-    description: 'Access contract for Support Bot - Alternative models with daily quota (Notebook 3)'
-    state: 'published'
-    subscriptionRequired: true
-    approvalRequired: false
-    terms: 'Access to gpt-4.1, Mistral-Large-3 at 2000 TPM with 50K daily quota'
-  }
-}
-
-// Product 3: Add APIs
-resource productSupportBotApiUniversal 'Microsoft.ApiManagement/service/products/apis@2023-09-01-preview' = {
-  parent: productSupportBot
-  name: 'universal-llm-api'
-  properties: {}
-}
-
-// Product 4: LLM-Testing-UniversalLLMAllModels-DEV (Notebook 2 - all models)
-resource productUniversalLlmTest 'Microsoft.ApiManagement/service/products@2023-09-01-preview' = {
-  parent: apim
-  name: 'llm-testing-universalllm-dev'
-  properties: {
-    displayName: 'LLM-Testing-UniversalLLMAllModels-DEV'
-    description: 'Test product with access to all deployed models (Notebook 2)'
-    state: 'published'
-    subscriptionRequired: true
-    approvalRequired: false
-    terms: 'Unrestricted access to all deployed models for testing'
-  }
-}
-
-// Product 4: Add APIs
-resource productUniversalLlmTestApiUniversal 'Microsoft.ApiManagement/service/products/apis@2023-09-01-preview' = {
-  parent: productUniversalLlmTest
-  name: 'universal-llm-api'
-  properties: {}
-}
-
-// Product 5: LLM-Testing-UnifiedAI-DEV (Notebook 6 - multi-backend)
-resource productUnifiedAiTest 'Microsoft.ApiManagement/service/products@2023-09-01-preview' = {
-  parent: apim
-  name: 'llm-testing-unifiedai-dev'
-  properties: {
-    displayName: 'LLM-Testing-UnifiedAI-DEV'
-    description: 'Test product for unified AI multi-backend routing (Notebook 6)'
-    state: 'published'
-    subscriptionRequired: true
-    approvalRequired: false
-    terms: 'Access to gpt-5.2 and Mistral-Large-3 via multi-backend routing'
-  }
-}
-
-// Product 5: Add APIs
-resource productUnifiedAiTestApiUnified 'Microsoft.ApiManagement/service/products/apis@2023-09-01-preview' = {
-  parent: productUnifiedAiTest
-  name: 'unified-ai-api'
-  properties: {}
-}
-
-// Product 6: LLM-HR-PIIMasking-DEV (Notebook 5 - PII masking)
-resource productHrPiiMasking 'Microsoft.ApiManagement/service/products@2023-09-01-preview' = {
-  parent: apim
-  name: 'llm-hr-piimasking-dev'
-  properties: {
-    displayName: 'LLM-HR-PIIMasking-DEV'
-    description: 'PII masking and deanonymization (Notebook 5 - core feature)'
-    state: 'published'
-    subscriptionRequired: true
-    approvalRequired: false
-    terms: 'PII processing with anonymization/deanonymization for HR use case'
-  }
-}
-
-// Product 6: Add APIs
-resource productHrPiiMaskingApiUniversal 'Microsoft.ApiManagement/service/products/apis@2023-09-01-preview' = {
-  parent: productHrPiiMasking
-  name: 'universal-llm-api'
-  properties: {}
-}
-
-// Product 7: LLM-Compliance-PIIBlocking-DEV (Notebook 5 - PII blocking)
-resource productCompliancePiiBlocking 'Microsoft.ApiManagement/service/products@2023-09-01-preview' = {
-  parent: apim
-  name: 'llm-compliance-piiblocking-dev'
-  properties: {
-    displayName: 'LLM-Compliance-PIIBlocking-DEV'
-    description: 'PII detection and blocking policy (Notebook 5 - compliance feature)'
-    state: 'published'
-    subscriptionRequired: true
-    approvalRequired: false
-    terms: 'Detects and blocks PII patterns in requests/responses'
-  }
-}
-
-// Product 7: Add APIs
-resource productCompliancePiiBlockingApiUniversal 'Microsoft.ApiManagement/service/products/apis@2023-09-01-preview' = {
-  parent: productCompliancePiiBlocking
-  name: 'universal-llm-api'
-  properties: {}
-}
-
-// Product 8: LLM-HR-PIIAnalytics-DEV (Notebook 5 - PII analytics)
-resource productHrPiiAnalytics 'Microsoft.ApiManagement/service/products@2023-09-01-preview' = {
-  parent: apim
-  name: 'llm-hr-piianalytics-dev'
-  properties: {
-    displayName: 'LLM-HR-PIIAnalytics-DEV'
-    description: 'PII analytics and telemetry (Notebook 5 - observability)'
-    state: 'published'
-    subscriptionRequired: true
-    approvalRequired: false
-    terms: 'Tracks PII events to Cosmos DB pii-usage-container'
-  }
-}
-
-// Product 8: Add APIs
-resource productHrPiiAnalyticsApiUniversal 'Microsoft.ApiManagement/service/products/apis@2023-09-01-preview' = {
-  parent: productHrPiiAnalytics
-  name: 'universal-llm-api'
-  properties: {}
-}
-
-// ===== Phase 4: APIM Subscriptions (API Keys per Product) =====
-// Each subscription provides subscription-key auth for its product
-
-// Subscription for LLM-Sales-Assistant-DEV
-resource subscriptionSalesAssistant 'Microsoft.ApiManagement/service/subscriptions@2023-09-01-preview' = {
-  parent: apim
-  name: 'llm-sales-assistant-dev-sub-01'
-  properties: {
-    scope: productSalesAssistant.id
-    displayName: 'LLM-Sales-Assistant-DEV-SUB-01'
-    state: 'active'
-    allowTracing: true
-  }
-}
-
-// Subscription for LLM-HR-ChatAgent-DEV
-resource subscriptionHrChatAgent 'Microsoft.ApiManagement/service/subscriptions@2023-09-01-preview' = {
-  parent: apim
-  name: 'llm-hr-chatagent-dev-sub-01'
-  properties: {
-    scope: productHrChatAgent.id
-    displayName: 'LLM-HR-ChatAgent-DEV-SUB-01'
-    state: 'active'
-    allowTracing: true
-  }
-}
-
-// Subscription for LLM-Support-Bot-DEV
-resource subscriptionSupportBot 'Microsoft.ApiManagement/service/subscriptions@2023-09-01-preview' = {
-  parent: apim
-  name: 'llm-support-bot-dev-sub-01'
-  properties: {
-    scope: productSupportBot.id
-    displayName: 'LLM-Support-Bot-DEV-SUB-01'
-    state: 'active'
-    allowTracing: true
-  }
-}
-
-// Subscription for LLM-Testing-UniversalLLMAllModels-DEV
-resource subscriptionUniversalLlmTest 'Microsoft.ApiManagement/service/subscriptions@2023-09-01-preview' = {
-  parent: apim
-  name: 'llm-testing-universalllm-dev-sub-01'
-  properties: {
-    scope: productUniversalLlmTest.id
-    displayName: 'LLM-Testing-UniversalLLMAllModels-DEV-SUB-01'
-    state: 'active'
-    allowTracing: true
-  }
-}
-
-// Subscription for LLM-Testing-UnifiedAI-DEV
-resource subscriptionUnifiedAiTest 'Microsoft.ApiManagement/service/subscriptions@2023-09-01-preview' = {
-  parent: apim
-  name: 'llm-testing-unifiedai-dev-sub-01'
-  properties: {
-    scope: productUnifiedAiTest.id
-    displayName: 'LLM-Testing-UnifiedAI-DEV-SUB-01'
-    state: 'active'
-    allowTracing: true
-  }
-}
-
-// Subscription for LLM-HR-PIIMasking-DEV
-resource subscriptionHrPiiMasking 'Microsoft.ApiManagement/service/subscriptions@2023-09-01-preview' = {
-  parent: apim
-  name: 'llm-hr-piimasking-dev-sub-01'
-  properties: {
-    scope: productHrPiiMasking.id
-    displayName: 'LLM-HR-PIIMasking-DEV-SUB-01'
-    state: 'active'
-    allowTracing: true
-  }
-}
-
-// Subscription for LLM-Compliance-PIIBlocking-DEV
-resource subscriptionCompliancePiiBlocking 'Microsoft.ApiManagement/service/subscriptions@2023-09-01-preview' = {
-  parent: apim
-  name: 'llm-compliance-piiblocking-dev-sub-01'
-  properties: {
-    scope: productCompliancePiiBlocking.id
-    displayName: 'LLM-Compliance-PIIBlocking-DEV-SUB-01'
-    state: 'active'
-    allowTracing: true
-  }
-}
-
-// Subscription for LLM-HR-PIIAnalytics-DEV
-resource subscriptionHrPiiAnalytics 'Microsoft.ApiManagement/service/subscriptions@2023-09-01-preview' = {
-  parent: apim
-  name: 'llm-hr-piianalytics-dev-sub-01'
-  properties: {
-    scope: productHrPiiAnalytics.id
-    displayName: 'LLM-HR-PIIAnalytics-DEV-SUB-01'
-    state: 'active'
-    allowTracing: true
-  }
-}
+// Access-contract products and subscriptions are intentionally NOT provisioned here:
+// the challenge notebooks (citadel-access-contracts) create them.
 
 // ===== Hub: Event Hub Namespace =====
 resource eventHubNamespace_resource 'Microsoft.EventHub/namespaces@2022-10-01-preview' = {
@@ -1355,6 +1044,248 @@ resource apimLoggerPiiUsageEventHub 'Microsoft.ApiManagement/service/loggers@202
     eventHub
     roleAssignmentApimMiEventHubSender
   ]
+}
+
+// Referenced by the ai-usage fragment (token usage events).
+resource apimLoggerUsageEventHub 'Microsoft.ApiManagement/service/loggers@2023-09-01-preview' = {
+  parent: apim
+  name: 'usage-eventhub-logger'
+  properties: {
+    loggerType: 'azureEventHub'
+    description: 'LLM usage events'
+    credentials: {
+      endpointAddress: '${eventHubNamespace}.servicebus.windows.net'
+      identityClientId: apimMI.properties.clientId
+      name: eventHubName
+    }
+    isBuffered: true
+  }
+  dependsOn: [
+    eventHub
+    roleAssignmentApimMiEventHubSender
+  ]
+}
+
+// ===== Hub: APIM observability (Application Insights + Azure Monitor) =====
+resource apimLoggerAzureMonitor 'Microsoft.ApiManagement/service/loggers@2023-09-01-preview' = {
+  parent: apim
+  name: 'azuremonitor'
+  properties: {
+    loggerType: 'azureMonitor'
+    isBuffered: false
+    description: 'Azure Monitor logger for Log Analytics'
+  }
+}
+
+resource apimDiagnosticAppInsights 'Microsoft.ApiManagement/service/diagnostics@2023-09-01-preview' = {
+  parent: apim
+  name: 'applicationinsights'
+  properties: {
+    alwaysLog: 'allErrors'
+    httpCorrelationProtocol: 'W3C'
+    verbosity: 'information'
+    logClientIp: true
+    loggerId: apimLoggerAppInsights.id
+    metrics: true
+    sampling: {
+      samplingType: 'fixed'
+      percentage: 100
+    }
+  }
+}
+
+resource apimDiagnosticAzureMonitor 'Microsoft.ApiManagement/service/diagnostics@2023-09-01-preview' = {
+  parent: apim
+  name: 'azuremonitor'
+  properties: {
+    alwaysLog: 'allErrors'
+    verbosity: 'information'
+    logClientIp: true
+    loggerId: apimLoggerAzureMonitor.id
+    sampling: {
+      samplingType: 'fixed'
+      percentage: 100
+    }
+  }
+}
+
+// Per-API diagnostics: Application Insights (with metrics) and Azure Monitor with
+// LLM request/response logging, for every API the lab publishes.
+var diagnosticApis = [
+  apiUniversalLlm.name
+  apiUnifiedAi.name
+  apiAzureOpenAi.name
+]
+
+resource apiDiagnosticsAppInsights 'Microsoft.ApiManagement/service/apis/diagnostics@2023-09-01-preview' = [for apiName in diagnosticApis: {
+  name: '${apim.name}/${apiName}/applicationinsights'
+  properties: {
+    alwaysLog: 'allErrors'
+    httpCorrelationProtocol: 'W3C'
+    verbosity: 'information'
+    logClientIp: true
+    loggerId: apimLoggerAppInsights.id
+    metrics: true
+    sampling: {
+      samplingType: 'fixed'
+      percentage: 100
+    }
+    frontend: {
+      request: { body: { bytes: 0 } }
+      response: { body: { bytes: 0 } }
+    }
+    backend: {
+      request: { body: { bytes: 0 } }
+      response: { body: { bytes: 0 } }
+    }
+  }
+  dependsOn: [
+    apimDiagnosticAppInsights
+  ]
+}]
+
+resource apiDiagnosticsAzureMonitor 'Microsoft.ApiManagement/service/apis/diagnostics@2024-06-01-preview' = [for apiName in diagnosticApis: {
+  name: '${apim.name}/${apiName}/azuremonitor'
+  properties: {
+    alwaysLog: 'allErrors'
+    verbosity: 'information'
+    logClientIp: true
+    loggerId: apimLoggerAzureMonitor.id
+    sampling: {
+      samplingType: 'fixed'
+      percentage: 100
+    }
+    frontend: {
+      request: { body: { bytes: 0 } }
+      response: { body: { bytes: 0 } }
+    }
+    backend: {
+      request: { body: { bytes: 0 } }
+      response: { body: { bytes: 0 } }
+    }
+    largeLanguageModel: {
+      logs: 'enabled'
+      requests: {
+        messages: 'all'
+        maxSizeInBytes: 262144
+      }
+      responses: {
+        messages: 'all'
+        maxSizeInBytes: 262144
+      }
+    }
+  }
+  dependsOn: [
+    apimDiagnosticAzureMonitor
+  ]
+}]
+
+// Gateway logs (incl. LLM logs) and metrics to the hub Log Analytics workspace.
+resource apimDiagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  scope: apim
+  name: 'apimDiagnosticSettings'
+  properties: {
+    workspaceId: laHub.id
+    logAnalyticsDestinationType: 'Dedicated'
+    logs: [
+      {
+        categoryGroup: 'allLogs'
+        enabled: true
+      }
+    ]
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
+      }
+    ]
+  }
+}
+
+// ===== Hub: additional gateway policy fragments =====
+// Hub-level fragments that no challenge deploys. The routing/authorization/model
+// fragments are intentionally left to challenge 1 (llm-backend-onboarding).
+resource policyFragmentAiUsage 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
+  parent: apim
+  name: 'ai-usage'
+  properties: {
+    format: 'rawxml'
+    description: 'Emits LLM token usage events to Event Hub'
+    value: loadTextContent('../../challenges/bicep/infra/modules/apim/policies/frag-ai-usage.xml')
+  }
+  dependsOn: [
+    apimLoggerUsageEventHub
+  ]
+}
+
+resource policyFragmentRaiseThrottlingEvents 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
+  parent: apim
+  name: 'raise-throttling-events'
+  properties: {
+    format: 'rawxml'
+    description: 'Raises throttling events when a backend or product limit is hit'
+    value: loadTextContent('../../challenges/bicep/infra/modules/apim/policies/frag-raise-throttling-events.xml')
+  }
+}
+
+resource policyFragmentAiFoundryCompatibility 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
+  parent: apim
+  name: 'ai-foundry-compatibility'
+  properties: {
+    format: 'rawxml'
+    description: 'Normalizes Azure OpenAI and Foundry request/response shapes'
+    value: loadTextContent('../../challenges/bicep/infra/modules/apim/policies/frag-ai-foundry-compatibility.xml')
+  }
+}
+
+resource policyFragmentStripBackendHeaders 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
+  parent: apim
+  name: 'strip-backend-headers'
+  properties: {
+    format: 'rawxml'
+    description: 'Removes backend-identifying headers from responses'
+    value: loadTextContent('../../challenges/bicep/infra/modules/apim/policies/frag-strip-backend-headers.xml')
+  }
+}
+
+resource policyFragmentCentralCacheManager 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
+  parent: apim
+  name: 'central-cache-manager'
+  properties: {
+    format: 'rawxml'
+    description: 'Caches metadata configuration for Unified AI API performance'
+    value: loadTextContent('../../challenges/bicep/infra/modules/apim/policies/frag-central-cache-manager.xml')
+  }
+}
+
+resource policyFragmentRequestProcessor 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
+  parent: apim
+  name: 'request-processor'
+  properties: {
+    format: 'rawxml'
+    description: 'Analyzes incoming Unified AI requests to extract routing context'
+    value: loadTextContent('../../challenges/bicep/infra/modules/apim/policies/frag-request-processor.xml')
+  }
+}
+
+resource policyFragmentPathBuilder 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
+  parent: apim
+  name: 'path-builder'
+  properties: {
+    format: 'rawxml'
+    description: 'Reconstructs backend URI paths for Unified AI API routing'
+    value: loadTextContent('../../challenges/bicep/infra/modules/apim/policies/frag-path-builder.xml')
+  }
+}
+
+resource policyFragmentSetResponseHeaders 'Microsoft.ApiManagement/service/policyFragments@2023-09-01-preview' = {
+  parent: apim
+  name: 'set-response-headers'
+  properties: {
+    format: 'rawxml'
+    description: 'Adds UAIG-* response headers when enableResponseHeaders is true'
+    value: loadTextContent('../../challenges/bicep/infra/modules/apim/policies/frag-set-response-headers.xml')
+  }
 }
 
 // ===== Spoke: Azure AI Foundry Account (AIServices) =====
@@ -1477,7 +1408,7 @@ resource hubFoundryAppInsightsConnection 'Microsoft.CognitiveServices/accounts/c
     authType: 'ApiKey'
     isSharedToAll: true
     credentials: {
-      key: reference(aiHub.id, '2020-02-02').InstrumentationKey
+      key: aiHub.properties.ConnectionString
     }
     metadata: {
       ApiType: 'Azure'
@@ -1496,7 +1427,7 @@ resource spokeFoundryAppInsightsConnection 'Microsoft.CognitiveServices/accounts
     authType: 'ApiKey'
     isSharedToAll: true
     credentials: {
-      key: reference(aiSpoke.id, '2020-02-02').InstrumentationKey
+      key: aiSpoke.properties.ConnectionString
     }
     metadata: {
       ApiType: 'Azure'
@@ -1511,31 +1442,6 @@ output HUB_FOUNDRY_PROJECT_ENDPOINT string = 'https://${hubFoundryAccountName}.s
 output SPOKE_FOUNDRY_PROJECT_ENDPOINT string = 'https://${spokeFoundryAccountName}.services.ai.azure.com/api/projects/${spokeFoundryProjectName}'
 
 output APIM_GATEWAY_URL string = 'https://${apim.name}.azure-api.net'
-
-// Phase 4: Subscription keys for products (for HackboxCredential distribution to notebooks)
-output SALES_ASSISTANT_SUBSCRIPTION_KEY string = listSecrets(subscriptionSalesAssistant.id, '2023-09-01-preview').primaryKey
-output SALES_ASSISTANT_SUBSCRIPTION_ID string = subscriptionSalesAssistant.name
-
-output HR_CHATAGENT_SUBSCRIPTION_KEY string = listSecrets(subscriptionHrChatAgent.id, '2023-09-01-preview').primaryKey
-output HR_CHATAGENT_SUBSCRIPTION_ID string = subscriptionHrChatAgent.name
-
-output SUPPORT_BOT_SUBSCRIPTION_KEY string = listSecrets(subscriptionSupportBot.id, '2023-09-01-preview').primaryKey
-output SUPPORT_BOT_SUBSCRIPTION_ID string = subscriptionSupportBot.name
-
-output UNIVERSAL_LLM_TEST_SUBSCRIPTION_KEY string = listSecrets(subscriptionUniversalLlmTest.id, '2023-09-01-preview').primaryKey
-output UNIVERSAL_LLM_TEST_SUBSCRIPTION_ID string = subscriptionUniversalLlmTest.name
-
-output UNIFIED_AI_TEST_SUBSCRIPTION_KEY string = listSecrets(subscriptionUnifiedAiTest.id, '2023-09-01-preview').primaryKey
-output UNIFIED_AI_TEST_SUBSCRIPTION_ID string = subscriptionUnifiedAiTest.name
-
-output PII_MASKING_SUBSCRIPTION_KEY string = listSecrets(subscriptionHrPiiMasking.id, '2023-09-01-preview').primaryKey
-output PII_MASKING_SUBSCRIPTION_ID string = subscriptionHrPiiMasking.name
-
-output PII_BLOCKING_SUBSCRIPTION_KEY string = listSecrets(subscriptionCompliancePiiBlocking.id, '2023-09-01-preview').primaryKey
-output PII_BLOCKING_SUBSCRIPTION_ID string = subscriptionCompliancePiiBlocking.name
-
-output PII_ANALYTICS_SUBSCRIPTION_KEY string = listSecrets(subscriptionHrPiiAnalytics.id, '2023-09-01-preview').primaryKey
-output PII_ANALYTICS_SUBSCRIPTION_ID string = subscriptionHrPiiAnalytics.name
 
 // Phase 4: LLM Backend Config (JSON array for Notebook 1 dynamic discovery)
 // Emitted as raw JSON (NOT base64) because the notebooks call json.loads() directly.

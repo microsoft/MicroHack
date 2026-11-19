@@ -44,5 +44,6 @@ and each step lights up as you build its agent.
 |---------|-------------|
 | `python` / `uv` not found, no `src/.venv` | Codespace created with the default config (*Create codespace on main*). Recreate it via **New with options...** → **Azure / AI / Inventory Planning Agentic**. |
 | `PROJECT_ENDPOINT is not set` | `.env` missing or not in `src/` — the console reads it via `config.py`. |
-| Panels empty | A Python import error — check the `uvicorn` terminal output. |
+| Panels say `not connected`, or Cosmos returns 403 | Confirm `COSMOS_ENDPOINT` is set and the Codespace is signed in with the Hackbox account. New Cosmos data-role assignments can take up to 15 minutes to propagate; keep `uvicorn` running, wait, and reload. If the error persists, capture the terminal traceback before manually repairing anything. |
+| Panels are empty for another reason | A Python import error is the likely cause — check the `uvicorn` terminal output. |
 | Port 8000 not forwarded | Open the **Ports** tab and forward 8000 manually. |

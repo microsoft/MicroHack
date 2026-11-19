@@ -201,8 +201,11 @@ A row is **CRITICAL** when `onHand` is less than `safetyStock`. It is **AT_RISK*
    ```
 2. Open the forwarded **port 8000** (Codespaces opens it automatically).
 3. The **first** time the page loads, the app copies the sample data from `src/data` into
-   Cosmos DB. This takes a few seconds. Then the **current exposure** panel (products at
-   risk) and the **order book** panel (existing orders) show data from the database.
+   Cosmos DB. This takes a few seconds once the connection is ready. Newly assigned
+   Cosmos permissions can take up to 15 minutes to reach the account. If the console
+   says `not connected` immediately after setup, keep `uvicorn` running, wait, and
+   reload the page. Then the **current exposure** panel (products at risk) and the
+   **order book** panel (existing orders) show data from the database.
 4. The **Sense demand** button already calls the agent you build in Challenge 2. Steps
    2–4 stay **locked** until the step before them succeeds. Don't click **Sense demand**
    yet: it creates and runs your first hosted agent, which is the task of Challenge 2.
@@ -229,8 +232,8 @@ A row is **CRITICAL** when `onHand` is less than `safetyStock`. It is **AT_RISK*
 | `gpt-5.4-mini` missing | Tell your facilitator. The lab setup should have deployed it. |
 | Port 8000 didn't open | Open the **Ports** tab and click the globe on 8000. |
 | `az login` opens no browser | Use `az login --use-device-code` and follow the URL. |
-| Panels show "not connected" | Set `COSMOS_ENDPOINT` in `src/.env` and `az login`. If the lab was just created, your database permission can take a few minutes to become active. Wait, then reload the page. |
-| `Forbidden` / 403 from Cosmos | Either your **Cosmos DB Built-in Data Contributor** permission isn't active yet (wait a few minutes), or you're signed in to the wrong tenant. Check `az login`. |
+| Panels show "not connected" | Set `COSMOS_ENDPOINT` in `src/.env` and run `az login --use-device-code`. If the lab was just created, Cosmos data-plane permission can take up to 15 minutes to become active. Keep the app running, wait, and reload the page. If it still fails, copy the last error from the `uvicorn` terminal and ask the facilitator. |
+| `Forbidden` / 403 from Cosmos | A new **Cosmos DB Built-in Data Contributor** assignment can take up to 15 minutes to propagate. If 15 minutes have passed, run `az logout`, then `az login --use-device-code` with the Hackbox account and restart `uvicorn`. |
 
 ## 🚀 Go further
 

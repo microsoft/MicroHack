@@ -165,7 +165,7 @@
       const s = await api("/api/state");
       if (s.error) {
         $("stats").textContent = "not connected";
-        $("lowStock").innerHTML = `<span class="muted">Set COSMOS_ENDPOINT in src/.env and run az login, then reload.</span>`;
+        $("lowStock").innerHTML = `<span class="muted">Check COSMOS_ENDPOINT and az login. If the lab was just created, permissions can take up to 15 minutes; then reload. For other errors, see the uvicorn terminal.</span>`;
         $("orders").innerHTML = `<span class="muted">—</span>`;
         return;
       }

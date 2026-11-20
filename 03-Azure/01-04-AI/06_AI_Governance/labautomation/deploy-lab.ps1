@@ -641,6 +641,23 @@ if ($rbacFailures.Count -gt 0) {
     throw "Required participant RBAC could not be applied ($($rbacFailures.Count) grant(s) failed). Resources exist in '$effectiveRG', but the notebooks would fail at runtime, so this lab is reported as failed."
 }
 
+# --- Deploy usage-ingestion Logic App workflows (Event Hub -> Cosmos DB) ---
+# The Logic App Standard host is created by the template; its workflows are zip-deployed here.
+$logicAppNameOut = Get-OutVal $deployOutputs 'LOGIC_APP_NAME'
+$logicAppSrc = Join-Path $PSScriptRoot 'logicapp'
+if ($logicAppNameOut -and (Test-Path $logicAppSrc)) {
+    $logicAppZip = Join-Path ([System.IO.Path]::GetTempPath()) "logicapp-$([guid]::NewGuid().ToString('N')).zip"
+    try {
+        Compress-Archive -Path (Join-Path $logicAppSrc '*') -DestinationPath $logicAppZip -Force
+        Publish-AzWebApp -ResourceGroupName $effectiveRG -Name $logicAppNameOut -ArchivePath $logicAppZip -Force | Out-Null
+        Write-Host "[OK]    Usage-ingestion workflows deployed to Logic App '$logicAppNameOut'."
+    } catch {
+        throw "Usage-ingestion Logic App workflows could not be deployed: $($_.Exception.Message)"
+    } finally {
+        Remove-Item $logicAppZip -Force -ErrorAction SilentlyContinue
+    }
+}
+
 # --- Return credentials to the attendee dashboard ---
 Write-Host "[OK]    Lab provisioning complete."
 

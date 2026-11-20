@@ -12,7 +12,7 @@ Console supplies infrastructure only. Validate/explore 02 without reprovisioning
 then complete 03-05 to install Radius, create workspaces and abstractions (including
 `artifacts/types.tgz`), and publish/register recipes before this application exercise.
 Use the **Bash** examples and source `artifacts/console-env.sh` in each new
-terminal. Keep its discovered names; the PowerShell examples are the manual path.
+terminal. Keep its discovered names. All commands in this walkthrough use Bash.
 
 ### How we arrived here
 
@@ -138,23 +138,6 @@ if [[ ! -f artifacts/types.tgz ]]; then
 fi
 ```
 
-**PowerShell 7:**
-
-```powershell
-New-Item -ItemType Directory -Path artifacts -Force | Out-Null
-if (-not (Test-Path artifacts/types.tgz)) {
-    $TypesFile = Join-Path ([System.IO.Path]::GetTempPath()) "adaptive-apps-types.yaml"
-    Invoke-WebRequest `
-        -Uri "https://raw.githubusercontent.com/microsoft/adaptive-apps/885627980684e5bcc6fe4bbd2848c1ec247b0a0b/radius/resource-types/types.yaml" `
-        -OutFile $TypesFile
-    rad bicep publish-extension `
-        --from-file $TypesFile `
-        --target artifacts/types.tgz `
-        --force
-    Remove-Item $TypesFile -Force
-}
-```
-
 `iac/bicepconfig.json` maps the `radiusResources` extension to this generated archive.
 Do not commit `types.tgz`.
 
@@ -163,8 +146,6 @@ Do not commit `types.tgz`.
 ### 1. Restore and select the K3s target
 
 After every devcontainer restart, re-establish the tunnel before K3s commands.
-PowerShell also invokes the provisioning tool through Bash because that tool remains a
-Bash script.
 
 **Bash:**
 
@@ -183,28 +164,6 @@ test "$(rad workspace show --output json | jq -r '.connection.context')" = "k3s-
 rad env show env-local-prod
 ```
 
-**PowerShell 7:**
-
-```powershell
-$env:AZURE_SUBSCRIPTION = "<subscription-id>"
-bash resources/prepare-k3s-azure-vm.sh connect
-$env:KUBECONFIG = "$HOME/.kube/adaptive-apps-k3s.yaml"
-
-kubectl config use-context k3s-azure-vm
-rad workspace switch ws-local-prod
-rad group switch rg-trading
-rad env switch env-local-prod
-
-if ((kubectl config current-context) -ne "k3s-azure-vm") {
-    throw "Kubernetes target drift: expected k3s-azure-vm."
-}
-$Workspace = rad workspace show --output json | ConvertFrom-Json
-if ($Workspace.connection.context -ne "k3s-azure-vm") {
-    throw "Radius target drift: ws-local-prod must target k3s-azure-vm."
-}
-rad env show env-local-prod
-```
-
 ### 2. Verify the Challenge 05 handoff
 
 **Bash:**
@@ -215,16 +174,6 @@ rad recipe list \
   --workspace ws-local-prod \
   --group rg-trading \
   --environment env-local-prod
-```
-
-**PowerShell 7:**
-
-```powershell
-rad resource-type list
-rad recipe list `
-    --workspace ws-local-prod `
-    --group rg-trading `
-    --environment env-local-prod
 ```
 
 Confirm default recipes exist for:
@@ -256,29 +205,6 @@ rad deploy iac/app.bicep \
 unset AUTH_PASSWORD
 ```
 
-**PowerShell 7:**
-
-```powershell
-$SecurePassword = Read-Host "Frontend password" -AsSecureString
-$Credential = [System.Management.Automation.PSCredential]::new("admin", $SecurePassword)
-$PlainPassword = $Credential.GetNetworkCredential().Password
-try {
-    rad deploy iac/app.bicep `
-        --workspace ws-local-prod `
-        --group rg-trading `
-        --environment env-local-prod `
-        --parameters imageRegistry=ghcr.io/microsoft/adaptive-apps `
-        --parameters imageTag=latest `
-        --parameters authUsername=admin `
-        --parameters "authPassword=$PlainPassword"
-}
-finally {
-    $PlainPassword = $null
-    $Credential = $null
-    $SecurePassword = $null
-}
-```
-
 Do not save the password in a parameters file or command transcript.
 The CLI argument is briefly visible to local process inspection, so run the lab only
 on a trusted, single-user workstation or devcontainer host.
@@ -293,29 +219,14 @@ Radius stores the application Graph. resources and workload types. Let's check i
 rad app graph --application adaptive-apps
 rad resource list --application adaptive-apps
 
-ENV_NAMESPACE="$(rad env show env-local-prod --output json |
-  jq -r '.properties.compute.namespace')"
-APP_NAMESPACE="${ENV_NAMESPACE}-adaptive-apps"
-kubectl get namespace "$APP_NAMESPACE" >/dev/null 2>&1 ||
-  APP_NAMESPACE="$ENV_NAMESPACE"
-kubectl get pods --namespace "$APP_NAMESPACE"
+APP_NAMESPACE="$(bash resources/resolve-trading-namespace.sh ws-local-prod env-local-prod)" &&
+  export APP_NAMESPACE &&
+  kubectl get pods --namespace "$APP_NAMESPACE"
 ```
 
-**PowerShell 7:**
-
-```powershell
-rad app graph --application adaptive-apps
-rad resource list --application adaptive-apps
-
-$Environment = rad env show env-local-prod --output json | ConvertFrom-Json
-$EnvironmentNamespace = $Environment.properties.compute.namespace
-$AppNamespace = "$EnvironmentNamespace-adaptive-apps"
-kubectl get namespace $AppNamespace --no-headers *> $null
-if ($LASTEXITCODE -ne 0) {
-    $AppNamespace = $EnvironmentNamespace
-}
-kubectl get pods --namespace $AppNamespace
-```
+The resolver checks for the Trading schema initializer Job in both the application's
+usual suffixed namespace and the environment namespace. It returns neither a guess
+nor an ambiguous result. Stop if discovery fails; check the deployment and context.
 
 The local recipes should produce in-cluster PostgreSQL and Mosquitto resources. The
 local workload-identity recipe returns a compatible no-auth mapping.
@@ -331,15 +242,6 @@ rad resource expose Applications.Core/containers frontend \
   --application adaptive-apps \
   --port 3000 \
   --remote-port 3000
-```
-
-**PowerShell 7:**
-
-```powershell
-rad resource expose Applications.Core/containers frontend `
-    --application adaptive-apps `
-    --port 3000 `
-    --remote-port 3000
 ```
 
 Open <http://localhost:3000> and sign in with the prompted password. Press
@@ -366,25 +268,6 @@ test "$(rad workspace show --output json | jq -r '.connection.context')" = "aks-
 rad env show env-azure-prod
 ```
 
-**PowerShell 7:**
-
-```powershell
-Remove-Item Env:KUBECONFIG -ErrorAction SilentlyContinue
-kubectl config use-context aks-adaptive-apps
-rad workspace switch ws-azure-prod
-rad group switch rg-trading
-rad env switch env-azure-prod
-
-if ((kubectl config current-context) -ne "aks-adaptive-apps") {
-    throw "Kubernetes target drift: expected aks-adaptive-apps."
-}
-$Workspace = rad workspace show --output json | ConvertFrom-Json
-if ($Workspace.connection.context -ne "aks-adaptive-apps") {
-    throw "Radius target drift: ws-azure-prod must target aks-adaptive-apps."
-}
-rad env show env-azure-prod
-```
-
 ### 2. Reuse Azure credentials and recipes
 
 Challenge 03 registered federated Azure credentials for the AKS Radius control plane.
@@ -398,16 +281,6 @@ rad recipe list \
   --workspace ws-azure-prod \
   --group rg-trading \
   --environment env-azure-prod
-```
-
-**PowerShell 7:**
-
-```powershell
-rad credential show azure
-rad recipe list `
-    --workspace ws-azure-prod `
-    --group rg-trading `
-    --environment env-azure-prod
 ```
 
 The required resource types are the same as K3s, but their recipes should map to Azure
@@ -438,29 +311,6 @@ rad deploy iac/app.bicep \
 unset AUTH_PASSWORD
 ```
 
-**PowerShell 7:**
-
-```powershell
-$SecurePassword = Read-Host "Frontend password" -AsSecureString
-$Credential = [System.Management.Automation.PSCredential]::new("admin", $SecurePassword)
-$PlainPassword = $Credential.GetNetworkCredential().Password
-try {
-    rad deploy iac/app.bicep `
-        --workspace ws-azure-prod `
-        --group rg-trading `
-        --environment env-azure-prod `
-        --parameters imageRegistry=ghcr.io/microsoft/adaptive-apps `
-        --parameters imageTag=latest `
-        --parameters authUsername=admin `
-        --parameters "authPassword=$PlainPassword"
-}
-finally {
-    $PlainPassword = $null
-    $Credential = $null
-    $SecurePassword = $null
-}
-```
-
 Azure Database for PostgreSQL can take several minutes to provision.
 
 ### 4. Validate AKS, Radius, and Azure resources
@@ -475,42 +325,13 @@ az account set --subscription "$AZURE_SUBSCRIPTION"
 rad app graph --application adaptive-apps
 rad resource list --application adaptive-apps
 
-ENV_NAMESPACE="$(rad env show env-azure-prod --output json |
-  jq -r '.properties.compute.namespace')"
-APP_NAMESPACE="${ENV_NAMESPACE}-adaptive-apps"
-kubectl get namespace "$APP_NAMESPACE" >/dev/null 2>&1 ||
-  APP_NAMESPACE="$ENV_NAMESPACE"
-kubectl get pods --namespace "$APP_NAMESPACE"
+APP_NAMESPACE="$(bash resources/resolve-trading-namespace.sh ws-azure-prod env-azure-prod)" &&
+  export APP_NAMESPACE &&
+  kubectl get pods --namespace "$APP_NAMESPACE"
 
 az resource list \
   --resource-group "$RESOURCE_GROUP" \
   --output table
-```
-
-**PowerShell 7:**
-
-```powershell
-$env:AZURE_SUBSCRIPTION = "<subscription-id>"
-if (-not $env:RESOURCE_GROUP) {
-    $env:RESOURCE_GROUP = "<lab-resource-group>"
-}
-az account set --subscription $env:AZURE_SUBSCRIPTION
-
-rad app graph --application adaptive-apps
-rad resource list --application adaptive-apps
-
-$Environment = rad env show env-azure-prod --output json | ConvertFrom-Json
-$EnvironmentNamespace = $Environment.properties.compute.namespace
-$AppNamespace = "$EnvironmentNamespace-adaptive-apps"
-kubectl get namespace $AppNamespace --no-headers *> $null
-if ($LASTEXITCODE -ne 0) {
-    $AppNamespace = $EnvironmentNamespace
-}
-kubectl get pods --namespace $AppNamespace
-
-az resource list `
-    --resource-group $env:RESOURCE_GROUP `
-    --output table
 ```
 
 ### 5. Expose the AKS frontend
@@ -527,16 +348,7 @@ rad resource expose Applications.Core/containers frontend \
   --remote-port 3000
 ```
 
-**PowerShell 7:**
-
-```powershell
-rad resource expose Applications.Core/containers frontend `
-    --application adaptive-apps `
-    --port 3000 `
-    --remote-port 3000
-```
-
-Open <http://localhost:3000> and sign in with the credentials you passed to `rad deploy`:
+Open <http://localhost:3002> and sign in with the credentials you passed to `rad deploy`:
 the `authUsername` value (`admin`) and the `authPassword` you typed at the prompt. The
 frontend checks these itself; Challenge 07 replaces them with an OIDC identity provider.
 
@@ -565,12 +377,41 @@ separate limitation. See
 
 ### 6. Prove database initialization and backend readiness
 
-For one combined Bash check on either platform, so run for both AKS and K3S, select the intended Kubernetes context (if lost set `APP_NAMESPACE` to the application's namespace), then run in both AKS and K3S context:
+Run this check for both AKS and K3s. Select the intended Kubernetes context and matching
+Radius workspace using the target-selection commands above. Rediscover and export
+`APP_NAMESPACE` each time you switch platforms; do not reuse the previous target's value.
+
+In the AKS context:
 
 ```bash
-bash resources/verify-trading-db.sh
+APP_NAMESPACE="$(bash resources/resolve-trading-namespace.sh ws-azure-prod env-azure-prod)" &&
+  export APP_NAMESPACE &&
+  bash resources/verify-trading-db.sh
 ```
-You will see the entered trading records per environment, they should differe and this step proof that the chain is working.
+
+In the K3s context:
+
+```bash
+APP_NAMESPACE="$(bash resources/resolve-trading-namespace.sh ws-local-prod env-local-prod)" &&
+  export APP_NAMESPACE &&
+  bash resources/verify-trading-db.sh
+```
+
+Discovery selects a namespace only when exactly one candidate contains the Trading
+initializer Job. Usually these are `env-azure-prod-adaptive-apps` and
+`env-local-prod-adaptive-apps`; deployments directly in `env-azure-prod` or
+`env-local-prod` are also supported. If both candidates match, inspect the Jobs and
+explicitly export the intended namespace before running `verify-trading-db.sh`.
+
+If verification reports `No trading-db schema initializer Job found`, it lists
+matching Jobs in other namespaces of the current Kubernetes context and suggests
+the corrected `export APP_NAMESPACE=...` command when there is one match. It stops
+without switching namespaces or contexts. Multiple matches require your selection;
+no matches may mean initialization was not deployed. Cross-namespace permission
+failures are reported explicitly.
+
+You will see the trading records entered in each environment. They differ only if
+you placed different orders; identical records alone do not indicate a failure.
 
 The first query lists `accounts`, `orders`, `positions`, and `trades`. The second returns
 one row per order you placed in step 5:
@@ -629,42 +470,12 @@ rad resource list --application adaptive-apps
 rad recipe list --environment env-local-prod
 ```
 
-**PowerShell 7:**
-
-```powershell
-$env:AZURE_SUBSCRIPTION = "<subscription-id>"
-bash resources/prepare-k3s-azure-vm.sh connect
-$env:KUBECONFIG = "$HOME/.kube/adaptive-apps-k3s.yaml"
-kubectl config use-context k3s-azure-vm
-rad workspace switch ws-local-prod
-rad group switch rg-trading
-rad env switch env-local-prod
-
-rad app graph --application adaptive-apps
-rad resource list --application adaptive-apps
-rad recipe list --environment env-local-prod
-```
-
 ### AKS evidence
 
 **Bash:**
 
 ```bash
 unset KUBECONFIG
-kubectl config use-context aks-adaptive-apps
-rad workspace switch ws-azure-prod
-rad group switch rg-trading
-rad env switch env-azure-prod
-
-rad app graph --application adaptive-apps
-rad resource list --application adaptive-apps
-rad recipe list --environment env-azure-prod
-```
-
-**PowerShell 7:**
-
-```powershell
-Remove-Item Env:KUBECONFIG -ErrorAction SilentlyContinue
 kubectl config use-context aks-adaptive-apps
 rad workspace switch ws-azure-prod
 rad group switch rg-trading
@@ -827,9 +638,6 @@ bash resources/prepare-k3s-azure-vm.sh connect
 export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
 ```
 
-In PowerShell, set `$env:AZURE_SUBSCRIPTION`, invoke the same script through `bash`, and
-set `$env:KUBECONFIG`.
-
 ### The generated extension is missing
 
 Repeat Stage 1's `rad bicep publish-extension` command. The archive is generated and is
@@ -857,9 +665,9 @@ or missing TopicSpaces roles still prevents messaging, even if the HTTP API is h
 Inspect the actual accounts and MQTT results after deployment:
 
 ```bash
-kubectl get deployment backend frontend --namespace env-azure-prod \
+kubectl get deployment backend frontend --namespace "$APP_NAMESPACE" \
   --output custom-columns=NAME:.metadata.name,SERVICEACCOUNT:.spec.template.spec.serviceAccountName
-kubectl logs deployment/backend --namespace env-azure-prod --tail=100
+kubectl logs deployment/backend --namespace "$APP_NAMESPACE" --tail=100
 ```
 
 Look for a successful MQTT CONNECT and subscription, not just a Ready pod. If the

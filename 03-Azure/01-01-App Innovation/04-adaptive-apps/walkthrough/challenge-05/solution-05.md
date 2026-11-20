@@ -572,6 +572,11 @@ unset KUBECONFIG
 kubectl config use-context aks-adaptive-apps
 rad workspace switch ws-azure-prod
 rad recipe list --environment env-azure-prod
+bash resources/verify-recipes.sh ws-azure-prod env-azure-prod \
+  Radius.Resources/postgreSqlDatabases Radius.Resources/mqttBrokers \
+  Radius.Resources/idProviders Radius.Resources/workloadIdentities \
+  Radius.Resources/aiModels Radius.Resources/governance \
+  Radius.Resources/agentGuardrails Radius.Resources/sqlDatabases
 ```
 
 K3s:
@@ -581,7 +586,19 @@ export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
 kubectl config use-context k3s-azure-vm
 rad workspace switch ws-local-prod
 rad recipe list --environment env-local-prod
+bash resources/verify-recipes.sh ws-local-prod env-local-prod \
+  Radius.Resources/postgreSqlDatabases Radius.Resources/mqttBrokers \
+  Radius.Resources/idProviders Radius.Resources/workloadIdentities \
+  Radius.Resources/aiModels Radius.Resources/governance \
+  Radius.Resources/agentGuardrails
 ```
+
+The checks compare the expected registrations with the available recipes: **eight
+for AKS**, including SQL, and **seven for K3s**. Each missing or unusable `default`
+Bicep recipe is named in a `WARNING`, and the check exits with a nonzero status if
+any are missing. Additional recipes are allowed. An all-present message confirms
+the expected set is registered; this does not deploy the recipes or prove their
+registry artifacts can be pulled. Re-register the reported recipes before continuing.
 
 For either active platform:
 

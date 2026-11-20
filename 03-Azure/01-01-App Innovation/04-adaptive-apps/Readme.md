@@ -192,20 +192,18 @@ Radius, abstractions, and recipes are not. You still need the tools above, a ful
 repository checkout, and the non-provisioning connection helper.
 Use Bash for hosted instructions, including in containers with PowerShell.
 
-The recommended option is the repository
-[devcontainer](https://github.com/microsoft/MicroHack/blob/main/.devcontainer/03-azure-01-01-app-innovation-04-adaptive-apps/devcontainer.json),
-which installs the Challenges 01-07 toolchain while retaining the manual host setup
-path. Clone `https://github.com/microsoft/MicroHack.git` on `main`, open the repository root in VS Code, run **Dev
-Containers: Reopen in Container**, and select
-`03-azure-01-01-app-innovation-04-adaptive-apps` when prompted. The container then
-opens this MicroHack as its workspace. See
-[Challenge 01](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/challenges/challenge-01.md) for host prerequisites, credential
-persistence, verification, and troubleshooting.
+The recommended options are **GitHub Codespaces** or a **local VS Code Dev
+Container**, using the Adaptive Apps devcontainer toolchain. Choose **exactly one**
+environment in the
+[Challenge 01 solution](walkthrough/challenge-01/solution-01.md#choose-one-environment):
+Codespaces, local Dev Container, or manual setup. Follow that path's repository,
+branch, and configuration instructions; container users do not need the manual
+tool installations. The solution also covers credential persistence, verification,
+and troubleshooting.
 
-Local Dev Containers remain the validated workstation path. Optional Codespaces
-selection and forwarded-browser/OIDC considerations are documented in
-[Console setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md#optional-extensions-and-hosted-browsers)
-for organizer validation, not as a tested hosted alternative.
+Local Dev Containers remain the validated workstation path. Organizers must validate
+Codespaces connections and forwarded-browser/OIDC settings before the event; see
+[Console setup](docs/console-setup.md#optional-extensions-and-hosted-browsers).
 
 The default K3s VM has no public IP. Its Kubernetes API is reached through an Azure
 Bastion native-client tunnel bound only to localhost in the participant environment.

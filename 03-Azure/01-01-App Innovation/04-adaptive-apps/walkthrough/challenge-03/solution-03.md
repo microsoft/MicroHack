@@ -6,9 +6,9 @@ Duration: 30-45 minutes per environment
 
 ## Coach notes
 
-**Hosted Console:** source `artifacts/console-env.sh` and use the supplied
-resource names. Install Radius below, selecting **Option A: managed identity**
-for Azure workload identity.
+**LAB** means facilitator-provided infrastructure; **BYOS** means bring your own
+subscription. For LAB, use the supplied resource names and **Option A: managed
+identity** for Azure workload identity.
 
 - The goal is to install, configure, and explore Radius on both default platforms.
 - The default uses a **federated model**: one control plane on AKS and one on K3s.
@@ -16,6 +16,57 @@ for Azure workload identity.
   participant's workstation.
 - Radius startup can take 5-10 minutes. Inspect pod state before rerunning commands.
 - Always compare `kubectl config current-context` with the active Radius workspace.
+
+## Tutorial: Connect to the lab resources
+
+### 1. First-time setup (LAB and BYOS)
+
+Run in **Bash from the Adaptive Apps MicroHack root** in your devcontainer.
+For **LAB**, use the subscription and resource group supplied by the facilitator.
+For **BYOS**, use the subscription and resource group prepared in Challenge 02.
+
+```bash
+az login
+export AZURE_SUBSCRIPTION="<subscription-id>"
+export RESOURCE_GROUP="<resource-group>"
+```
+
+For LAB, if `artifacts/console-env.sh` already exists, you can source it instead of
+the two exports. For nondefault resource names, also export `AKS_CLUSTER`,
+`K3S_VM_NAME`, and `BASTION_NAME` before continuing.
+
+```bash
+bash resources/connect-lab.sh && source artifacts/lab-env.sh
+```
+
+The helper retrieves both clusters' credentials, refreshes stale K3s credentials,
+and starts the Bastion API tunnel without provisioning infrastructure or installing
+Radius. It saves the shared variables to `artifacts/lab-env.sh`; sourcing that file
+exports them into **your current terminal** and leaves AKS selected. Running the
+helper alone cannot set variables in its parent shell.
+
+Do not continue if connection setup fails. Otherwise, subscription, resource-group,
+region, cluster/context, and K3s kubeconfig variables are ready for the remaining
+steps; do not set them again in each step.
+
+### 2. New terminals and reconnecting (LAB and BYOS)
+
+In each new Bash terminal, restore the saved variables:
+
+```bash
+source artifacts/lab-env.sh
+```
+
+After a devcontainer restart, restore the variables **before** rerunning the helper:
+
+```bash
+source artifacts/lab-env.sh
+bash resources/connect-lab.sh && source artifacts/lab-env.sh
+```
+
+If `artifacts/lab-env.sh` is missing, repeat the first-time setup instead.
+The tunnel exposes only the Kubernetes API on localhost. Radius dashboard access still
+uses `kubectl port-forward` through that API connection.
 
 ## Control-plane deployment options
 
@@ -135,7 +186,7 @@ Then select and verify it:
 
 ```bash
 unset KUBECONFIG
-kubectl config use-context aks-adaptive-apps
+kubectl config use-context "$AKS_CONTEXT"
 kubectl config current-context
 kubectl get nodes
 kubectl get namespace radius-system --ignore-not-found
@@ -143,18 +194,12 @@ kubectl get namespace radius-system --ignore-not-found
 
 ### 2. Prepare Azure workload identity
 
-Hosted participants first source `artifacts/console-env.sh`; the defaults below
-preserve those supplied values. BYOS participants set their own subscription and
-resource group. Replace `<lab-resource-group>` with your lab's Azure resource-group
-name; keep the value supplied by Console if already set.
+The connection setup has already selected the subscription and exported the lab
+resource names. Retrieve the identity settings from that AKS cluster:
 
 ```bash
-export AZURE_SUBSCRIPTION="${AZURE_SUBSCRIPTION:-<subscription-id>}"
-export RESOURCE_GROUP="${RESOURCE_GROUP:-<lab-resource-group>}"
-export AKS_CLUSTER="${AKS_CLUSTER:-aks-adaptive-apps}"
 export RADIUS_APP_NAME="${AKS_CLUSTER}-radius-app"
 
-az account set --subscription "$AZURE_SUBSCRIPTION"
 export OIDC_ISSUER="$(az aks show \
   --resource-group "$RESOURCE_GROUP" \
   --name "$AKS_CLUSTER" \
@@ -167,7 +212,7 @@ Choose **one** identity option. Both use AKS OIDC federation with no client secr
 See Microsoft's [AKS workload identity guide](https://learn.microsoft.com/azure/aks/workload-identity-deploy-cluster)
 for the managed identity and federated credential commands.
 
-#### Option A: user-assigned managed identity (required for MicroHack Console)
+#### Option A: user-assigned managed identity (required for LAB and MicroHack Console; also supported for BYOS)
 
 Create the identity inside the supplied lab resource group. These are Azure Resource
 Manager operations, not tenant app/SP creation. The explicit principal object ID
@@ -175,10 +220,6 @@ in the role assignment below avoids a Microsoft Graph lookup.
 
 ```bash
 export RADIUS_MANAGED_IDENTITY_NAME="${AKS_CLUSTER}-radius"
-export AZURE_LOCATION="$(az aks show \
-  --resource-group "$RESOURCE_GROUP" \
-  --name "$AKS_CLUSTER" --query location --output tsv)"
-
 az identity create \
   --resource-group "$RESOURCE_GROUP" \
   --name "$RADIUS_MANAGED_IDENTITY_NAME" \
@@ -210,8 +251,8 @@ at **Grant the identity access**.
 
 #### Option B: Entra application (BYOS with tenant permissions only)
 
-BYOS: Create an Entra application and service principal. Do not run this option in a
-hosted RG-only lab:
+Create an Entra application and service principal. Do not run this option in LAB,
+where permissions are limited to the assigned resource group:
 
 ```bash
 export APPLICATION_CLIENT_ID="$(az ad app create \
@@ -268,7 +309,7 @@ az role assignment create \
 
 ```bash
 rad install kubernetes \
-  --kubecontext aks-adaptive-apps \
+  --kubecontext "$AKS_CONTEXT" \
   --set global.azureWorkloadIdentity.enabled=true
 ```
 
@@ -281,11 +322,11 @@ docker logout ghcr.io || true
 
 Then rerun the installation.
 
-### 4. Create the AKS workspace and scopes
+### 4. Create the Radius workspace and scopes in the Azure AKS environment
 
 ```bash
 rad workspace create kubernetes ws-azure-prod \
-  --context aks-adaptive-apps \
+  --context "$AKS_CONTEXT" \
   --force
 rad workspace switch ws-azure-prod
 
@@ -307,30 +348,27 @@ rad credential register azure wi \
 
 ## Manual tutorial: K3s
 
-### 1. Select and verify K3s
+### 1. Select and verify K3s (local) 
 
 ```bash
-export AZURE_SUBSCRIPTION="${AZURE_SUBSCRIPTION:-<subscription-id>}"
-export RESOURCE_GROUP="${RESOURCE_GROUP:-<lab-resource-group>}"
-bash resources/prepare-k3s-azure-vm.sh connect
-export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
-kubectl config use-context k3s-azure-vm
+export KUBECONFIG="$K3S_KUBECONFIG"
+kubectl config use-context "$K3S_CONTEXT"
 kubectl config current-context
 kubectl get nodes
 kubectl get namespace radius-system --ignore-not-found
 ```
 
-### 2. Install Radius on K3s
+### 2. Install Radius on K3s (local) 
 
 ```bash
-rad install kubernetes --kubecontext k3s-azure-vm
+rad install kubernetes --kubecontext "$K3S_CONTEXT"
 ```
 
-### 3. Create the K3s workspace and scopes
+### 3. Create the Radius workspace and scopes in the K3S (local) environment
 
 ```bash
 rad workspace create kubernetes ws-local-prod \
-  --context k3s-azure-vm \
+  --context "$K3S_CONTEXT" \
   --force
 rad workspace switch ws-local-prod
 
@@ -391,47 +429,72 @@ explicitly whether that installation needs an Azure provider.
 
 ## Optional automation
 
-The automation performs the same steps above and is intended only for participants
-who choose to skip the manual tutorial.
+These scripts automate **Radius control-plane installation and post-configuration
+on existing Kubernetes clusters**. They do **not** create or reinstall AKS, the
+K3s Kubernetes installation, its VM, or networking. They do not deploy the portfolio,
+recipes, or application workloads from later challenges.
+
+The Radius environments `env-azure-prod` and `env-local-prod` are configuration
+objects, not Kubernetes clusters; `rg-trading` is a Radius group, not an Azure
+resource group.
+
+For **LAB**, the facilitator supplies the Kubernetes infrastructure. For **BYOS**,
+prepare it in Challenge 02 first. Both paths use the shared connection setup above
+and `artifacts/lab-env.sh`. Run the following in Bash from the Adaptive Apps
+MicroHack root. One team member installs each shared control plane; each participant
+can rerun with `RADIUS_REINSTALL=false` to configure their own local workspace.
 
 ### AKS
 
-For hosted recovery, use the supplied configuration and explicitly select managed
-identity mode. Do not use the application-mode default:
+**LAB and BYOS:** use managed identity for Radius workload identity. This is
+required for LAB and also works for BYOS. The helper configures the identity,
+federation, role assignment, Radius Azure credential/provider, workspace
+`ws-azure-prod`, group `rg-trading`, and environment `env-azure-prod`.
 
 ```bash
-source artifacts/console-env.sh
+source artifacts/lab-env.sh
 unset KUBECONFIG
-kubectl config use-context aks-adaptive-apps
+kubectl config use-context "$AKS_CONTEXT"
 RADIUS_IDENTITY_MODE=managedidentity RADIUS_REINSTALL=false bash resources/deploy-radius-aks.sh
 ```
 
-The sourced Console configuration exports both settings as well. Keep
-`RADIUS_REINSTALL=false` to preserve an existing Radius installation and coordinate
-recovery with the team. The following is the BYOS application-mode alternative
-(requires tenant permissions); without overrides its script defaults can reinstall
-Radius:
+**BYOS only, with tenant permissions:** to use an Entra application/service principal
+instead of managed identity, replace only the last command with:
 
 ```bash
-unset KUBECONFIG
-kubectl config use-context aks-adaptive-apps
-
-export AZURE_SUBSCRIPTION="${AZURE_SUBSCRIPTION:-<subscription-id>}"
-export RESOURCE_GROUP="${RESOURCE_GROUP:-<lab-resource-group>}"
-export AKS_CLUSTER="aks-adaptive-apps"
-
-# Run from the Adaptive Apps MicroHack root.
-bash resources/deploy-radius-aks.sh
+RADIUS_IDENTITY_MODE=application RADIUS_REINSTALL=false bash resources/deploy-radius-aks.sh
 ```
 
 ### K3s
 
-```bash
-export AZURE_SUBSCRIPTION="${AZURE_SUBSCRIPTION:-<subscription-id>}"
-bash resources/prepare-k3s-azure-vm.sh connect
-export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
-kubectl config use-context k3s-azure-vm
+**LAB and BYOS:** use the same commands. The helper installs Radius if missing,
+creates missing workspace/group/environment configuration, and validates it.
+It does not register Azure credentials or configure an Azure provider.
 
-# Run from the Adaptive Apps MicroHack root.
-bash resources/deploy-radius-k3s.sh
+```bash
+source artifacts/lab-env.sh
+export KUBECONFIG="$K3S_KUBECONFIG"
+kubectl config use-context "$K3S_CONTEXT"
+
+RADIUS_REINSTALL=false bash resources/deploy-radius-k3s.sh
 ```
+
+The script waits for Radius readiness before configuring scopes. It creates any
+missing `ws-local-prod`, `rg-trading`, and `env-local-prod`, selects them, and checks
+the workspace's K3s context and the environment's `env-local-prod` namespace with
+no Azure provider. Existing environments (including later recipe configuration)
+are preserved; incompatible settings or failed queries stop setup with an error.
+
+### Install versus reinstall (LAB and BYOS)
+
+| Setting | Radius behavior on the selected, existing cluster |
+| --- | --- |
+| `RADIUS_REINSTALL=false` (all examples above) | Install Radius if missing; otherwise retain its control plane. Then run Radius post-configuration and validation in either case. |
+| `RADIUS_REINSTALL=true` | Reinstall an existing Radius control plane, then run post-configuration and validation. This does not reinstall AKS or K3s. |
+
+Keep the explicit `false` override for safe reruns: the AKS script's raw default is
+`true`, while the K3s script's default is `false`. Neither setting skips Radius
+post-configuration. Coordinate an intentional Radius reinstall with the team
+because it can disrupt the shared installation.
+
+Dashboard exploration and the team discussion remain manual.

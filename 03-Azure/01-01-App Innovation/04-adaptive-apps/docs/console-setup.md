@@ -8,12 +8,13 @@ registry (ACR). You install and explore Radius, resource types, and recipes in
 
 ## 1. Prepare your workstation
 
-Complete **Task 2 (workstation), Task 3 (local state), and Task 4 (tool checks)** in
-[Challenge 01](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/challenges/challenge-01.md).
-Use a **full checkout** of the canonical `microsoft/MicroHack` repository on `main`;
+Choose **one environment** in the
+[Challenge 01 solution](../walkthrough/challenge-01/solution-01.md#choose-one-environment)
+and complete its tool checks. **GitHub Codespaces** and a **local VS Code Dev
+Container** are recommended; a manual host toolchain is also supported.
+Use the **full repository checkout** and branch specified by that setup guide;
 the challenges need its `iac`, `resources`, and application files, not only a
-downloaded connection script. The validated workstation option
-remains a **local VS Code devcontainer**; a manual host toolchain is also supported.
+downloaded connection script.
 Use a **Bash terminal**, even when PowerShell is installed in the container.
 
 Skip subscription setup and infrastructure provisioning. In Challenge 02,
@@ -88,12 +89,13 @@ Reuse the supplied ACR in Challenge 05; do not recreate it. The Bicep extension
   devcontainer or Codespace does not supply these. Finish after 10; Challenge 11
   is not yet published.
 
-**Codespaces is an optional organizer-validation path, not a validated workshop
-promise.** To evaluate it, use the canonical repository's **Code > Codespaces >
-New with options**, select branch `main` and the
-`03-azure-01-01-app-innovation-04-adaptive-apps` devcontainer configuration, and
-verify all tools and the Bastion connection before the event. If that configuration
-is not offered, use the local devcontainer rather than the default Codespace.
+**Codespaces is a recommended browser-based setup; organizers must still validate
+the hosted connections before the event.** Follow the
+[Challenge 01 Codespaces setup](../walkthrough/challenge-01/solution-01.md#recommended-environment-github-codespaces)
+to select the repository, branch, and **Azure / App Innovation / Adaptive Apps**
+devcontainer configuration. Verify all tools and the Bastion connection before the
+event. If that configuration is not offered, use the local devcontainer rather than
+the default Codespace.
 Use the Ports view's forwarded HTTPS URLs for browser access: browser `localhost`
 does not address a hosted container. Validate frontend and Keycloak public URLs,
 OIDC redirect URIs, allowed origins, and Entra SAML reply URLs together; do not

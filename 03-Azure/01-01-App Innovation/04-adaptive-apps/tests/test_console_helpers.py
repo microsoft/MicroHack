@@ -109,7 +109,22 @@ current-context: default
         print("mock-role-assignment")
     sys.exit(0)
 if command == "rad":
-    if args[:2] == ["recipe", "list"]:
+    if args[:2] == ["group", "list"] or args[:2] == ["env", "list"]:
+        print("[]")
+    elif args[:2] == ["workspace", "show"]:
+        group = os.environ.get("RADIUS_GROUP", "rg-trading")
+        environment = os.environ.get("RADIUS_ENVIRONMENT", "env-local-prod")
+        scope = "/planes/radius/local/resourceGroups/" + group
+        print(json.dumps({
+            "connection": {"kind": "kubernetes", "context": os.environ.get("K3S_CONTEXT", "k3s-azure-vm")},
+            "scope": scope, "environment": scope + "/providers/Applications.Core/environments/" + environment,
+        }))
+    elif args[:2] == ["env", "show"]:
+        print(json.dumps({
+            "name": os.environ.get("RADIUS_ENVIRONMENT", "env-local-prod"),
+            "properties": {"compute": {"kind": "kubernetes", "namespace": os.environ.get("RADIUS_NAMESPACE", "env-local-prod")}},
+        }))
+    elif args[:2] == ["recipe", "list"]:
         types = ["postgreSqlDatabases", "mqttBrokers", "idProviders", "workloadIdentities",
                  "aiModels", "governance", "agentGuardrails", "sqlDatabases"]
         recipes = [{"name": os.environ.get("RECIPE_NAME", "default"),

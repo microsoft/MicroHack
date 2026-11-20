@@ -67,7 +67,7 @@ param(
     # in lab-defaults.json (Fabric is the dominant cost; each SKU step roughly
     # doubles it).
     [ValidateSet('F2','F4','F8','F16','F32','F64')]
-    [string]$FabricSkuName = "F4"
+    [string]$FabricSkuName = "F8"
 )
 
 $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition

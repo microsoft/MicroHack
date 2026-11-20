@@ -6,16 +6,13 @@ Estimated time: 60-90 minutes | Difficulty: intermediate to advanced
 
 ## Challenge objective
 
-Add user authentication to the portable trading application without coupling the
-frontend to one enterprise identity system. The frontend must keep one OpenID Connect
-(OIDC) contract with Keycloak while each platform supplies a different user source:
+Can the same frontend sign in users at both a private site and in Azure without changing
+how the application authenticates? Yes: the frontend uses OIDC with Keycloak in both
+places; only the user source behind Keycloak changes.
 
-- `ws-local-prod` uses users held locally by Keycloak on private K3s.
-- `ws-azure-prod` brokers Microsoft Entra ID through Keycloak on AKS.
-
-The application model changes once to express the stable OIDC contract. That same model
-is then deployed to both independent Radius control planes with target-specific
-parameters and broker configuration.
+On private K3s, Keycloak authenticates a local user. On AKS, Keycloak sends the user to
+Microsoft Entra ID and then returns the result to the same frontend OIDC flow. The app
+model and client ID stay the same; each target keeps its own Keycloak realm and secret.
 
 ## Scenario
 
@@ -31,13 +28,9 @@ through local port-forwarding.
 
 ## Learning goals
 
-- Separate end-user authentication from Radius control-plane and application workload
-  identities.
-- Use Keycloak as a stable OIDC boundary in front of different user authorities.
-- Keep client ID, redirect URI, and application model consistent while client secrets
-  and upstream federation remain target-specific.
-- Prevent identity changes from reaching the wrong Kubernetes or Radius control plane.
-- Validate the complete browser, broker, upstream-provider, and callback path.
+- Trace one frontend OIDC flow through Keycloak to either a local user or Entra.
+- Keep the app contract the same while switching the user source between K3s and AKS.
+- Verify the selected target and successful sign-in without exposing secrets.
 
 ## Fixed target map
 
@@ -48,6 +41,9 @@ through local port-forwarding.
 
 The Keycloak database and the Radius application state are independent on each target.
 An OIDC client secret or user created on one target does not exist on the other.
+Create the application client and users in a dedicated `adaptive-apps` realm on each
+Keycloak instance. The matching realm names do not share users or configuration; keep
+the `master` realm for Keycloak administration.
 
 ## Additional prerequisites
 
@@ -70,7 +66,8 @@ Challenge 08 is not yet published; continue from 07 to 09.
 
 ## Identity boundaries
 
-Do not conflate these three identity planes:
+**Boundary:** this challenge changes end-user sign-in only. The other identities keep
+doing their existing jobs:
 
 | Plane | Purpose | Established by |
 | --- | --- | --- |
@@ -96,6 +93,11 @@ Event Grid MQTT authorization.
   - Browser Keycloak endpoint on `http://localhost:8080`
 - Do not commit, echo, screenshot, or save passwords and client secrets in the
   repository. Use secure prompts and clear plaintext variables after the CLI boundary.
+- Pass secret deployment parameters through a protected temporary ARM JSON parameter
+  file, not `rad deploy` command-line values; remove the file after deployment, including
+  when deployment fails. On Windows, use Bash in WSL2 with the repository in the WSL
+  Linux filesystem for all credential-sensitive steps, including client-secret capture
+  and deployment.
 - Keep all port-forwards in the foreground. Stop Keycloak and frontend forwarding before
   switching targets.
 - Do not expose the private K3s VM, Kubernetes API, Keycloak, or frontend to the
@@ -109,60 +111,32 @@ Event Grid MQTT authorization.
 
 ## Tasks
 
-### Task 1: Define the portable authentication contract
+### Task 1: Prove the app contract with a local K3s user
 
-Review `iac/app.bicep` and identify the optional OIDC parameters and frontend
-environment variables. Draw both authentication sequences:
+Select the K3s target. Configure its independent `adaptive-apps` realm, OIDC client,
+and non-administrator local test user. Deploy the app with the OIDC contract, then
+sign in through Keycloak. Use the existing target checks and temporary parameter-file
+instructions; do not expose credentials or public endpoints.
 
-1. Browser -> K3s Keycloak -> local Keycloak user -> frontend callback.
-2. Browser -> AKS Keycloak -> Microsoft Entra ID -> Keycloak -> frontend callback.
+You may use `resources/configure-identity.sh k3s check`, `setup --rotate-admin`,
+and `deploy` as separate actions instead of copying the administration blocks.
+Inspect the helper's non-secret settings and complete the browser login yourself.
+The [manual reference](../docs/identity-manual.md) retains the underlying commands.
 
-Label each value as application-owned, broker-owned, or upstream-provider-owned.
-Explain why the app model can remain identical even though each Keycloak instance has a
-different client secret.
+### Task 2: Keep the app, switch the user source on AKS
 
-### Task 2: Configure and validate the K3s identity path
+Stop the K3s forwards and select the AKS target. Configure its independent
+`adaptive-apps` realm and the same OIDC client settings, then connect Keycloak to Entra
+over SAML. Verify Entra's Reply URL matches the realm callback and assign only the
+workshop test user or group. Redeploy the same app contract and complete an Entra-backed
+sign-in.
 
-Reconnect the Bastion API tunnel and explicitly select `k3s-azure-vm`,
-`ws-local-prod`, `rg-trading`, and `env-local-prod`.
+Use the same helper actions with target `aks` for repetitive broker/deployment
+mechanics. Keep Entra app creation, assignment and Keycloak SAML federation manual.
+Use `--rotate-admin` only for initial setup; reruns must not reset credentials
+unless explicitly requested.
 
-On the K3s `core` Keycloak instance:
-
-- Create or reconcile the confidential `adaptive-apps` client.
-- Create a non-administrator local test user with a securely entered password.
-- Rotate the portfolio bootstrap administrator without exposing its password.
-- Capture the generated client secret only into a protected shell variable.
-- Redeploy `iac/app.bicep` with the OIDC contract enabled.
-- Forward Keycloak to local port 8080 and the frontend to local port 3000.
-- Sign in through the OIDC path and verify the returned user identity.
-
-Record why this is a local availability pattern rather than an enterprise directory
-replacement.
-
-### Task 3: Configure Microsoft Entra federation on AKS
-
-Stop both K3s foreground processes, clear the dedicated K3s kubeconfig, and explicitly
-select `aks-adaptive-apps`, `ws-azure-prod`, `rg-trading`, and `env-azure-prod`.
-
-On the AKS `core` Keycloak instance:
-
-- Create the same `adaptive-apps` OIDC client contract.
-- Rotate this broker's portfolio bootstrap administrator independently from K3s.
-- Configure a non-gallery Microsoft Entra enterprise application for SAML SSO.
-- Use the Keycloak realm as the SAML service provider and add Entra as an upstream
-  identity provider with alias `entra`.
-- Give the SAML service provider a team-unique entity ID so multiple workshop teams can
-  share one Entra tenant.
-- Assign only the workshop test users or group to the enterprise application.
-- Map the user attributes needed by the frontend.
-- Redeploy the same `iac/app.bicep` with this target's Keycloak client secret.
-- Forward Keycloak and the frontend, then complete an Entra-backed sign-in.
-
-The localhost SAML and OIDC URLs are acceptable only for this port-forwarded workshop.
-Document the stable HTTPS hostnames and certificate ownership a production deployment
-would require.
-
-### Task 4: Compare evidence and troubleshoot by layer
+### Task 3: Compare the two sign-in paths
 
 For both targets, capture non-secret evidence of:
 
@@ -172,7 +146,9 @@ For both targets, capture non-secret evidence of:
 - The Radius application graph and frontend OIDC environment-variable names.
 - Successful login through the intended user authority.
 
-Create a layered diagnostic checklist covering:
+Explain what changed (the user source and target-specific broker settings) and what did
+not (the frontend OIDC contract, client ID, and redirect URI). If sign-in fails, check
+the relevant layer in order:
 
 1. Local port-forward and browser reachability.
 2. OIDC client, redirect URI, and secret alignment.
@@ -190,6 +166,8 @@ Create a layered diagnostic checklist covering:
 - AKS login succeeds with an assigned Microsoft Entra user brokered through Keycloak.
 - Client secrets and user passwords differ per target, remain out of source and
   evidence, and are cleared from plaintext variables.
+- Secret deployment parameters are passed by a protected temporary file that is removed
+  on success or failure.
 - The team can explain why Keycloak changes upstream providers without changing the
   frontend's OIDC protocol.
 - The team can distinguish user authentication from Radius control-plane identity and

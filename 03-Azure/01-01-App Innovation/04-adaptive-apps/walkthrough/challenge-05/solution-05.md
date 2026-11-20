@@ -293,43 +293,13 @@ cat >"${DOCKER_CONFIG}/config.json" <<EOF
 EOF
 ```
 
-Publish the teaching recipe and both workshop-owned PostgreSQL recipes. The PostgreSQL
-recipes compile the same `iac/recipes/trading-schema.sql` into each implementation and
-use immutable workshop tags rather than the external `latest` recipes. Version `1.0.8`
-retains the Azure PostgreSQL naming correction and maps size `L` to General Purpose
-`Standard_D4ds_v5` (4 vCores, 16 GiB RAM), as requested by the default application.
-PostgreSQL remains version 16 with 32 GiB storage. In K3s, the same portable size `L`
-selects a 2 GiB memory limit rather than Azure compute. Do not republish changed source over
-`1.0.6` or another existing tag; publish a new version instead.
+Publish only the Azure SQL teaching recipe in this stage. Do not republish changed
+source over an existing tag; publish a new version instead.
 
 ```bash
 rad bicep publish \
   --file iac/recipes/sql-server.bicep \
   --target "br:${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.8"
-
-rad bicep publish \
-  --file iac/recipes/postgres-azure-flex.bicep \
-  --target "br:${ACR_NAME}.azurecr.io/recipes/postgres-azure-flex:1.0.8"
-
-rad bicep publish \
-  --file iac/recipes/postgres-kubernetes.bicep \
-  --target "br:${ACR_NAME}.azurecr.io/recipes/postgres-kubernetes:1.0.8"
-```
-
-**PowerShell 7:**
-
-```powershell
-rad bicep publish `
-    --file iac/recipes/sql-server.bicep `
-    --target "br:$env:ACR_NAME.azurecr.io/recipes/sql-server:1.0.8"
-
-rad bicep publish `
-    --file iac/recipes/postgres-azure-flex.bicep `
-    --target "br:$env:ACR_NAME.azurecr.io/recipes/postgres-azure-flex:1.0.8"
-
-rad bicep publish `
-    --file iac/recipes/postgres-kubernetes.bicep `
-    --target "br:$env:ACR_NAME.azurecr.io/recipes/postgres-kubernetes:1.0.8"
 ```
 
 Register the Azure SQL teaching recipe:
@@ -348,18 +318,77 @@ Verify:
 rad recipe list --environment env-azure-prod
 ```
 
-## Manual tutorial, Stage 3: Register the complete AKS recipe set
+<a id="manual-tutorial-stage-3-register-the-complete-aks-recipe-set"></a>
+
+## Manual tutorial, Stage 3: Publish and register the complete AKS recipe set
+
+Publish the workshop-owned Azure PostgreSQL, Event Grid MQTT, and workload-identity
+recipes to the ACR configured in Stage 2. Stage 2 remains focused on Azure SQL.
+The PostgreSQL recipe compiles `iac/recipes/trading-schema.sql` into the implementation
+and uses a pinned workshop tag rather than the external `latest` recipe. Version `1.0.8` retains the Azure
+PostgreSQL naming correction and maps size `L` to General Purpose `Standard_D4ds_v5`
+(4 vCores, 16 GiB RAM), as requested by the default application. PostgreSQL remains
+version 16 with 32 GiB storage. Do not republish changed source over `1.0.6` or another
+existing tag; publish a new version instead.
+
+```bash
+rad bicep publish \
+  --file iac/recipes/postgres-azure-flex.bicep \
+  --target "br:${ACR_NAME}.azurecr.io/recipes/postgres-azure-flex:1.0.8"
+
+rad bicep publish \
+  --file iac/recipes/event-grid-mqtt-azure.bicep \
+  --target "br:${ACR_NAME}.azurecr.io/recipes/event-grid-mqtt-azure:1.0.9"
+
+rad bicep publish \
+  --file iac/recipes/workload-identity-azure.bicep \
+  --target "br:${ACR_NAME}.azurecr.io/recipes/workload-identity-azure:1.0.8"
+```
+
+Event Grid uses version `1.0.9` because its recipe now accepts the namespace name
+supplied by the environment. Do not overwrite an already published `1.0.8` artifact.
+The remaining AKS recipes already reference published GHCR templates and do not need
+republishing. Deploy the environment definition below to register the complete set,
+including the Azure SQL teaching recipe published and registered in Stage 2.
 
 The AKS environment definition registers Azure-backed implementations and the custom
 SQL recipe. PostgreSQL public access is restricted to the cluster's exact effective
 outbound IPs. The commands reject unsupported outbound types, public IP prefixes, and
 non-static IP resources rather than widening the database firewall.
 
+The environment supplies the same Event Grid namespace name to the broker and identity
+recipes. `iac/app.bicep` deploys the broker before either identity, so the `orders` topic
+space exists before role assignments and permission bindings are created. The identity
+recipe receives the AKS OIDC issuer and binds the application's service account
+(`default` unless overridden). This workshop uses one Trading broker per environment.
+The Radius Azure provisioning identity must be allowed to create managed identities,
+federated credentials, and role assignments; resource Contributor alone cannot create
+role assignments.
+
 ```bash
 export ISTIO_REVISION="$(kubectl get deployment \
   --namespace aks-istio-system \
   --selector app=istiod \
   --output jsonpath='{.items[0].metadata.labels.istio\.io/rev}')"
+
+AKS_OIDC_ISSUER="$(az aks show \
+  --resource-group "$RESOURCE_GROUP" \
+  --name aks-adaptive-apps \
+  --query oidcIssuerProfile.issuerUrl \
+  --output tsv | tr -d '\r')"
+[[ "$AKS_OIDC_ISSUER" == https://* ]] || {
+  echo "AKS OIDC issuer is missing. Complete Challenge 02 or contact your lab coach." >&2
+  exit 1
+}
+WORKLOAD_IDENTITY_ENABLED="$(az aks show \
+  --resource-group "$RESOURCE_GROUP" \
+  --name aks-adaptive-apps \
+  --query securityProfile.workloadIdentity.enabled \
+  --output tsv | tr -d '\r')"
+[[ "${WORKLOAD_IDENTITY_ENABLED,,}" == "true" ]] || {
+  echo "AKS workload identity is disabled. Complete Challenge 02 or contact your lab coach." >&2
+  exit 1
+}
 
 OUTBOUND_TYPE="$(az aks show \
   --resource-group "$RESOURCE_GROUP" \
@@ -419,67 +448,17 @@ rad deploy iac/aks-env.bicep \
   --parameters azureResourceGroup="$RESOURCE_GROUP" \
   --parameters istioRevision="$ISTIO_REVISION" \
   --parameters postgresRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/postgres-azure-flex:1.0.8" \
+  --parameters mqttRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/event-grid-mqtt-azure:1.0.9" \
+  --parameters workloadIdentityRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/workload-identity-azure:1.0.8" \
+  --parameters oidcIssuer="$AKS_OIDC_ISSUER" \
   --parameters aksEgressIps="$AKS_EGRESS_IPS" \
   --parameters sqlDatabasesRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/sql-server:1.0.8"
-```
-
-**PowerShell 7:**
-
-```powershell
-$IstioRevision = kubectl get deployment `
-    --namespace aks-istio-system `
-    --selector app=istiod `
-    --output jsonpath='{.items[0].metadata.labels.istio\.io/rev}'
-$Cluster = az aks show `
-    --resource-group $env:RESOURCE_GROUP `
-    --name aks-adaptive-apps | ConvertFrom-Json
-
-switch ($Cluster.networkProfile.outboundType) {
-    "loadBalancer" {
-        $OutboundIds = @($Cluster.networkProfile.loadBalancerProfile.effectiveOutboundIPs.id)
-    }
-    { $_ -in "managedNATGateway", "userAssignedNATGateway" } {
-        $OutboundIds = @($Cluster.networkProfile.natGatewayProfile.effectiveOutboundIPs.id)
-    }
-    default {
-        throw "Unsupported AKS outbound type: $($Cluster.networkProfile.outboundType)"
-    }
-}
-if ($OutboundIds.Count -eq 0) {
-    throw "AKS has no effective outbound public IPs."
-}
-
-$EgressIps = foreach ($OutboundId in $OutboundIds) {
-    if ($OutboundId -notmatch "/providers/Microsoft.Network/publicIPAddresses/") {
-        throw "Only exact public IP resources are supported: $OutboundId"
-    }
-    $PublicIp = az network public-ip show --ids $OutboundId | ConvertFrom-Json
-    if ($PublicIp.publicIPAllocationMethod -ne "Static" -or
-        $PublicIp.sku.name -ne "Standard" -or
-        -not $PublicIp.ipAddress) {
-        throw "AKS egress IP must be Standard and static: $OutboundId"
-    }
-    $PublicIp.ipAddress
-}
-
-rad deploy iac/aks-env.bicep `
-    --workspace ws-azure-prod `
-    --group rg-trading `
-    --environment env-azure-prod `
-    --parameters environmentName=env-azure-prod `
-    --parameters namespace=env-azure-prod `
-    --parameters azureSubscriptionId=$env:AZURE_SUBSCRIPTION `
-    --parameters azureResourceGroup=$env:RESOURCE_GROUP `
-    --parameters istioRevision=$IstioRevision `
-    --parameters "postgresRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/postgres-azure-flex:1.0.8" `
-    --parameters "aksEgressIps=$($EgressIps -join ',')" `
-    --parameters "sqlDatabasesRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/sql-server:1.0.8"
 ```
 
 | Resource type | AKS/Azure backend |
 | --- | --- |
 | `postgreSqlDatabases` | Azure Database for PostgreSQL Flexible Server |
-| `mqttBrokers` | In-cluster Eclipse Mosquitto |
+| `mqttBrokers` | Azure Event Grid MQTT |
 | `idProviders` | In-cluster Keycloak |
 | `workloadIdentities` | AKS workload identity |
 | `aiModels` | Azure OpenAI |
@@ -488,14 +467,37 @@ rad deploy iac/aks-env.bicep `
 | `sqlDatabases` | Custom Azure SQL recipe |
 
 > [!NOTE]
-> `mqttBrokers` maps to in-cluster Mosquitto on AKS as well as K3s. The Event Grid recipe
-> exists and provisions correctly, but the published application sends its Entra token as
-> an MQTT CONNECT password, while Event Grid requires MQTT v5 enhanced authentication.
-> Selecting it therefore crash-loops the backend. Challenge 06 explains this in
-> [Why AKS uses Mosquitto for `mqttBrokers`](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/walkthrough/challenge-06/solution-06.md#why-aks-uses-mosquitto-for-mqttbrokers),
-> including the `mqttRecipeTemplatePath` override that restores the Event Grid recipe.
+> AKS uses Event Grid; K3s continues to use Mosquitto. Use an application image containing
+> [microsoft/adaptive-apps#46](https://github.com/microsoft/adaptive-apps/pull/46), which
+> adds MQTT v5 enhanced authentication, token renewal, and reconnect handling to the backend.
+> Backend order processing is supported, but the browser's unauthenticated MQTT client
+> does not support live streaming through Event Grid. Recipe registration does not
+> deploy the application or prove token acquisition. In Challenge 06, verify the actual
+> pod service accounts match the federated credentials, the projected token is mounted,
+> and the backend logs a successful CONNECT and SUBSCRIBE. `iac/app.bicep` explicitly
+> projects a service-account token with audience `api://AzureADTokenExchange` and sets
+> `AZURE_FEDERATED_TOKEN_FILE`; no manual service-account annotation is needed.
+> If the pods use different accounts, pass `serviceAccountOverrides` to the environment
+> deployment, for example
+> `--parameters 'serviceAccountOverrides={"backend-identity":"backend","frontend-identity":"frontend"}'`,
+> using the actual account names rather than copying the example blindly.
+> Custom accounts must already exist in `env-azure-prod`; the default account is created
+> automatically with the namespace.
 
-## Manual tutorial, Stage 4: Register the complete K3s recipe set
+<a id="manual-tutorial-stage-4-register-the-complete-k3s-recipe-set"></a>
+
+## Manual tutorial, Stage 4: Publish and register the complete K3s recipe set
+
+Publish the workshop-owned Kubernetes PostgreSQL recipe to the same ACR. It compiles
+the same `iac/recipes/trading-schema.sql` as the Azure implementation. The portable
+size `L` selects a 2 GiB memory limit in K3s rather than Azure compute. Use the pinned
+workshop tag and publish a new version if the source changes.
+
+```bash
+rad bicep publish \
+  --file iac/recipes/postgres-kubernetes.bicep \
+  --target "br:${ACR_NAME}.azurecr.io/recipes/postgres-kubernetes:1.0.8"
+```
 
 Switch both kube context and Radius workspace:
 
@@ -519,18 +521,6 @@ rad deploy iac/local-env.bicep \
   --parameters environmentName=env-local-prod \
   --parameters namespace=env-local-prod \
   --parameters postgresRecipeTemplatePath="${ACR_NAME}.azurecr.io/recipes/postgres-kubernetes:1.0.8"
-```
-
-**PowerShell 7:**
-
-```powershell
-rad deploy iac/local-env.bicep `
-    --workspace ws-local-prod `
-    --group rg-trading `
-    --environment env-local-prod `
-    --parameters environmentName=env-local-prod `
-    --parameters namespace=env-local-prod `
-    --parameters "postgresRecipeTemplatePath=$env:ACR_NAME.azurecr.io/recipes/postgres-kubernetes:1.0.8"
 ```
 
 | Resource type | K3s/local backend |
@@ -559,12 +549,6 @@ the corrected recipe registrations are not mutable `latest` references.
 bash resources/validate-postgres-recipes.sh
 ```
 
-**PowerShell 7:**
-
-```powershell
-bash resources/validate-postgres-recipes.sh
-```
-
 AKS:
 
 ```bash
@@ -572,6 +556,11 @@ unset KUBECONFIG
 kubectl config use-context aks-adaptive-apps
 rad workspace switch ws-azure-prod
 rad recipe list --environment env-azure-prod
+bash resources/verify-recipes.sh ws-azure-prod env-azure-prod \
+  Radius.Resources/postgreSqlDatabases Radius.Resources/mqttBrokers \
+  Radius.Resources/idProviders Radius.Resources/workloadIdentities \
+  Radius.Resources/aiModels Radius.Resources/governance \
+  Radius.Resources/agentGuardrails Radius.Resources/sqlDatabases
 ```
 
 K3s:
@@ -581,7 +570,19 @@ export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
 kubectl config use-context k3s-azure-vm
 rad workspace switch ws-local-prod
 rad recipe list --environment env-local-prod
+bash resources/verify-recipes.sh ws-local-prod env-local-prod \
+  Radius.Resources/postgreSqlDatabases Radius.Resources/mqttBrokers \
+  Radius.Resources/idProviders Radius.Resources/workloadIdentities \
+  Radius.Resources/aiModels Radius.Resources/governance \
+  Radius.Resources/agentGuardrails
 ```
+
+The checks compare the expected registrations with the available recipes: **eight
+for AKS**, including SQL, and **seven for K3s**. Each missing or unusable `default`
+Bicep recipe is named in a `WARNING`, and the check exits with a nonzero status if
+any are missing. Additional recipes are allowed. An all-present message confirms
+the expected set is registered; this does not deploy the recipes or prove their
+registry artifacts can be pulled. Re-register the reported recipes before continuing.
 
 For either active platform:
 
@@ -610,11 +611,12 @@ bash resources/configure-recipes.sh aks
 bash resources/configure-recipes.sh k3s
 ```
 
-The script creates or reuses ACR, publishes the custom SQL recipe for AKS, deploys the
-two corrected PostgreSQL recipes plus the custom SQL recipe, deploys the appropriate
+The script creates or reuses ACR, publishes the SQL and corrected PostgreSQL recipes
+plus the Event Grid and workload-identity recipes for AKS, deploys the appropriate
 environment definition, and verifies the registered recipes. It uses
 `WORKSHOP_RECIPE_VERSION=1.0.8` by default and reuses an existing version tag instead of
-overwriting it. `k3s` also needs `AZURE_SUBSCRIPTION`, `RESOURCE_GROUP`, and `ACR_NAME`
+overwriting it. The updated Event Grid recipe uses `EVENT_GRID_RECIPE_VERSION=1.0.9`.
+`k3s` also needs `AZURE_SUBSCRIPTION`, `RESOURCE_GROUP`, and `ACR_NAME`
 because it publishes the pinned workshop recipe before registration when needed.
 
 ### Troubleshooting: Kubernetes resources created by a recipe

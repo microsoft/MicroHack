@@ -27,6 +27,7 @@ K3S_NSG_NAME="${K3S_NSG_NAME:-nsg-adaptive-apps-k3s}"
 K3S_NIC_NAME="${K3S_NIC_NAME:-nic-adaptive-apps-k3s}"
 K3S_VM_NAME="${K3S_VM_NAME:-vm-adaptive-apps-k3s}"
 K3S_VM_SIZE="${K3S_VM_SIZE:-Standard_D4s_v5}"
+K3S_VERSION="${K3S_VERSION:-v1.33.13+k3s1}"
 # Four-vCPU, 16 GiB x64 sizes in decreasing order of preference. Regions and
 # subscriptions differ in what they offer, so the script falls back automatically.
 # These are Azure VM sizes: an arm64 workstation still provisions an x64 Azure VM,
@@ -71,6 +72,10 @@ Required for provision/connect:
   AZURE_SUBSCRIPTION   Target Azure subscription ID.
   RESOURCE_GROUP       Lab Azure resource group.
 
+Provision pins K3s to v1.33.13+k3s1 by default. K3S_VERSION can select another
+explicit release. An existing installation must match; no automatic version
+changes are performed.
+
 For status/disconnect of a running tunnel, retain the same RESOURCE_GROUP so its
 process identity can be verified. These modes do not require Azure authentication.
 
@@ -92,6 +97,11 @@ case "$MODE" in
     exit 2
     ;;
 esac
+
+if [[ "$MODE" == "provision" && ! "$K3S_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+\+k3s[0-9]+$ ]]; then
+  echo "K3S_VERSION must be an exact release such as v1.33.13+k3s1." >&2
+  exit 2
+fi
 
 is_integer() {
   [[ "$1" =~ ^[0-9]+$ ]]
@@ -958,6 +968,16 @@ K3S_INSTALL_RESPONSE="$(az vm run-command invoke \
   --command-id RunShellScript \
   --scripts "
 set -eu
+required_version='${K3S_VERSION}'
+if command -v k3s >/dev/null 2>&1; then
+  installed_version=\"\$(k3s --version)\"
+  installed_version=\"\${installed_version#k3s version }\"
+  installed_version=\"\${installed_version%% *}\"
+  if [ \"\$installed_version\" != \"\$required_version\" ]; then
+    printf 'K3S_VERSION_MISMATCH: Existing K3s version %s does not match required %s. Automatic version changes are not supported. Use a fresh lab VM.\n' \"\$installed_version\" \"\$required_version\" >&2
+    exit 1
+  fi
+fi
 install -d -m 0755 /etc/rancher/k3s
 cat >/etc/rancher/k3s/config.yaml <<EOF
 tls-san:
@@ -976,7 +996,7 @@ else
     exit 1
   fi
   curl -sfL https://get.k3s.io --output /tmp/install-k3s.sh
-  sh /tmp/install-k3s.sh
+  INSTALL_K3S_VERSION=\"\$required_version\" sh /tmp/install-k3s.sh
   rm -f /tmp/install-k3s.sh
 fi
 systemctl is-active --quiet k3s
@@ -984,6 +1004,11 @@ printf 'K3S_INSTALL_OK\n'
 " \
   --output json)"
 readonly K3S_INSTALL_RESPONSE
+K3S_VERSION_ERROR="$(jq -r '.value[]?.message // empty | split("\n")[] | select(startswith("K3S_VERSION_MISMATCH:"))' <<<"$K3S_INSTALL_RESPONSE")"
+if [[ -n "$K3S_VERSION_ERROR" ]]; then
+  printf '%s\n' "$K3S_VERSION_ERROR" >&2
+  exit 1
+fi
 if jq -r '.value[]?.message // empty' <<<"$K3S_INSTALL_RESPONSE" |
   grep -qx 'K3S_NO_OUTBOUND'; then
   echo "The K3s VM has no outbound internet access, so the installer could not be downloaded." >&2

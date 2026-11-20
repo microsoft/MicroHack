@@ -207,26 +207,43 @@ for pattern in '*.bicep' '*.sql'; do
   }
 done
 
-# Azure Event Grid accepts a Microsoft Entra JWT only through the MQTT v5 enhanced
-# authentication fields (Authentication Method 'OAUTH2-JWT' plus Authentication Data). The
-# workshop application instead sends the token as a CONNECT password, so Event Grid rejects
-# every connection, the MQTT background service throws, and .NET's default
-# BackgroundServiceExceptionBehavior.StopHost crash-loops the whole backend. Until the
-# application supports enhanced authentication, the AKS environment must not select the
-# Event Grid recipe as the default mqttBrokers implementation.
+# The updated application supports Event Grid enhanced authentication. The broker and
+# workload identities must use the same namespace, and identities must follow the broker.
 AKS_ENVIRONMENT_TEMPLATE="${ROOT_DIR}/iac/aks-env.bicep"
 [[ -f "$AKS_ENVIRONMENT_TEMPLATE" ]] || {
   echo "Missing AKS environment template: $AKS_ENVIRONMENT_TEMPLATE" >&2
   exit 1
 }
-if grep -v '^[[:space:]]*//' "$AKS_ENVIRONMENT_TEMPLATE" | grep -Fq 'mqtt-azure-event-grid'; then
-  echo "aks-env.bicep must not default Radius.Resources/mqttBrokers to the Event Grid recipe; the application cannot authenticate to it." >&2
-  exit 1
-fi
-grep -Fq "'\${recipeRegistry}/mqtt:latest'" "$AKS_ENVIRONMENT_TEMPLATE" || {
-  echo "aks-env.bicep must fall back to the in-cluster Mosquitto recipe for Radius.Resources/mqttBrokers." >&2
-  exit 1
-}
+for mapping in 'templatePath: mqttRecipeTemplatePath' \
+  'templatePath: workloadIdentityRecipeTemplatePath' \
+  'namespaceName: eventGridNamespaceName' \
+  'eventGridNamespaceName: eventGridNamespaceName' \
+  'oidcIssuer: oidcIssuer' \
+  'serviceAccountOverrides: serviceAccountOverrides'; do
+  grep -Fq "$mapping" "$AKS_ENVIRONMENT_TEMPLATE" || {
+    echo "aks-env.bicep is missing Event Grid/identity wiring: $mapping" >&2
+    exit 1
+  }
+done
+for identity in backendIdentity frontendIdentity; do
+  grep -A5 -F "resource ${identity} " "$APP_TEMPLATE" | grep -Fq 'tradingMqtt' || {
+    echo "${identity} must wait for the Event Grid broker before creating permissions." >&2
+    exit 1
+  }
+  grep -Fq "serviceAccountName: ${identity}.properties.boundServiceAccountName" "$APP_TEMPLATE" || {
+    echo "${identity} must bind the pod to the service account used by its federated credential." >&2
+    exit 1
+  }
+done
+for token_setting in "audience: 'api://AzureADTokenExchange'" \
+  "AZURE_FEDERATED_TOKEN_FILE:" \
+  "expirationSeconds: 3600" \
+  "mountPath: federatedTokenPath"; do
+  grep -Fq "$token_setting" "$APP_TEMPLATE" || {
+    echo "app.bicep is missing projected workload-identity token wiring: $token_setting" >&2
+    exit 1
+  }
+done
 
 # The workloadIdentities recipe already returns the correct tenant, so the shared application
 # template must consume it rather than the optional override parameter. Wiring AZURE_TENANT_ID

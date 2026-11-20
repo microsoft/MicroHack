@@ -12,7 +12,7 @@ Console supplies infrastructure only. Validate/explore 02 without reprovisioning
 then complete 03-05 to install Radius, create workspaces and abstractions (including
 `artifacts/types.tgz`), and publish/register recipes before this application exercise.
 Use the **Bash** examples and source `artifacts/console-env.sh` in each new
-terminal. Keep its discovered names; the PowerShell examples are the manual path.
+terminal. Keep its discovered names. All commands in this walkthrough use Bash.
 
 ### How we arrived here
 
@@ -36,7 +36,7 @@ terminal. Keep its discovered names; the PowerShell examples are the manual path
    | Portable contract | `env-azure-prod` on AKS/Azure | `env-local-prod` on K3s |
    | --- | --- | --- |
    | `Radius.Resources/postgreSqlDatabases` | Azure Database for PostgreSQL Flexible Server | In-cluster PostgreSQL |
-   | `Radius.Resources/mqttBrokers` | In-cluster Eclipse Mosquitto | In-cluster Eclipse Mosquitto |
+   | `Radius.Resources/mqttBrokers` | Azure Event Grid MQTT | In-cluster Eclipse Mosquitto |
    | `Radius.Resources/workloadIdentities` | Azure/AKS workload identity mapping | Local Kubernetes mapping/no-op implementation |
 
    Challenge 05 also prepared Keycloak, AI, governance, and agent-guardrail recipe
@@ -72,14 +72,11 @@ Do not provision per-workload managed identities or AI services here.
 
 Deployment parity is not runtime parity. On AKS, recipe execution creates Azure
 Database for PostgreSQL Flexible Server; on K3s it creates an in-cluster PostgreSQL
-workload. The `mqttBrokers` contract is the exception: both environments currently
-resolve it to in-cluster Mosquitto, because the published application image cannot
-authenticate to Azure Event Grid. Event Grid's MQTT broker accepts a Microsoft Entra
-token only through MQTT v5 *enhanced authentication*, and the application sends the
-token as an ordinary CONNECT password instead, so every connection is refused. The
-portable contract is unchanged and the swap is a recipe decision, which is exactly the
-seam Radius exists to provide. See
-[Why AKS uses Mosquitto for `mqttBrokers`](#why-aks-uses-mosquitto-for-mqttbrokers).
+workload. The `mqttBrokers` contract resolves to Azure Event Grid on AKS and Mosquitto
+on K3s. The updated backend supports Event Grid's MQTT v5 enhanced authentication.
+The portable contract is unchanged and the swap is a recipe decision, which is exactly
+the seam Radius exists to provide. See
+[Event Grid authentication and browser streaming](#event-grid-authentication-and-browser-streaming).
 
 ## Target discipline
 
@@ -141,23 +138,6 @@ if [[ ! -f artifacts/types.tgz ]]; then
 fi
 ```
 
-**PowerShell 7:**
-
-```powershell
-New-Item -ItemType Directory -Path artifacts -Force | Out-Null
-if (-not (Test-Path artifacts/types.tgz)) {
-    $TypesFile = Join-Path ([System.IO.Path]::GetTempPath()) "adaptive-apps-types.yaml"
-    Invoke-WebRequest `
-        -Uri "https://raw.githubusercontent.com/microsoft/adaptive-apps/885627980684e5bcc6fe4bbd2848c1ec247b0a0b/radius/resource-types/types.yaml" `
-        -OutFile $TypesFile
-    rad bicep publish-extension `
-        --from-file $TypesFile `
-        --target artifacts/types.tgz `
-        --force
-    Remove-Item $TypesFile -Force
-}
-```
-
 `iac/bicepconfig.json` maps the `radiusResources` extension to this generated archive.
 Do not commit `types.tgz`.
 
@@ -166,8 +146,6 @@ Do not commit `types.tgz`.
 ### 1. Restore and select the K3s target
 
 After every devcontainer restart, re-establish the tunnel before K3s commands.
-PowerShell also invokes the provisioning tool through Bash because that tool remains a
-Bash script.
 
 **Bash:**
 
@@ -186,28 +164,6 @@ test "$(rad workspace show --output json | jq -r '.connection.context')" = "k3s-
 rad env show env-local-prod
 ```
 
-**PowerShell 7:**
-
-```powershell
-$env:AZURE_SUBSCRIPTION = "<subscription-id>"
-bash resources/prepare-k3s-azure-vm.sh connect
-$env:KUBECONFIG = "$HOME/.kube/adaptive-apps-k3s.yaml"
-
-kubectl config use-context k3s-azure-vm
-rad workspace switch ws-local-prod
-rad group switch rg-trading
-rad env switch env-local-prod
-
-if ((kubectl config current-context) -ne "k3s-azure-vm") {
-    throw "Kubernetes target drift: expected k3s-azure-vm."
-}
-$Workspace = rad workspace show --output json | ConvertFrom-Json
-if ($Workspace.connection.context -ne "k3s-azure-vm") {
-    throw "Radius target drift: ws-local-prod must target k3s-azure-vm."
-}
-rad env show env-local-prod
-```
-
 ### 2. Verify the Challenge 05 handoff
 
 **Bash:**
@@ -218,16 +174,6 @@ rad recipe list \
   --workspace ws-local-prod \
   --group rg-trading \
   --environment env-local-prod
-```
-
-**PowerShell 7:**
-
-```powershell
-rad resource-type list
-rad recipe list `
-    --workspace ws-local-prod `
-    --group rg-trading `
-    --environment env-local-prod
 ```
 
 Confirm default recipes exist for:
@@ -259,29 +205,6 @@ rad deploy iac/app.bicep \
 unset AUTH_PASSWORD
 ```
 
-**PowerShell 7:**
-
-```powershell
-$SecurePassword = Read-Host "Frontend password" -AsSecureString
-$Credential = [System.Management.Automation.PSCredential]::new("admin", $SecurePassword)
-$PlainPassword = $Credential.GetNetworkCredential().Password
-try {
-    rad deploy iac/app.bicep `
-        --workspace ws-local-prod `
-        --group rg-trading `
-        --environment env-local-prod `
-        --parameters imageRegistry=ghcr.io/microsoft/adaptive-apps `
-        --parameters imageTag=latest `
-        --parameters authUsername=admin `
-        --parameters "authPassword=$PlainPassword"
-}
-finally {
-    $PlainPassword = $null
-    $Credential = $null
-    $SecurePassword = $null
-}
-```
-
 Do not save the password in a parameters file or command transcript.
 The CLI argument is briefly visible to local process inspection, so run the lab only
 on a trusted, single-user workstation or devcontainer host.
@@ -296,29 +219,14 @@ Radius stores the application Graph. resources and workload types. Let's check i
 rad app graph --application adaptive-apps
 rad resource list --application adaptive-apps
 
-ENV_NAMESPACE="$(rad env show env-local-prod --output json |
-  jq -r '.properties.compute.namespace')"
-APP_NAMESPACE="${ENV_NAMESPACE}-adaptive-apps"
-kubectl get namespace "$APP_NAMESPACE" >/dev/null 2>&1 ||
-  APP_NAMESPACE="$ENV_NAMESPACE"
-kubectl get pods --namespace "$APP_NAMESPACE"
+APP_NAMESPACE="$(bash resources/resolve-trading-namespace.sh ws-local-prod env-local-prod)" &&
+  export APP_NAMESPACE &&
+  kubectl get pods --namespace "$APP_NAMESPACE"
 ```
 
-**PowerShell 7:**
-
-```powershell
-rad app graph --application adaptive-apps
-rad resource list --application adaptive-apps
-
-$Environment = rad env show env-local-prod --output json | ConvertFrom-Json
-$EnvironmentNamespace = $Environment.properties.compute.namespace
-$AppNamespace = "$EnvironmentNamespace-adaptive-apps"
-kubectl get namespace $AppNamespace --no-headers *> $null
-if ($LASTEXITCODE -ne 0) {
-    $AppNamespace = $EnvironmentNamespace
-}
-kubectl get pods --namespace $AppNamespace
-```
+The resolver checks for the Trading schema initializer Job in both the application's
+usual suffixed namespace and the environment namespace. It returns neither a guess
+nor an ambiguous result. Stop if discovery fails; check the deployment and context.
 
 The local recipes should produce in-cluster PostgreSQL and Mosquitto resources. The
 local workload-identity recipe returns a compatible no-auth mapping.
@@ -334,15 +242,6 @@ rad resource expose Applications.Core/containers frontend \
   --application adaptive-apps \
   --port 3000 \
   --remote-port 3000
-```
-
-**PowerShell 7:**
-
-```powershell
-rad resource expose Applications.Core/containers frontend `
-    --application adaptive-apps `
-    --port 3000 `
-    --remote-port 3000
 ```
 
 Open <http://localhost:3000> and sign in with the prompted password. Press
@@ -369,25 +268,6 @@ test "$(rad workspace show --output json | jq -r '.connection.context')" = "aks-
 rad env show env-azure-prod
 ```
 
-**PowerShell 7:**
-
-```powershell
-Remove-Item Env:KUBECONFIG -ErrorAction SilentlyContinue
-kubectl config use-context aks-adaptive-apps
-rad workspace switch ws-azure-prod
-rad group switch rg-trading
-rad env switch env-azure-prod
-
-if ((kubectl config current-context) -ne "aks-adaptive-apps") {
-    throw "Kubernetes target drift: expected aks-adaptive-apps."
-}
-$Workspace = rad workspace show --output json | ConvertFrom-Json
-if ($Workspace.connection.context -ne "aks-adaptive-apps") {
-    throw "Radius target drift: ws-azure-prod must target aks-adaptive-apps."
-}
-rad env show env-azure-prod
-```
-
 ### 2. Reuse Azure credentials and recipes
 
 Challenge 03 registered federated Azure credentials for the AKS Radius control plane.
@@ -403,20 +283,9 @@ rad recipe list \
   --environment env-azure-prod
 ```
 
-**PowerShell 7:**
-
-```powershell
-rad credential show azure
-rad recipe list `
-    --workspace ws-azure-prod `
-    --group rg-trading `
-    --environment env-azure-prod
-```
-
 The required resource types are the same as K3s, but their recipes should map to Azure
-Database for PostgreSQL and AKS workload identity. `mqttBrokers` deliberately maps to
-the same in-cluster Mosquitto recipe on both platforms; see
-[Why AKS uses Mosquitto for `mqttBrokers`](#why-aks-uses-mosquitto-for-mqttbrokers).
+Database for PostgreSQL, Event Grid MQTT, and AKS workload identity. See
+[Event Grid authentication and browser streaming](#event-grid-authentication-and-browser-streaming).
 
 If the credential is missing, return to Challenge 03 and repeat its workload-identity
 registration. Do not fall back to a long-lived service-principal secret.
@@ -442,29 +311,6 @@ rad deploy iac/app.bicep \
 unset AUTH_PASSWORD
 ```
 
-**PowerShell 7:**
-
-```powershell
-$SecurePassword = Read-Host "Frontend password" -AsSecureString
-$Credential = [System.Management.Automation.PSCredential]::new("admin", $SecurePassword)
-$PlainPassword = $Credential.GetNetworkCredential().Password
-try {
-    rad deploy iac/app.bicep `
-        --workspace ws-azure-prod `
-        --group rg-trading `
-        --environment env-azure-prod `
-        --parameters imageRegistry=ghcr.io/microsoft/adaptive-apps `
-        --parameters imageTag=latest `
-        --parameters authUsername=admin `
-        --parameters "authPassword=$PlainPassword"
-}
-finally {
-    $PlainPassword = $null
-    $Credential = $null
-    $SecurePassword = $null
-}
-```
-
 Azure Database for PostgreSQL can take several minutes to provision.
 
 ### 4. Validate AKS, Radius, and Azure resources
@@ -479,42 +325,13 @@ az account set --subscription "$AZURE_SUBSCRIPTION"
 rad app graph --application adaptive-apps
 rad resource list --application adaptive-apps
 
-ENV_NAMESPACE="$(rad env show env-azure-prod --output json |
-  jq -r '.properties.compute.namespace')"
-APP_NAMESPACE="${ENV_NAMESPACE}-adaptive-apps"
-kubectl get namespace "$APP_NAMESPACE" >/dev/null 2>&1 ||
-  APP_NAMESPACE="$ENV_NAMESPACE"
-kubectl get pods --namespace "$APP_NAMESPACE"
+APP_NAMESPACE="$(bash resources/resolve-trading-namespace.sh ws-azure-prod env-azure-prod)" &&
+  export APP_NAMESPACE &&
+  kubectl get pods --namespace "$APP_NAMESPACE"
 
 az resource list \
   --resource-group "$RESOURCE_GROUP" \
   --output table
-```
-
-**PowerShell 7:**
-
-```powershell
-$env:AZURE_SUBSCRIPTION = "<subscription-id>"
-if (-not $env:RESOURCE_GROUP) {
-    $env:RESOURCE_GROUP = "<lab-resource-group>"
-}
-az account set --subscription $env:AZURE_SUBSCRIPTION
-
-rad app graph --application adaptive-apps
-rad resource list --application adaptive-apps
-
-$Environment = rad env show env-azure-prod --output json | ConvertFrom-Json
-$EnvironmentNamespace = $Environment.properties.compute.namespace
-$AppNamespace = "$EnvironmentNamespace-adaptive-apps"
-kubectl get namespace $AppNamespace --no-headers *> $null
-if ($LASTEXITCODE -ne 0) {
-    $AppNamespace = $EnvironmentNamespace
-}
-kubectl get pods --namespace $AppNamespace
-
-az resource list `
-    --resource-group $env:RESOURCE_GROUP `
-    --output table
 ```
 
 ### 5. Expose the AKS frontend
@@ -531,16 +348,7 @@ rad resource expose Applications.Core/containers frontend \
   --remote-port 3000
 ```
 
-**PowerShell 7:**
-
-```powershell
-rad resource expose Applications.Core/containers frontend `
-    --application adaptive-apps `
-    --port 3000 `
-    --remote-port 3000
-```
-
-Open <http://localhost:3000> and sign in with the credentials you passed to `rad deploy`:
+Open <http://localhost:3002> and sign in with the credentials you passed to `rad deploy`:
 the `authUsername` value (`admin`) and the `authPassword` you typed at the prompt. The
 frontend checks these itself; Challenge 07 replaces them with an OIDC identity provider.
 
@@ -562,19 +370,48 @@ them to whatever database the `postgreSqlDatabases` recipe resolved to. On AKS t
 managed Azure server outside the cluster, which is what makes step 6 worth running.
 
 A reachable frontend and a complete Radius graph are the core proof. Order and trade
-streaming works in both environments because the `mqttBrokers` recipe resolves to an
-in-cluster Mosquitto broker on AKS as well; see
-[Why AKS uses Mosquitto for `mqttBrokers`](#why-aks-uses-mosquitto-for-mqttbrokers) for
-the reason the Event Grid implementation is not selected.
+processing is supported in both environments. Event Grid on AKS requires a correctly
+bound workload identity and the updated backend image; browser live streaming is a
+separate limitation. See
+[Event Grid authentication and browser streaming](#event-grid-authentication-and-browser-streaming).
 
 ### 6. Prove database initialization and backend readiness
 
-For one combined Bash check on either platform, so run for both AKS and K3S, select the intended Kubernetes context (if lost set `APP_NAMESPACE` to the application's namespace), then run in both AKS and K3S context:
+Run this check for both AKS and K3s. Select the intended Kubernetes context and matching
+Radius workspace using the target-selection commands above. Rediscover and export
+`APP_NAMESPACE` each time you switch platforms; do not reuse the previous target's value.
+
+In the AKS context:
 
 ```bash
-bash resources/verify-trading-db.sh
+APP_NAMESPACE="$(bash resources/resolve-trading-namespace.sh ws-azure-prod env-azure-prod)" &&
+  export APP_NAMESPACE &&
+  bash resources/verify-trading-db.sh
 ```
-You will see the entered trading records per environment, they should differe and this step proof that the chain is working.
+
+In the K3s context:
+
+```bash
+APP_NAMESPACE="$(bash resources/resolve-trading-namespace.sh ws-local-prod env-local-prod)" &&
+  export APP_NAMESPACE &&
+  bash resources/verify-trading-db.sh
+```
+
+Discovery selects a namespace only when exactly one candidate contains the Trading
+initializer Job. Usually these are `env-azure-prod-adaptive-apps` and
+`env-local-prod-adaptive-apps`; deployments directly in `env-azure-prod` or
+`env-local-prod` are also supported. If both candidates match, inspect the Jobs and
+explicitly export the intended namespace before running `verify-trading-db.sh`.
+
+If verification reports `No trading-db schema initializer Job found`, it lists
+matching Jobs in other namespaces of the current Kubernetes context and suggests
+the corrected `export APP_NAMESPACE=...` command when there is one match. It stops
+without switching namespaces or contexts. Multiple matches require your selection;
+no matches may mean initialization was not deployed. Cross-namespace permission
+failures are reported explicitly.
+
+You will see the trading records entered in each environment. They differ only if
+you placed different orders; identical records alone do not indicate a failure.
 
 The first query lists `accounts`, `orders`, `positions`, and `trades`. The second returns
 one row per order you placed in step 5:
@@ -633,42 +470,12 @@ rad resource list --application adaptive-apps
 rad recipe list --environment env-local-prod
 ```
 
-**PowerShell 7:**
-
-```powershell
-$env:AZURE_SUBSCRIPTION = "<subscription-id>"
-bash resources/prepare-k3s-azure-vm.sh connect
-$env:KUBECONFIG = "$HOME/.kube/adaptive-apps-k3s.yaml"
-kubectl config use-context k3s-azure-vm
-rad workspace switch ws-local-prod
-rad group switch rg-trading
-rad env switch env-local-prod
-
-rad app graph --application adaptive-apps
-rad resource list --application adaptive-apps
-rad recipe list --environment env-local-prod
-```
-
 ### AKS evidence
 
 **Bash:**
 
 ```bash
 unset KUBECONFIG
-kubectl config use-context aks-adaptive-apps
-rad workspace switch ws-azure-prod
-rad group switch rg-trading
-rad env switch env-azure-prod
-
-rad app graph --application adaptive-apps
-rad resource list --application adaptive-apps
-rad recipe list --environment env-azure-prod
-```
-
-**PowerShell 7:**
-
-```powershell
-Remove-Item Env:KUBECONFIG -ErrorAction SilentlyContinue
 kubectl config use-context aks-adaptive-apps
 rad workspace switch ws-azure-prod
 rad group switch rg-trading
@@ -688,7 +495,7 @@ rad recipe list --environment env-azure-prod
 | Database contract | `postgreSqlDatabases` | `postgreSqlDatabases` |
 | Database implementation | In-cluster PostgreSQL | Azure Database for PostgreSQL |
 | MQTT contract | `mqttBrokers` | `mqttBrokers` |
-| MQTT implementation | In-cluster Mosquitto | In-cluster Mosquitto |
+| MQTT implementation | In-cluster Mosquitto | Azure Event Grid MQTT |
 | Workload identity | Local no-op mapping | Azure workload-identity mapping |
 | AI | Disabled | Disabled |
 | Access path | Port-forward over Bastion API tunnel | Port-forward to AKS API |
@@ -831,81 +638,49 @@ bash resources/prepare-k3s-azure-vm.sh connect
 export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
 ```
 
-In PowerShell, set `$env:AZURE_SUBSCRIPTION`, invoke the same script through `bash`, and
-set `$env:KUBECONFIG`.
-
 ### The generated extension is missing
 
 Repeat Stage 1's `rad bicep publish-extension` command. The archive is generated and is
 not committed.
 
-### Why AKS uses Mosquitto for `mqttBrokers`
+<a id="why-aks-uses-mosquitto-for-mqttbrokers"></a>
 
-The AKS environment registers the in-cluster Eclipse Mosquitto recipe for
-`Radius.Resources/mqttBrokers`, the same implementation K3s uses. This is deliberate.
+### Event Grid authentication and browser streaming
 
-Azure Event Grid's MQTT broker accepts a Microsoft Entra token only through MQTT v5
-*enhanced authentication*: the CONNECT packet must carry `Authentication Method`
-`OAUTH2-JWT` and put the bearer token in `Authentication Data`. The published Trading
-backend instead passes the token as an ordinary CONNECT *password*, which Event Grid
-never inspects. No amount of platform work fixes that from the outside — a user-assigned
-managed identity, federated credentials, topic spaces, permission bindings, and Event
-Grid data-plane role assignments would all be correct and the broker would still refuse
-the connection.
+Challenge 05 registers Azure Event Grid MQTT on AKS and Mosquitto on K3s. Use a backend
+image containing
+[microsoft/adaptive-apps#46](https://github.com/microsoft/adaptive-apps/pull/46).
+That update sends the Entra token through MQTT v5 enhanced authentication
+(`OAUTH2-JWT` and Authentication Data), derives the client identifier from the token's
+`oid` claim, renews tokens, and reconnects without terminating the HTTP API.
 
-This is tracked upstream as
-[microsoft/adaptive-apps#44](https://github.com/microsoft/adaptive-apps/issues/44).
+The Event Grid and workload-identity recipes share the same namespace configured by
+the environment. The application deploys the broker before identities so its `orders`
+topic space exists when publish/subscribe permissions are created. Verify the pod's
+service account matches its federated credential and that `iac/app.bicep` projects
+the `api://AzureADTokenExchange` token at `AZURE_FEDERATED_TOKEN_FILE`.
+A missing token, an incorrect subject,
+or missing TopicSpaces roles still prevents messaging, even if the HTTP API is healthy.
 
-The failure is not graceful. `MqttOrderListener` calls `SubscribeAsync` on an
-unconnected client, which throws `MqttClientNotConnectedException`. .NET's default
-`BackgroundServiceExceptionBehavior.StopHost` then stops the host, so the backend
-container crash-loops, never becomes Ready, and `rad deploy` fails before the `frontend`
-container is created:
-
-```text
-"code": "Internal",
-"message": "Container state is 'Waiting' Reason: CrashLoopBackOff, ..."
-```
-
-The in-cluster recipe returns `authMethod: 'none'`, so the application skips the token
-branch entirely and connects over plain MQTT inside the cluster.
-
-Changing the recipe is not sufficient on its own. `iac/app.bicep` originally read
-`MQTT_AUTH_METHOD` and `MQTT_TOKEN_AUDIENCE` from the *workload identity* resource, and
-the Azure workload-identity recipe hard-codes `authMethod: 'OAUTH2-JWT'`. The
-application therefore attempted token authentication no matter which broker recipe the
-environment registered. Both variables now come from the broker, which is what the
-`mqttBrokers` resource type documents:
-
-```bicep
-MQTT_AUTH_METHOD: {
-  value: tradingMqtt.properties.authMethod
-}
-MQTT_TOKEN_AUDIENCE: {
-  value: tradingMqtt.properties.tokenAudience
-}
-```
-
-This is a correction, not a platform branch: the expression is identical in both
-environments and each recipe supplies its own answer. K3s is unaffected, because its
-no-op identity recipe already reported `none`.
-
-This is the portability boundary working as designed. `iac/app.bicep` still requests the
-portable `mqttBrokers` contract and names no broker; only the platform team's recipe
-registration in `iac/aks-env.bicep` differs. To restore the Event Grid implementation
-once the application supports enhanced authentication, pass the override rather than
-editing the environment template:
+Inspect the actual accounts and MQTT results after deployment:
 
 ```bash
-rad deploy iac/aks-env.bicep \
-  --workspace ws-azure-prod \
-  --group rg-trading \
-  --parameters mqttRecipeTemplatePath=ghcr.io/microsoft/adaptive-apps/recipes/mqtt-azure-event-grid:latest
+kubectl get deployment backend frontend --namespace "$APP_NAMESPACE" \
+  --output custom-columns=NAME:.metadata.name,SERVICEACCOUNT:.spec.template.spec.serviceAccountName
+kubectl logs deployment/backend --namespace "$APP_NAMESPACE" --tail=100
 ```
 
-The browser-side MQTT-over-WebSocket connection from the frontend is a separate,
-pre-existing gap: the in-cluster broker is not exposed outside the cluster, so live
-streaming in the browser still depends on the backend's REST endpoints.
+Look for a successful MQTT CONNECT and subscription, not just a Ready pod. If the
+accounts differ from the identity recipe's inputs, reapply Challenge 05's complete
+environment deployment with `serviceAccountOverrides` set to the actual names.
+
+`MQTT_AUTH_METHOD` and `MQTT_TOKEN_AUDIENCE` come from the broker resource, so K3s
+continues to use the unauthenticated in-cluster Mosquitto path without an application
+platform branch.
+
+The browser MQTT-over-WebSocket client still connects without credentials and cannot
+live-stream through Event Grid. Use the REST API/UI for the core demonstration;
+browser live streaming requires a separate authenticated browser path or server relay.
 
 ### A second exposure cannot bind port 3000
 

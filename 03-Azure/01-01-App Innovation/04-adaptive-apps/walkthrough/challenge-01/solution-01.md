@@ -35,7 +35,7 @@ inside this container; the lab platforms run in Azure.
    **before creating the Codespace**. The default is 30 minutes; you can choose
    5-240 minutes, subject to organization policy. The setting applies to new
    Codespaces.
-2. Open the **repository home page**, [djong1/MicroHack](https://github.com/djong1/MicroHack),
+2. Open the **repository home page**, [microsoft/MicroHack](https://github.com/microsoft/MicroHack),
    while signed in to GitHub. Above the file list, select the green **Code**
    button, then the **Codespaces** tab. This is the repository's Code menu, not
    a menu inside VS Code.
@@ -44,7 +44,7 @@ inside this container; the lab platforms run in Azure.
 
    In the **top-right corner of the Codespaces tab**, select **...**, then **New
    with options**. Do not use the quick-create button: this repository has
-   multiple devcontainers, and you must choose the Adaptive Apps one.
+   multiple devcontainers, and you must choose **walkthrough/challenge-01/solution-01.md**
 
    <a href="https://docs.github.com/assets/images/help/codespaces/default-machine-type.png"><img src="https://docs.github.com/assets/images/help/codespaces/default-machine-type.png" alt="GitHub documentation example showing the Codespaces three-dot menu and New with options" width="420"></a>
 
@@ -53,8 +53,8 @@ inside this container; the lab platforms run in Azure.
    repository names and existing Codespaces may differ. If the **Codespaces**
    tab is missing, check that you are signed in. Alternatively, open
    [Create a codespace](https://github.com/codespaces/new), select
-   **djong1/MicroHack**, and continue with the options below.
-3. Select branch **djong1-challenge-3-connections**, devcontainer configuration
+   **microsoft/MicroHack**, and continue with the options below.
+3. Select branch **main**, devcontainer configuration
    **Azure / App Innovation / Adaptive Apps**, and a **2-core** machine, then
    **Create codespace**. The configuration file is
    [`.devcontainer/03-azure-01-01-app-innovation-04-adaptive-apps/devcontainer.json`](../../../../../.devcontainer/03-azure-01-01-app-innovation-04-adaptive-apps/devcontainer.json).
@@ -167,15 +167,16 @@ and forwarded identity URLs need organizer validation as described in
 ### Start the container
 
 ```bash
-git clone --branch djong1-challenge-3-connections https://github.com/djong1/MicroHack.git
+git clone --branch main https://github.com/microsoft/MicroHack.git
 cd MicroHack
 code .
 ```
 
 In VS Code:
 
-1. Confirm the Explorer root is the MicroHack repository.
-2. Run **Dev Containers: Reopen in Container**.
+1. Confirm the Explorer root is the MicroHack repository and make sure Docker or
+   WSL is running.
+2. Press **Ctrl+Shift+P** and select **Dev Containers: Reopen in Container**.
 3. Select `03-azure-01-01-app-innovation-04-adaptive-apps` from the available
    configurations.
 4. Wait for
@@ -241,7 +242,9 @@ The configuration deliberately does not:
 - Mount the host's `~/.azure`, `~/.kube`, `~/.rad`, or `~/.ssh`
 - Mount the host Docker socket
 
-### Windows Git worktrees
+<a id="windows-git-worktrees"></a>
+
+### Troubleshooting: Windows Git worktrees
 
 A Windows Git worktree stores a `.git` text pointer containing a Windows path such as
 `C:/.../.git/worktrees/...`. Linux cannot resolve that host path through the repository
@@ -287,6 +290,10 @@ used by the Radius control plane on AKS. Rebuilding the container preserves thos
 local workspace definitions.
 
 ### Kubeconfig, tunnel, and SSH-key behavior
+
+> **Challenge 02 only:** This step is only needed for Challenge 02. If you are using
+> the lab environment, skip this step and continue to
+> [Challenge 03](../challenge-03/solution-03.md).
 
 Challenge 02 writes:
 

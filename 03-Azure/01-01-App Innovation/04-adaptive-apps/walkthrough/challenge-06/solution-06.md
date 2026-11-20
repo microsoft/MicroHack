@@ -36,7 +36,7 @@ terminal. Keep its discovered names; the PowerShell examples are the manual path
    | Portable contract | `env-azure-prod` on AKS/Azure | `env-local-prod` on K3s |
    | --- | --- | --- |
    | `Radius.Resources/postgreSqlDatabases` | Azure Database for PostgreSQL Flexible Server | In-cluster PostgreSQL |
-   | `Radius.Resources/mqttBrokers` | In-cluster Eclipse Mosquitto | In-cluster Eclipse Mosquitto |
+   | `Radius.Resources/mqttBrokers` | Azure Event Grid MQTT | In-cluster Eclipse Mosquitto |
    | `Radius.Resources/workloadIdentities` | Azure/AKS workload identity mapping | Local Kubernetes mapping/no-op implementation |
 
    Challenge 05 also prepared Keycloak, AI, governance, and agent-guardrail recipe
@@ -72,14 +72,11 @@ Do not provision per-workload managed identities or AI services here.
 
 Deployment parity is not runtime parity. On AKS, recipe execution creates Azure
 Database for PostgreSQL Flexible Server; on K3s it creates an in-cluster PostgreSQL
-workload. The `mqttBrokers` contract is the exception: both environments currently
-resolve it to in-cluster Mosquitto, because the published application image cannot
-authenticate to Azure Event Grid. Event Grid's MQTT broker accepts a Microsoft Entra
-token only through MQTT v5 *enhanced authentication*, and the application sends the
-token as an ordinary CONNECT password instead, so every connection is refused. The
-portable contract is unchanged and the swap is a recipe decision, which is exactly the
-seam Radius exists to provide. See
-[Why AKS uses Mosquitto for `mqttBrokers`](#why-aks-uses-mosquitto-for-mqttbrokers).
+workload. The `mqttBrokers` contract resolves to Azure Event Grid on AKS and Mosquitto
+on K3s. The updated backend supports Event Grid's MQTT v5 enhanced authentication.
+The portable contract is unchanged and the swap is a recipe decision, which is exactly
+the seam Radius exists to provide. See
+[Event Grid authentication and browser streaming](#event-grid-authentication-and-browser-streaming).
 
 ## Target discipline
 
@@ -414,9 +411,8 @@ rad recipe list `
 ```
 
 The required resource types are the same as K3s, but their recipes should map to Azure
-Database for PostgreSQL and AKS workload identity. `mqttBrokers` deliberately maps to
-the same in-cluster Mosquitto recipe on both platforms; see
-[Why AKS uses Mosquitto for `mqttBrokers`](#why-aks-uses-mosquitto-for-mqttbrokers).
+Database for PostgreSQL, Event Grid MQTT, and AKS workload identity. See
+[Event Grid authentication and browser streaming](#event-grid-authentication-and-browser-streaming).
 
 If the credential is missing, return to Challenge 03 and repeat its workload-identity
 registration. Do not fall back to a long-lived service-principal secret.
@@ -562,10 +558,10 @@ them to whatever database the `postgreSqlDatabases` recipe resolved to. On AKS t
 managed Azure server outside the cluster, which is what makes step 6 worth running.
 
 A reachable frontend and a complete Radius graph are the core proof. Order and trade
-streaming works in both environments because the `mqttBrokers` recipe resolves to an
-in-cluster Mosquitto broker on AKS as well; see
-[Why AKS uses Mosquitto for `mqttBrokers`](#why-aks-uses-mosquitto-for-mqttbrokers) for
-the reason the Event Grid implementation is not selected.
+processing is supported in both environments. Event Grid on AKS requires a correctly
+bound workload identity and the updated backend image; browser live streaming is a
+separate limitation. See
+[Event Grid authentication and browser streaming](#event-grid-authentication-and-browser-streaming).
 
 ### 6. Prove database initialization and backend readiness
 
@@ -688,7 +684,7 @@ rad recipe list --environment env-azure-prod
 | Database contract | `postgreSqlDatabases` | `postgreSqlDatabases` |
 | Database implementation | In-cluster PostgreSQL | Azure Database for PostgreSQL |
 | MQTT contract | `mqttBrokers` | `mqttBrokers` |
-| MQTT implementation | In-cluster Mosquitto | In-cluster Mosquitto |
+| MQTT implementation | In-cluster Mosquitto | Azure Event Grid MQTT |
 | Workload identity | Local no-op mapping | Azure workload-identity mapping |
 | AI | Disabled | Disabled |
 | Access path | Port-forward over Bastion API tunnel | Port-forward to AKS API |
@@ -839,73 +835,44 @@ set `$env:KUBECONFIG`.
 Repeat Stage 1's `rad bicep publish-extension` command. The archive is generated and is
 not committed.
 
-### Why AKS uses Mosquitto for `mqttBrokers`
+<a id="why-aks-uses-mosquitto-for-mqttbrokers"></a>
 
-The AKS environment registers the in-cluster Eclipse Mosquitto recipe for
-`Radius.Resources/mqttBrokers`, the same implementation K3s uses. This is deliberate.
+### Event Grid authentication and browser streaming
 
-Azure Event Grid's MQTT broker accepts a Microsoft Entra token only through MQTT v5
-*enhanced authentication*: the CONNECT packet must carry `Authentication Method`
-`OAUTH2-JWT` and put the bearer token in `Authentication Data`. The published Trading
-backend instead passes the token as an ordinary CONNECT *password*, which Event Grid
-never inspects. No amount of platform work fixes that from the outside — a user-assigned
-managed identity, federated credentials, topic spaces, permission bindings, and Event
-Grid data-plane role assignments would all be correct and the broker would still refuse
-the connection.
+Challenge 05 registers Azure Event Grid MQTT on AKS and Mosquitto on K3s. Use a backend
+image containing
+[microsoft/adaptive-apps#46](https://github.com/microsoft/adaptive-apps/pull/46).
+That update sends the Entra token through MQTT v5 enhanced authentication
+(`OAUTH2-JWT` and Authentication Data), derives the client identifier from the token's
+`oid` claim, renews tokens, and reconnects without terminating the HTTP API.
 
-This is tracked upstream as
-[microsoft/adaptive-apps#44](https://github.com/microsoft/adaptive-apps/issues/44).
+The Event Grid and workload-identity recipes share the same namespace configured by
+the environment. The application deploys the broker before identities so its `orders`
+topic space exists when publish/subscribe permissions are created. Verify the pod's
+service account matches its federated credential and that `iac/app.bicep` projects
+the `api://AzureADTokenExchange` token at `AZURE_FEDERATED_TOKEN_FILE`.
+A missing token, an incorrect subject,
+or missing TopicSpaces roles still prevents messaging, even if the HTTP API is healthy.
 
-The failure is not graceful. `MqttOrderListener` calls `SubscribeAsync` on an
-unconnected client, which throws `MqttClientNotConnectedException`. .NET's default
-`BackgroundServiceExceptionBehavior.StopHost` then stops the host, so the backend
-container crash-loops, never becomes Ready, and `rad deploy` fails before the `frontend`
-container is created:
-
-```text
-"code": "Internal",
-"message": "Container state is 'Waiting' Reason: CrashLoopBackOff, ..."
-```
-
-The in-cluster recipe returns `authMethod: 'none'`, so the application skips the token
-branch entirely and connects over plain MQTT inside the cluster.
-
-Changing the recipe is not sufficient on its own. `iac/app.bicep` originally read
-`MQTT_AUTH_METHOD` and `MQTT_TOKEN_AUDIENCE` from the *workload identity* resource, and
-the Azure workload-identity recipe hard-codes `authMethod: 'OAUTH2-JWT'`. The
-application therefore attempted token authentication no matter which broker recipe the
-environment registered. Both variables now come from the broker, which is what the
-`mqttBrokers` resource type documents:
-
-```bicep
-MQTT_AUTH_METHOD: {
-  value: tradingMqtt.properties.authMethod
-}
-MQTT_TOKEN_AUDIENCE: {
-  value: tradingMqtt.properties.tokenAudience
-}
-```
-
-This is a correction, not a platform branch: the expression is identical in both
-environments and each recipe supplies its own answer. K3s is unaffected, because its
-no-op identity recipe already reported `none`.
-
-This is the portability boundary working as designed. `iac/app.bicep` still requests the
-portable `mqttBrokers` contract and names no broker; only the platform team's recipe
-registration in `iac/aks-env.bicep` differs. To restore the Event Grid implementation
-once the application supports enhanced authentication, pass the override rather than
-editing the environment template:
+Inspect the actual accounts and MQTT results after deployment:
 
 ```bash
-rad deploy iac/aks-env.bicep \
-  --workspace ws-azure-prod \
-  --group rg-trading \
-  --parameters mqttRecipeTemplatePath=ghcr.io/microsoft/adaptive-apps/recipes/mqtt-azure-event-grid:latest
+kubectl get deployment backend frontend --namespace env-azure-prod \
+  --output custom-columns=NAME:.metadata.name,SERVICEACCOUNT:.spec.template.spec.serviceAccountName
+kubectl logs deployment/backend --namespace env-azure-prod --tail=100
 ```
 
-The browser-side MQTT-over-WebSocket connection from the frontend is a separate,
-pre-existing gap: the in-cluster broker is not exposed outside the cluster, so live
-streaming in the browser still depends on the backend's REST endpoints.
+Look for a successful MQTT CONNECT and subscription, not just a Ready pod. If the
+accounts differ from the identity recipe's inputs, reapply Challenge 05's complete
+environment deployment with `serviceAccountOverrides` set to the actual names.
+
+`MQTT_AUTH_METHOD` and `MQTT_TOKEN_AUDIENCE` come from the broker resource, so K3s
+continues to use the unauthenticated in-cluster Mosquitto path without an application
+platform branch.
+
+The browser MQTT-over-WebSocket client still connects without credentials and cannot
+live-stream through Event Grid. Use the REST API/UI for the core demonstration;
+browser live streaming requires a separate authenticated browser path or server relay.
 
 ### A second exposure cannot bind port 3000
 

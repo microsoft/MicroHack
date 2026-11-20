@@ -1,7 +1,8 @@
 @description('Radius-provided recipe context.')
 param context object
 
-var namespaceName = 'egns-${uniqueString(resourceGroup().id, context.resource.id)}'
+@description('Namespace name supplied by the environment so workload identities target the same broker.')
+param namespaceName string = 'egns-${uniqueString(resourceGroup().id, context.resource.id)}'
 
 module eventGrid '../platform/event-grid-mqtt-azure.bicep' = {
   name: namespaceName

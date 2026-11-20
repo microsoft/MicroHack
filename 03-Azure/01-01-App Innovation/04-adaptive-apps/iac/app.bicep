@@ -70,6 +70,27 @@ param workloadIdentityTenantId string = ''
 @description('Enable Istio sidecar injection when the platform portfolio includes Istio.')
 param enableIstioInjection bool = true
 
+var federatedTokenPath = '/var/run/secrets/radius/identity'
+var federatedTokenVolume = {
+  name: 'radius-workload-identity-token'
+  projected: {
+    sources: [
+      {
+        serviceAccountToken: {
+          audience: 'api://AzureADTokenExchange'
+          expirationSeconds: 3600
+          path: 'token'
+        }
+      }
+    ]
+  }
+}
+var federatedTokenMount = {
+  name: federatedTokenVolume.name
+  mountPath: federatedTokenPath
+  readOnly: true
+}
+
 var kubernetesMetadataExtension = enableIstioInjection ? [
   {
     kind: 'kubernetesMetadata'
@@ -121,6 +142,9 @@ resource tradingMqtt 'Radius.Resources/mqttBrokers@2025-08-01-preview' = {
 
 resource backendIdentity 'Radius.Resources/workloadIdentities@2025-08-01-preview' = {
   name: 'backend-identity'
+  dependsOn: [
+    tradingMqtt
+  ]
   properties: {
     environment: environment
     application: tradingApp.id
@@ -132,6 +156,9 @@ resource backendIdentity 'Radius.Resources/workloadIdentities@2025-08-01-preview
 
 resource frontendIdentity 'Radius.Resources/workloadIdentities@2025-08-01-preview' = {
   name: 'frontend-identity'
+  dependsOn: [
+    tradingMqtt
+  ]
   properties: {
     environment: environment
     application: tradingApp.id
@@ -177,6 +204,9 @@ resource backend 'Applications.Core/containers@2023-10-01-preview' = {
             ? backendIdentity.properties.tenantId
             : workloadIdentityTenantId
         }
+        AZURE_FEDERATED_TOKEN_FILE: {
+          value: '${federatedTokenPath}/token'
+        }
         // How to authenticate to MQTT is a property of the broker, not of the workload
         // identity. Reading it from the identity hard-codes 'OAUTH2-JWT' on Azure and
         // ignores which mqttBrokers recipe the environment actually registered.
@@ -192,6 +222,24 @@ resource backend 'Applications.Core/containers@2023-10-01-preview' = {
       }
     }
     extensions: kubernetesMetadataExtension
+    runtimes: {
+      kubernetes: {
+        pod: tradingMqtt.properties.authMethod == 'OAUTH2-JWT' ? {
+          serviceAccountName: backendIdentity.properties.boundServiceAccountName
+          volumes: [
+            federatedTokenVolume
+          ]
+          containers: [
+            {
+              name: 'backend'
+              volumeMounts: [
+                federatedTokenMount
+              ]
+            }
+          ]
+        } : {}
+      }
+    }
     connections: {
       db: {
         source: tradingDb.id
@@ -238,6 +286,9 @@ resource frontend 'Applications.Core/containers@2023-10-01-preview' = {
             ? frontendIdentity.properties.tenantId
             : workloadIdentityTenantId
         }
+        AZURE_FEDERATED_TOKEN_FILE: {
+          value: '${federatedTokenPath}/token'
+        }
         MQTT_AUTH_METHOD: {
           value: tradingMqtt.properties.authMethod
         }
@@ -280,6 +331,24 @@ resource frontend 'Applications.Core/containers@2023-10-01-preview' = {
       }
     }
     extensions: kubernetesMetadataExtension
+    runtimes: {
+      kubernetes: {
+        pod: tradingMqtt.properties.authMethod == 'OAUTH2-JWT' ? {
+          serviceAccountName: frontendIdentity.properties.boundServiceAccountName
+          volumes: [
+            federatedTokenVolume
+          ]
+          containers: [
+            {
+              name: 'frontend'
+              volumeMounts: [
+                federatedTokenMount
+              ]
+            }
+          ]
+        } : {}
+      }
+    }
     connections: {
       backend: {
         source: backend.id

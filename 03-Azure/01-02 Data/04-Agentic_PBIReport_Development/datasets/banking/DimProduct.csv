@@ -1,0 +1,5 @@
+ProductKey,ProductCode,ProductName,ProductFamily
+1,SYN-BP-1,PersonalLoan,Lending
+2,SYN-BP-2,AutoLoan,Lending
+3,SYN-BP-3,HomeLoan,Lending
+4,SYN-BP-4,SmallBusinessLoan,Lending

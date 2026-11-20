@@ -1,0 +1,6 @@
+__pycache__/
+.pbi/
+.venv/
+node_modules/
+event-config.json
+*.local.json

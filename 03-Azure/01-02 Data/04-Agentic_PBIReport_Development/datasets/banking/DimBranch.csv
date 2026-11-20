@@ -1,0 +1,13 @@
+BranchKey,BranchCode,BranchName,Region
+1,SYN-BR-1,Synthetic Branch 1,Region-1
+2,SYN-BR-2,Synthetic Branch 2,Region-2
+3,SYN-BR-3,Synthetic Branch 3,Region-3
+4,SYN-BR-4,Synthetic Branch 4,Region-4
+5,SYN-BR-5,Synthetic Branch 5,Region-1
+6,SYN-BR-6,Synthetic Branch 6,Region-2
+7,SYN-BR-7,Synthetic Branch 7,Region-3
+8,SYN-BR-8,Synthetic Branch 8,Region-4
+9,SYN-BR-9,Synthetic Branch 9,Region-1
+10,SYN-BR-10,Synthetic Branch 10,Region-2
+11,SYN-BR-11,Synthetic Branch 11,Region-3
+12,SYN-BR-12,Synthetic Branch 12,Region-4

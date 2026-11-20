@@ -1,0 +1,5 @@
+ClaimTypeKey,ClaimTypeCode,ClaimTypeName
+1,SYN-CT-1,Damage
+2,SYN-CT-2,Theft
+3,SYN-CT-3,Liability
+4,SYN-CT-4,Other

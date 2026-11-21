@@ -1,0 +1,10 @@
+[
+  {"id": "T01", "prompt": "What is the status of machine CNC-07?", "expected_tool": "get_machine_status", "expected_args": {"machine_id": "CNC-07"}},
+  {"id": "T02", "prompt": "Is PRESS-02 running OK right now?", "expected_tool": "get_machine_status", "expected_args": {"machine_id": "PRESS-02"}},
+  {"id": "T03", "prompt": "Check the conveyor CONV-03 for me.", "expected_tool": "get_machine_status", "expected_args": {"machine_id": "CONV-03"}},
+  {"id": "T04", "prompt": "Give me the current reading from the compressor CMP-01.", "expected_tool": "get_machine_status", "expected_args": {"machine_id": "CMP-01"}},
+  {"id": "T05", "prompt": "Open a high priority ticket for CNC-07: spindle vibration above the stop limit.", "expected_tool": "create_maintenance_ticket", "expected_args": {"machine_id": "CNC-07", "priority": "high"}},
+  {"id": "T06", "prompt": "Please create a low priority ticket for ROB-04: nozzle needs cleaning at next planned stop.", "expected_tool": "create_maintenance_ticket", "expected_args": {"machine_id": "ROB-04", "priority": "low"}},
+  {"id": "T07", "prompt": "Log a medium priority maintenance ticket for LATHE-05, vibration is close to the warning limit.", "expected_tool": "create_maintenance_ticket", "expected_args": {"machine_id": "LATHE-05", "priority": "medium"}},
+  {"id": "T08", "prompt": "Why is the sky blue?", "expected_tool": null, "expected_args": {}}
+]

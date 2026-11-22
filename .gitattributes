@@ -21,5 +21,7 @@
 "/.devcontainer/03-azure-01-01-app-innovation-04-adaptive-apps/devcontainer.json" text eol=lf
 # Agentic Inventory Planning: shell scripts run inside the dev container and must keep LF endings
 "/03-Azure/01-04-AI/03_Inventory_Planning_Agentic/**/*.sh" text eol=lf
+# Decision Models for a Retail Marketplace: same reason
+"/03-Azure/01-04-AI/14_Decision_Models_Retail_Marketplace/**/*.sh" text eol=lf
 # Shared dev container scripts run inside Linux containers; Windows autocrlf checkouts must not add CRLF
 "/.devcontainer/**/*.sh" text eol=lf

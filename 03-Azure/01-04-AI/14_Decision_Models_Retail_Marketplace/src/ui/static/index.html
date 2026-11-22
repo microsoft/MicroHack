@@ -1,0 +1,938 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zava Marketplace — Launch Day</title>
+<style>
+:root { --blue:#1f5fa8; --blue2:#e8f0fa; --ink:#1d2430; --mute:#5f6b7a; --line:#dde3ea; --bg:#f4f6fa;
+        --ok:#1e7d4f; --okbg:#e6f4ec; --warn:#9a6200; --warnbg:#fff4de; --bad:#b3261e; --badbg:#fde8e6; --fix:#6941c6; --fixbg:#f0ebfb; }
+* { box-sizing:border-box; }
+html { scrollbar-gutter:stable; }
+body { margin:0; font:14px/1.45 "Segoe UI", system-ui, sans-serif; color:var(--ink); background:var(--bg); }
+header { background:#fff; border-bottom:1px solid var(--line); position:sticky; top:0; z-index:5; }
+.top { display:flex; align-items:center; gap:18px; padding:9px 20px 6px; }
+header h1 { font-size:17px; margin:0; white-space:nowrap; }
+header h1 span { color:var(--blue); }
+.lights { display:flex; gap:12px; font-size:12px; color:var(--mute); margin-left:auto; align-items:center; }
+.light { display:flex; align-items:center; gap:5px; }
+.dot { width:9px; height:9px; border-radius:50%; background:#bbb; }
+.dot.ok { background:#2fa36b; } .dot.bad { background:#d93025; }
+.scorebar { display:flex; align-items:center; gap:14px; padding:6px 20px 9px; flex-wrap:wrap; cursor:pointer; }
+.chips { display:flex; align-items:center; gap:4px; font-size:12.5px; }
+.chip { padding:2px 9px; border-radius:11px; background:#eef1f5; color:var(--mute); white-space:nowrap; }
+.chip.on { background:var(--okbg); color:var(--ok); font-weight:600; }
+.chips .arrow { color:#b0b9c4; }
+.sk { display:flex; gap:14px; margin-left:auto; }
+.sk div { text-align:right; } .sk b { font-size:15px; display:block; line-height:1.1; } .sk span { font-size:11px; color:var(--mute); }
+.layout { display:grid; grid-template-columns:230px minmax(0,1fr); min-height:calc(100vh - 92px); }
+nav { background:#fff; border-right:1px solid var(--line); padding:14px 10px; }
+nav button { display:block; width:100%; text-align:left; border:0; background:none; padding:8px 10px; border-radius:7px; font:inherit; color:var(--ink); cursor:pointer; margin-bottom:2px; }
+nav button small { display:block; color:var(--mute); font-size:11.5px; }
+nav button.active { background:var(--blue2); color:var(--blue); font-weight:600; }
+nav .sep { border-top:1px solid var(--line); margin:10px 4px 6px; }
+nav .lbl { font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--mute); padding:2px 10px 4px; }
+main { padding:18px 24px 60px; max-width:1250px; }
+.tab { display:none; } .tab.active { display:block; }
+.lesson { background:linear-gradient(90deg,#1f5fa8,#3a7bd5); color:#fff; border-radius:12px; padding:16px 20px; margin-bottom:14px; }
+.lesson .n { font-size:12px; opacity:.85; text-transform:uppercase; letter-spacing:.06em; }
+.lesson h2 { margin:2px 0 6px; font-size:21px; }
+.lesson p { margin:0 0 4px; opacity:.95; max-width:950px; }
+.learn { display:flex; gap:10px; margin-top:8px; flex-wrap:wrap; }
+.learn span { background:#ffffff26; border-radius:12px; padding:2px 10px; font-size:12.5px; }
+.card { background:#fff; border:1px solid var(--line); border-radius:10px; padding:14px 16px; margin-bottom:14px; }
+.card h3 { margin:0 0 8px; font-size:15px; }
+.step { display:inline-block; background:var(--blue); color:#fff; border-radius:12px; padding:1px 9px; font-size:11.5px; margin-right:6px; font-weight:600; }
+.step.m { background:var(--bad); } .step.b { background:var(--ok); }
+.mystery { border-left:4px solid var(--bad); }
+.build { border-left:4px solid var(--ok); }
+.grid2 { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:14px; } .grid3 { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+.row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.btn { background:var(--blue); color:#fff; border:0; border-radius:7px; padding:7px 13px; font:inherit; cursor:pointer; }
+.btn.ghost { background:#fff; color:var(--blue); border:1px solid var(--blue); }
+.btn.go { background:var(--ok); font-weight:600; padding:9px 16px; }
+.btn.small { padding:4px 9px; font-size:12.5px; }
+.btn:disabled { opacity:.5; cursor:wait; }
+select, input, textarea { font:inherit; padding:6px 8px; border:1px solid #c5ced9; border-radius:6px; background:#fff; }
+textarea { width:100%; resize:vertical; }
+label.f { display:block; font-size:12px; color:var(--mute); margin:8px 0 3px; }
+.muted { color:var(--mute); } .small { font-size:12px; }
+.inbox { max-height:420px; overflow:auto; border:1px solid var(--line); border-radius:8px; }
+.item { padding:7px 10px; border-bottom:1px solid var(--line); cursor:pointer; display:flex; gap:10px; align-items:center; }
+.item:hover { background:#f7f9fc; }
+.item img { width:36px; height:36px; object-fit:cover; border-radius:5px; background:#eee; }
+.thumb { width:36px; height:36px; border-radius:5px; background:#eef1f5; display:grid; place-items:center; color:#9aa5b1; font-size:10px; }
+.listing { display:grid; grid-template-columns:150px 1fr; gap:12px; }
+.listing img, .nophoto { width:150px; height:150px; object-fit:cover; border-radius:8px; border:1px solid var(--line); }
+.nophoto { background:#eef1f5; display:grid; place-items:center; color:#9aa5b1; }
+.desc { white-space:pre-wrap; background:#fafbfd; border:1px solid var(--line); border-radius:6px; padding:8px; max-height:150px; overflow:auto; }
+.facts { font-size:12.5px; background:#f3f8f2; border:1px solid #d7e9d3; border-radius:6px; padding:6px 8px; margin-top:6px; }
+.badge { display:inline-block; padding:2px 9px; border-radius:11px; font-weight:600; font-size:12px; }
+.o-publish { background:var(--okbg); color:var(--ok); } .o-review { background:var(--warnbg); color:var(--warn); }
+.o-reject { background:var(--badbg); color:var(--bad); } .o-auto_fix { background:var(--fixbg); color:var(--fix); }
+table { border-collapse:collapse; width:100%; } th, td { text-align:left; padding:5px 7px; border-bottom:1px solid var(--line); vertical-align:top; }
+th { font-size:12px; color:var(--mute); font-weight:600; }
+.bar { position:relative; height:14px; background:#eef1f5; border-radius:7px; min-width:90px; }
+.bar > i { position:absolute; left:0; top:0; bottom:0; border-radius:7px; background:var(--blue); }
+.bar > b { position:absolute; right:6px; top:-1px; font-size:11px; font-weight:600; }
+.bar.yes > i { background:#d9822b; } .bar.good > i { background:#2fa36b; }
+.models { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:12px; }
+.model h4 { margin:0 0 4px; font-size:14px; }
+.kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; }
+.kpi { background:#fafbfd; border:1px solid var(--line); border-radius:8px; padding:8px 10px; }
+.kpi .v { font-size:20px; font-weight:700; } .kpi .l { font-size:11.5px; color:var(--mute); }
+.kpi .d { font-size:12px; font-weight:600; }
+details.code { margin-top:10px; border:1px dashed #b9c6d6; border-radius:8px; padding:6px 10px; background:#fbfcfe; }
+details.code summary, details.more summary { cursor:pointer; color:var(--blue); font-weight:600; font-size:13px; }
+pre { background:#0f1720; color:#e6edf3; padding:10px; border-radius:7px; overflow:auto; max-height:360px; font-size:12px; margin:6px 0; }
+.takeaway { border-left:4px solid #2fa36b; background:var(--okbg); padding:9px 12px; border-radius:6px; margin:10px 0 14px; }
+.predict { background:var(--warnbg); border:1px solid #f2d59b; border-radius:8px; padding:8px 12px; margin:8px 0; }
+.err { color:var(--bad); background:var(--badbg); padding:6px 10px; border-radius:6px; margin:6px 0; }
+.note { background:#fffdf5; border:1px solid #efe3b7; }
+.progress { color:var(--mute); font-size:12.5px; }
+.chart { display:flex; align-items:flex-end; gap:4px; height:130px; border-bottom:1px solid var(--line); padding-top:6px; }
+.chart .col { flex:1; display:flex; gap:2px; align-items:flex-end; height:100%; }
+.chart .col i { flex:1; display:block; border-radius:3px 3px 0 0; }
+.chart .col i.p { background:#9cb8de; } .chart .col i.o { background:#1f5fa8; }
+.axis { display:flex; gap:4px; font-size:10.5px; color:var(--mute); } .axis span { flex:1; text-align:center; }
+.slider { display:grid; grid-template-columns:240px 1fr 60px; align-items:center; gap:8px; margin:4px 0; }
+.big { font-size:26px; font-weight:800; }
+.win { color:var(--ok); } .lose { color:var(--bad); }
+a { color:var(--blue); }
+.quote { border-left:3px solid #c5ced9; padding:4px 12px; margin:6px 0; color:#384352; font-style:italic; }
+.path { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+.path .card { margin:0; cursor:pointer; } .path .card:hover { border-color:var(--blue); }
+.path .when { font-size:11.5px; color:var(--mute); text-transform:uppercase; letter-spacing:.05em; }
+.trylist li { margin:4px 0; }
+.try { cursor:pointer; }
+#drawer { position:fixed; top:0; right:0; bottom:0; width:min(640px,95vw); background:#fff; box-shadow:-4px 0 24px #0002; z-index:20; overflow:auto; padding:16px 18px 40px; transform:translateX(105%); transition:transform .2s; }
+#drawer.open { transform:none; }
+#drawer .close { position:absolute; right:14px; top:10px; }
+#shade { position:fixed; inset:0; background:#0003; z-index:19; display:none; } #shade.open { display:block; }
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <h1>Zava Marketplace <span>·</span> Launch Day</h1>
+    <div class="lights" id="lights"><span>checking models…</span></div>
+  </div>
+  <div class="scorebar" id="scorebar" title="Your launch scorecard — click for details">
+    <div class="chips" id="chips"></div>
+    <div class="sk" id="sk"><span class="muted small">loading the rehearsal…</span></div>
+  </div>
+</header>
+<div class="layout">
+<nav id="nav">
+  <button data-tab="t0" class="active">🚀 Launch Day<small>The mission and your scorecard</small></button>
+  <div class="lbl">Build the gate</div>
+  <button data-tab="t1">1 · Safety check<small>Friday evening</small></button>
+  <button data-tab="t2">2 · Truth check<small>Saturday</small></button>
+  <button data-tab="t3">3 · Shelf check<small>Sunday morning</small></button>
+  <button data-tab="t4">4 · Go-live dial<small>Sunday afternoon</small></button>
+  <div class="lbl">⭐ Stretch — Monday</div>
+  <button data-tab="t5">5a · Sellers strike back<small>Can they beat your gate?</small></button>
+  <button data-tab="t6">5b · AI writes, the gate checks<small>A rewrite for every seller</small></button>
+  <div class="sep"></div>
+  <button data-tab="t7">📄 My launch report<small>Take it home</small></button>
+  <button data-tab="t8">🔧 Under the hood<small>Optional, for the curious</small></button>
+</nav>
+<main>
+
+<!-- ================================================================== 0 Launch -->
+<section class="tab active" id="t0">
+  <div class="lesson"><div class="n">Friday 16:00 · 65 hours to launch</div><h2>Zava Marketplace opens on Monday at 09:00</h2>
+    <p>Sellers will send about <b>10,000 listings a day</b>. Some will sell banned products, hide a phone number to dodge fees, invent features, or pick the wrong category. Trust &amp; Safety has <b>three reviewers</b>.</p>
+    <p>Your job this weekend: build the <b>Listing Gate</b> — let honest listings go live in seconds, fix what can be fixed, send only the hard cases to a person, and never put a dangerous listing in front of a customer.</p></div>
+  <div class="grid3" id="baselines"></div>
+  <div class="card">
+    <h3>How you'll build it — one piece of the gate at a time</h3>
+    <p class="muted" style="margin-top:0">Each piece asks a few <b>closed questions</b> about every listing — yes or no, which one, how good — to a <b>decision model</b>, Microsoft-Decision-1.1. It answers each with a probability in about a quarter of a second, for a fraction of a cent. Your rules turn the answers into <i>publish</i>, <i>fix</i>, <i>review</i> or <i>reject</i>.</p>
+    <div class="path">
+      <div class="card" data-goto="t1"><div class="when">Friday evening</div><h3>1 · Safety check</h3><div class="small">Banned products and contact details.<br><b>Learn:</b> what a decision model is, and why a probability isn't a decision.</div></div>
+      <div class="card" data-goto="t2"><div class="when">Saturday</div><h3>2 · Truth check</h3><div class="small">Claims, photos, prices, notes to the reviewer.<br><b>Learn:</b> how to ask a question a model answers well.</div></div>
+      <div class="card" data-goto="t3"><div class="when">Sunday morning</div><h3>3 · Shelf check</h3><div class="small">The right aisle and a listing good enough to sell.<br><b>Learn:</b> choice and score questions — and a way out.</div></div>
+      <div class="card" data-goto="t4"><div class="when">Sunday afternoon</div><h3>4 · Go-live dial</h3><div class="small">What's automatic, what a person checks.<br><b>Learn:</b> set the line from what mistakes cost; keep people for the middle.</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Your launch scorecard <span class="muted small">— last week's 524 trial listings (the "rehearsal") through the gate you've built so far</span></h3>
+    <div id="launchCard"></div>
+    <details class="more" style="margin-top:10px"><summary>Assumptions behind the numbers</summary>
+      <div class="grid3" id="assume" style="margin-top:8px"></div>
+      <p class="small muted">The rehearsal uses recorded answers from Microsoft-Decision-1.1, so it's instant and free. When you change a question in Challenge 2 and re-score it, the rehearsal uses your answers.</p>
+    </details>
+  </div>
+  <div class="row"><button class="btn ghost small" id="restart">Start the weekend again</button><span class="small muted">Empties the gate and resets questions and thresholds. Your Decision Design Cards are kept.</span></div>
+</section>
+
+<!-- ================================================================== 1 Safety -->
+<section class="tab" id="t1">
+  <div class="lesson"><div class="n">Challenge 1 · Friday evening</div><h2>Safety check: keep banned products and hidden contact details out</h2>
+    <p>You ran last week's listings through an empty gate. Everything went live in a second — including things that must never reach a customer.</p>
+    <div class="learn"><span>🎯 You build: the Safety check</span><span>🧠 You learn: what a decision model is, and why a probability isn't a decision</span></div></div>
+  <div class="card mystery"><h3><span class="step m">The mystery</span>What went live with an empty gate?</h3><div id="m1"></div></div>
+  <div class="card">
+    <h3><span class="step">Investigate</span>Ask a decision model about a listing</h3>
+    <p>Open each listing, <b>predict</b> what the gate should do, then ask. Look at the <b>probability</b> next to every answer.</p>
+    <ul class="trylist">
+      <li><a class="try" data-id="ZM-0072">ZM-0072</a> — a weedkiller with no product number</li>
+      <li><a class="try" data-id="ZM-0056">ZM-0056</a> — a smart plug with a "quick deal"</li>
+      <li><a class="try" data-id="ZM-0005">ZM-0005</a> — an ordinary garden hose</li>
+      <li>Then compare with a chat model: in the listing panel, click <b>Ask a chat model the same questions</b>. What's missing from its answers?</li>
+    </ul>
+    <details class="more"><summary>Browse all 24 starter listings</summary><div class="inbox" id="inbox" style="margin-top:8px"></div></details>
+  </div>
+  <div class="card">
+    <h3><span class="step">Try</span>Ask your own yes/no question</h3>
+    <p class="small">A decision model answers any closed question. Try <a class="try" data-id="ZM-0005" data-k="yes_no" data-q="Is this product meant to be used outdoors?">"Is it meant to be used outdoors?"</a> on the hose, then on <a class="try" data-id="ZM-0186" data-k="yes_no" data-q="Is this product meant to be used outdoors?">the desk lamp</a>. A probability near 0 is a confident <i>no</i>; unsure is near the middle.</p>
+  </div>
+  <div class="card build"><h3><span class="step b">Build</span>Add the Safety check to your gate</h3>
+    <p class="small">Two yes/no questions — <code>prohibited_item</code> and <code>off_platform_contact</code>. Your rule: above <b>80%</b> it's a yes and the listing is <b>rejected</b>; below <b>20%</b> it's a no; anything in between goes to a person.</p>
+    <div class="piece" data-piece="safety"></div></div>
+  <div class="takeaway"><b>What you learned:</b> a decision model answers a closed question with a probability, fast and cheap, and writes almost nothing. <b>Your code</b> turns that probability into an action — the model doesn't decide, your rules do. A chat model can answer too, but without a probability you can't tell a sure "no" from a guess.</div>
+  <div class="card note" data-note="Challenge 1" data-hint="Think of a yes/no check people in your team do many times a day — e.g. 'Does this invoice match the purchase order?', 'Does this email contain personal data?'"></div>
+</section>
+
+<!-- ================================================================== 2 Truth -->
+<section class="tab" id="t2">
+  <div class="lesson"><div class="n">Challenge 2 · Saturday</div><h2>Truth check: does the listing tell the truth?</h2>
+    <p>Banned products are out. Now Priya from Trust &amp; Safety sends over her draft of the truth check: does the listing match the manufacturer's facts, show the right photo, ask a sensible price — and is there anything aimed at the reviewer rather than the shopper?</p>
+    <div class="learn"><span>🎯 You build: the Truth check</span><span>🧠 You learn: how to ask a question a model answers well</span></div></div>
+  <div class="card">
+    <h3><span class="step">Predict</span>Priya's first draft: one question for every claim</h3>
+    <p>Her draft asks one <b>choice</b> question: is the listing <i>consistent</i>, <i>contradicted</i>, <i>unsupported</i> or <i>not assessable</i> compared with the manufacturer's facts? How often will it be right on the 24 starter listings?</p>
+    <div class="row"><select id="draftGuess"><option value="">— your guess —</option><option>above 90%</option><option>70–90%</option><option>50–70%</option><option>below 50%</option></select>
+    <button class="btn" id="runDraft">Test Priya's draft</button><span class="progress" id="draftProg"></span></div>
+    <div id="draftOut"></div>
+    <div class="takeaway" id="tk2a" style="display:none"><b>Why it fails:</b> "consistent" and "unsupported" can both be true of one listing, so the model splits one probability between them. The gate asks <b>two yes/no questions</b> instead — <i>does anything contradict the facts?</i> and <i>does it claim something the facts don't mention?</i> One idea per question.</div>
+  </div>
+  <div class="card build"><h3><span class="step b">Build</span>Add the Truth check to your gate</h3>
+    <p class="small">Five questions — contradicts the facts, invented claim, photo shows a product, photo matches the title, text aimed at the gate — plus two checks in <b>code</b>: the product number is in Zava's catalogue, and the price is between 40% and 250% of the usual price.</p>
+    <div class="piece" data-piece="truth"></div></div>
+  <div class="card mystery"><h3><span class="step m">The mystery</span>What still gets through?</h3><div id="m2"></div>
+    <p class="small">Open <a class="try" data-id="ZM-0050">ZM-0050</a> and read the description to the end. Ask the gate's questions: what does <code>addressed_to_gate</code> say?</p></div>
+  <div class="card">
+    <h3><span class="step">Fix</span>Reword the question that missed it</h3>
+    <p class="small">The question describes text that <b>asks</b> the gate to do something. The note doesn't ask — it <b>claims</b> a check already happened. Decision models read literally. Extend the question so it also covers <b>notes claiming the listing was already checked, approved or verified</b>. Keep it one idea. Save, then test it on the starter set.</p>
+    <div id="qFocus"></div>
+    <div class="row" style="margin-top:8px"><button class="btn" id="testQs">Test my wording on the starter set</button><span class="progress" id="qProg"></span></div>
+    <div id="qOut"></div>
+    <details class="more" style="margin-top:10px"><summary>All of the gate's questions</summary><div id="qList"></div><button class="btn ghost small" id="resetQs" style="margin-top:6px">Reset all to the original wording</button></details>
+  </div>
+  <div class="card build"><h3><span class="step b">Build</span>Carry your fix into the rehearsal</h3>
+    <p class="small">Re-asks <b>only the question you changed</b> on the 1,040 rehearsal and Monday listings (2–3 minutes). Your scorecard then uses your answers.</p>
+    <div class="row"><button class="btn go" id="rescore">Re-score with my question</button><span class="progress" id="rsProg"></span></div>
+    <div id="rsOut"></div></div>
+  <div class="card">
+    <h3><span class="step">Try</span>Why is the price check code, not a question?</h3>
+    <p class="small">Open <a class="try" data-id="ZM-0066" data-k="yes_no" data-q="Is the price in seller_listing less than 40% of this product's usual price?">ZM-0066, a desk lamp at €13.54, and ask "Is the price less than 40% of the usual price?"</a>. The model answers about 50% — a coin toss. Look in <b>Show me the code</b>: it was never told the usual price. A division is one line of code, always right and free. Keep exact maths in code.</p>
+  </div>
+  <div class="takeaway"><b>What you learned:</b> one idea per question; plain words; give it what it needs to know; keep exact checks in code; and <b>test every change</b> — on the starter set, then on a thousand listings.</div>
+  <div class="card note" data-note="Challenge 2" data-hint="Take your Challenge 1 decision. Is it really one question, or two or three ideas in one? Write the sharpest version."></div>
+</section>
+
+<!-- ================================================================== 3 Shelf -->
+<section class="tab" id="t3">
+  <div class="lesson"><div class="n">Challenge 3 · Sunday morning</div><h2>Shelf check: the right aisle, and good enough to sell</h2>
+    <p>Safe and truthful isn't enough. A desk lamp filed under kitchen is invisible to shoppers, and a listing shouting "!!! LIMITED STOCK !!!" sells nothing.</p>
+    <div class="learn"><span>🎯 You build: the Shelf check</span><span>🧠 You learn: choice and score questions — and why every choice needs a way out</span></div></div>
+  <div class="card mystery"><h3><span class="step m">The mystery</span>Live — but in the wrong aisle, or not worth reading</h3><div id="m3"></div></div>
+  <div class="card">
+    <h3><span class="step">Investigate</span>Choice and score questions</h3>
+    <ul class="trylist">
+      <li><b>Choice — one answer from a list:</b> <a class="try" data-id="ZM-0089">ZM-0089</a> is a desk lamp listed under <i>kitchen</i>. Ask the gate's questions and look at <code>category</code>: a probability for <b>every</b> category. Code compares the winner with the seller's choice and fixes it.</li>
+      <li><b>Leave a way out:</b> <a class="try" data-id="ZM-0084" data-k="choice" data-q="Which category does this product belong to?" data-o="garden_and_lawn, kitchen_and_dining, lighting, paint_and_supplies">"Gift idea!" — ask for a category <i>without</i> "cannot tell"</a>, then <a class="try" data-id="ZM-0084" data-k="choice" data-q="Which category does this product belong to?" data-o="garden_and_lawn, kitchen_and_dining, lighting, paint_and_supplies, cannot_tell">again <i>with</i> it</a>. Where did the probability go?</li>
+      <li><b>Score — how good, on a scale:</b> <a class="try" data-id="ZM-0060" data-k="score" data-q="How useful is this listing to a shopper deciding whether to buy?" data-o="unusable, poor, acceptable, good, excellent">ZM-0060 ("!!! LIMITED STOCK !!!")</a> against <a class="try" data-id="ZM-0005" data-k="score" data-q="How useful is this listing to a shopper deciding whether to buy?" data-o="unusable, poor, acceptable, good, excellent">ZM-0005</a>. Levels go lowest first.</li>
+    </ul>
+  </div>
+  <div class="card build"><h3><span class="step b">Build</span>Add the Shelf check to your gate</h3>
+    <p class="small">A <b>choice</b> question for the category (with <i>cannot tell</i>): if the model is at least <b>70%</b> sure and disagrees with the seller, the gate <b>fixes</b> the category. A <b>score</b> question for listing quality: if it's probably <i>poor</i> or <i>unusable</i>, a person looks.</p>
+    <div class="piece" data-piece="shelf"></div></div>
+  <div class="card">
+    <h3><span class="step">Sneak peek</span>A new product arrives on Monday</h3>
+    <p class="small">Sellers have announced a product the gate has never seen: <a class="try" data-id="ZM-0828">a smart LED bulb (ZM-0828)</a>, listed under <i>smart_home</i>. Ask the gate's questions. Is the model sure about the category? Is a smart bulb a light, or a smart-home device? Remember the answer for Monday.</p>
+  </div>
+  <div class="takeaway"><b>What you learned:</b> a <b>choice</b> question picks one answer and shows how the probability spreads; a <b>score</b> question rates on a scale. Always give the model a way out — <i>cannot tell</i>, <i>other</i> — or it's forced into a wrong answer. And when two labels are both reasonable, that's a policy decision, not a model problem.</div>
+  <div class="card note" data-note="Challenge 3" data-hint="Where do you route, sort or rate things at work — tickets to teams, documents to types, leads by quality? Which options, and what's the way out?"></div>
+</section>
+
+<!-- ================================================================== 4 Dial -->
+<section class="tab" id="t4">
+  <div class="lesson"><div class="n">Challenge 4 · Sunday afternoon</div><h2>Go-live dial: what's automatic, and what a person checks</h2>
+    <p>The gate works. Now two people disagree in the launch meeting.</p>
+    <div class="quote">"Your gate sends <b id="q4h">…</b> hours of reviews a day to three people. Cut it." — Marta, CFO</div>
+    <div class="quote">"Not one more dangerous listing in front of a customer." — Sam, Head of Trust &amp; Safety</div>
+    <div class="learn"><span>🎯 You build: the go-live dial and your launch plan</span><span>🧠 You learn: the line between automatic and human is a business decision</span></div></div>
+  <div class="card">
+    <h3><span class="step">Try</span>Turn the dial by hand</h3>
+    <p class="small">Every yes/no question has two lines. Above <b>yes</b> the gate acts as if the answer is yes; below <b>no</b> as if it's no; between them, a person decides. Move them for one question and watch your scorecard.</p>
+    <div class="row"><label class="f" style="margin:0">Question</label><select id="handQ"><option>unsupported_claim</option><option>addressed_to_gate</option><option>contradicts_facts</option><option>prohibited_item</option><option>photo_matches_title</option></select></div>
+    <div class="slider"><span><b>no</b> if the probability is at most</span><input type="range" min="0" max="1" step="0.01" value="0.2" id="handNo"><b id="handNoV">0.20</b></div>
+    <div class="slider"><span><b>yes</b> if the probability is at least</span><input type="range" min="0" max="1" step="0.01" value="0.8" id="handYes"><b id="handYesV">0.80</b></div>
+    <div id="handOut"></div>
+    <p class="small muted">Try <code>unsupported_claim</code>: drag <b>no</b> up to 0.50, then 0.95. When does it start letting invented claims through?</p>
+  </div>
+  <div class="card build">
+    <h3><span class="step b">Build</span>Price the mistakes, and let the console set the dial</h3>
+    <p class="small">What does each mistake cost, in reviewer-minutes? Marta and Sam have to agree on these numbers — not the model. The console tries every pair of lines for every question on the rehearsal and keeps the cheapest.</p>
+    <div id="costSliders"></div>
+    <div class="row" style="margin-top:8px"><button class="btn" id="tuneGo">Find the cheapest dial settings</button><span class="progress" id="tuneProg"></span></div>
+    <div id="tuneOut"></div>
+  </div>
+  <div class="card">
+    <h3><span class="step">See</span>Monday 09:00 — the doors open</h3>
+    <p class="small">516 listings the gate has never seen, including products that didn't exist last week. You tuned on the rehearsal; this is the real test. <b>Open it once</b> — every opening is counted, because if you keep tuning until Monday looks good, Monday stops telling you anything.</p>
+    <div class="row"><button class="btn go" id="examGo">Open the doors</button><span class="small muted" id="examCount"></span></div>
+    <div id="examOut"></div>
+  </div>
+  <div class="card">
+    <h3><span class="step">Try</span>Be the reviewer</h3>
+    <p class="small">Run your gate on the 24 starter listings. Everything it isn't sure about lands here. Open a listing, decide — <b>publish</b>, <b>fix the category</b> or <b>send it back to the seller</b> — then see whether that was the right call. What would make a reviewer faster?</p>
+    <div class="row"><button class="btn" id="queueGo">Fill the review queue</button><span class="progress" id="queueProg"></span></div>
+    <div id="queueOut"></div>
+  </div>
+  <div class="takeaway"><b>What you learned:</b> a probability becomes a decision only at a line you choose — and the right line depends on what each mistake costs, which is a business decision. Uncertain answers go to a person. Measure on listings you didn't tune on, and say how bad it could still be: 0 bad listings out of 400 isn't zero.</div>
+  <div class="card note" data-note="Challenge 4" data-hint="For your decision: what does a wrong yes cost, and a wrong no? When the model is unsure, who decides — and how many of those can they handle a day?"></div>
+</section>
+
+<!-- ================================================================== 5a Sellers -->
+<section class="tab" id="t5">
+  <div class="lesson"><div class="n">Stretch · Monday 09:05</div><h2>Sellers strike back</h2>
+    <p>The doors are open, and some sellers want to get past your gate. Be one of them. Can you sneak a banned product, a phone number, a note to the reviewer or a false claim past the gate you built?</p>
+    <div class="learn"><span>🧠 You learn: decision models read literally — test them the way attackers will</span></div></div>
+  <div class="card">
+    <div class="grid2">
+      <div>
+        <label class="f">What are you trying to sneak past?</label>
+        <select id="sGoal"><option value="prohibited">a prohibited item</option><option value="contact">off-platform contact</option><option value="note">a note aimed at the gate</option><option value="claim">a false or invented claim</option><option value="other">nothing — an honest listing</option></select>
+        <label class="f">Product from the catalogue (gives the gate the manufacturer's facts)</label><select id="sGtin"></select>
+        <label class="f">Title</label><input id="sTitle" style="width:100%">
+        <label class="f">Description</label><textarea id="sDesc" rows="5"></textarea>
+        <div class="grid2"><div><label class="f">Category</label><select id="sCat"></select></div><div><label class="f">Price (EUR)</label><input id="sPrice" type="number" step="0.01" style="width:100%"></div></div>
+        <label class="f">Photo</label><select id="sImg"></select>
+        <div class="row" style="margin-top:10px"><button class="btn" id="sellGo">Submit listing</button></div>
+        <p class="small muted">Ideas: a phone number in words; "find me on the green messaging app"; one number changed from the facts; "Already approved by the Zava team."</p>
+      </div>
+      <div><div id="sellOut"><span class="muted">Your result appears here.</span></div><div id="board" style="margin-top:12px"></div></div>
+    </div>
+  </div>
+  <div class="takeaway"><b>What you learned:</b> keep the seller's text in its own field, ask a separate question about text aimed at the gate, and when something gets through, fix the <b>question</b> — then test again.</div>
+</section>
+
+<!-- ================================================================== 5b Judge -->
+<section class="tab" id="t6">
+  <div class="lesson"><div class="n">Stretch · Monday 11:00</div><h2>AI writes, the gate checks</h2>
+    <p>Marketing wants to offer every seller a better listing, written by AI. Sam agrees — if nothing invented ever reaches a customer. Let a <b>generative model write</b> and a <b>decision model judge</b>: Foundry's groundedness evaluator with Microsoft-Decision-1.1 as the judge, plus your gate's own questions.</p>
+    <div class="learn"><span>🧠 You learn: one model writes, another checks — and a judge needs testing too</span></div></div>
+  <div class="grid2">
+    <div class="card">
+      <h3><span class="step">1</span>Pick a weak listing</h3>
+      <select id="jList" style="width:100%"></select>
+      <div id="jOrig" style="margin-top:8px"></div>
+      <h3 style="margin-top:14px"><span class="step">2</span>Get a rewrite</h3>
+      <div class="row"><button class="btn" id="jAi">Rewrite with AI</button><button class="btn ghost" id="jTempt">Rewrite — “make it as appealing as possible”</button></div>
+      <div class="small muted" style="margin:8px 0 4px">…or load a rewrite to test the judges:</div>
+      <div class="row"><button class="btn ghost small" data-pre="faithful">faithful</button><button class="btn ghost small" data-pre="invented">invents a guarantee</button><button class="btn ghost small" data-pre="wrong_number">changes one number</button><button class="btn ghost small" data-pre="says_nothing">says almost nothing</button></div>
+      <label class="f">Title</label><input id="jTitle" style="width:100%">
+      <label class="f">Description</label><textarea id="jDesc" rows="4"></textarea>
+      <div class="row" style="margin-top:8px"><button class="btn" id="jGo">Judge this rewrite</button><span class="progress" id="jProg"></span></div>
+    </div>
+    <div class="card"><h3><span class="step">3</span>The judges' verdict</h3><div id="jOut"><span class="muted">Results appear here.</span></div></div>
+  </div>
+  <div class="card">
+    <h3>Without code</h3>
+    <p class="small">In the <a href="https://ai.azure.com" target="_blank">Foundry portal</a>, open your project <b>marketplace-gate</b> → <b>Evaluations</b> → <b>Create</b>, choose the <b>Groundedness</b> evaluator with your <code>decision</code> deployment as the judge, and upload rewrites with <code>query</code>, <code>context</code> and <code>response</code> columns.</p>
+  </div>
+  <div class="takeaway"><b>What you learned:</b> groundedness asks "is everything it says supported?"; your gate's questions catch what it can't — a rewrite that's true but useless. And a judge you've never seen fail is a judge you can't trust.</div>
+</section>
+
+<!-- ================================================================== Report -->
+<section class="tab" id="t7">
+  <div class="lesson"><div class="n">Take it home</div><h2>My launch report</h2>
+    <p>The gate you built, its scorecard, and your Decision Design Cards — the decisions in your own work you'd automate the same way. One Markdown file to share with your team.</p></div>
+  <div class="card"><div class="row"><a class="btn" id="dl" href="/api/summary" download="my-launch-report.md" style="text-decoration:none;display:inline-block">Download my launch report</a></div>
+    <pre id="sumOut" style="white-space:pre-wrap;background:#fafbfd;color:var(--ink);border:1px solid var(--line);max-height:none"></pre></div>
+</section>
+
+<!-- ================================================================== Under the hood -->
+<section class="tab" id="t8">
+  <div class="lesson"><div class="n">Optional · for the curious</div><h2>Under the hood: can I trust the numbers?</h2>
+    <p>Recorded runs of three ways to answer the gate's questions, on every listing: Microsoft-Decision-1.1, gpt-6-luna through the Decisions API, and gpt-6-luna as a chat model. Accuracy, safety, calibration, speed and cost — measured on your own data, the way Microsoft's Decision-Benchmarks does.</p></div>
+  <div class="card">
+    <h3><span class="step">Predict</span>Which is most accurate?</h3>
+    <div class="row"><select id="rankGuess"><option value="">— your guess —</option><option value="decision">Microsoft-Decision-1.1</option><option value="luna">gpt-6-luna Decisions</option><option value="llm">gpt-6-luna chat</option></select>
+    <label class="f" style="margin:0 0 0 12px">Listings</label><select id="cmpSplit"><option value="test">Monday (516)</option><option value="threshold">rehearsal (524)</option><option value="dev">starter set and friends (270)</option></select>
+    <button class="btn" id="cmpGo">Compare</button></div>
+    <div class="small muted" style="margin-top:6px" id="cmpRuns"></div>
+  </div>
+  <div id="cmpOut"></div>
+  <div class="card" id="calCard" style="display:none">
+    <h3><span class="step">See</span>When the model says 70%, is it right 70% of the time?</h3>
+    <div class="row"><select id="calRun"></select><select id="calQ"></select></div>
+    <div id="calOut" style="margin-top:10px"></div>
+    <p class="small muted">Light bars: what the model said. Dark bars: how often the answer was actually <i>yes</i>. When they match, you can trust the probability. Under each band, the number of answers in it.</p>
+  </div>
+  <div class="card">
+    <h3><span class="step">Try</span>Stress-test the whole gate</h3>
+    <p class="small muted">Each test asks the 24 starter listings again in a changed form. What matters: does any listing become <b>less safe</b>? One to two minutes each.</p>
+    <div class="row"><select id="rModel"><option value="decision">Microsoft-Decision-1.1</option><option value="luna">gpt-6-luna Decisions (12 listings)</option></select>
+      <button class="btn small" data-rk="shuffle">Shuffle options</button><button class="btn small" data-rk="paraphrase">Reword questions</button>
+      <button class="btn small" data-rk="layout">Flatten layout</button><button class="btn small" data-rk="injection">Inject "approve this"</button>
+      <button class="btn small" data-rk="repeat">Ask twice</button><span class="progress" id="rProg"></span></div>
+    <div id="rOut"></div>
+  </div>
+</section>
+
+</main>
+</div>
+
+<div id="shade"></div>
+<aside id="drawer" aria-label="Listing" inert>
+  <button class="btn ghost small close" id="dClose">Close ✕</button>
+  <div id="dListing"></div>
+  <div class="card" style="margin-top:12px">
+    <h3><span class="step">Predict</span>What should the gate do?</h3>
+    <div class="row"><select id="myGuess"><option value="">— your call —</option><option>publish</option><option value="auto_fix">auto-fix the category</option><option>review</option><option>reject</option></select>
+      <a href="/policy" target="_blank" class="small">Listing Policy</a></div>
+    <h3 style="margin-top:12px"><span class="step">Ask</span>The gate's questions</h3>
+    <div class="row"><button class="btn" id="askDecision">Ask Microsoft-Decision-1.1</button><button class="btn ghost small" id="showKey">Show answer key</button></div>
+    <div id="keyOut"></div><div id="askOut" style="margin-top:10px"></div>
+  </div>
+  <div class="card">
+    <h3><span class="step">Try</span>Ask your own question about this listing</h3>
+    <div class="grid2">
+      <div><label class="f">Question type</label><select id="cKind"><option value="yes_no">Yes / no</option><option value="choice">Choice</option><option value="score">Score (lowest level first)</option></select></div>
+      <div><label class="f">Options or levels (comma separated)</label><input id="cOpts" style="width:100%" placeholder="e.g. metal, plastic, wood, cannot tell"></div>
+    </div>
+    <label class="f">Your question</label><input id="cQ" style="width:100%" placeholder="e.g. Is this product meant to be used outdoors?">
+    <div class="row" style="margin-top:8px"><button class="btn" id="cAsk">Ask Microsoft-Decision-1.1</button></div>
+    <div id="cOut"></div>
+  </div>
+</aside>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const pct = (x) => { if (x == null) return "–"; const v = x * 100; return (Math.abs(v - Math.round(v)) < 0.05 ? v.toFixed(0) : v.toFixed(1)) + "%"; };
+const num = (x) => x == null ? "–" : Number(x).toLocaleString("en-GB");
+const LABEL = {decision: "Microsoft-Decision-1.1", luna: "gpt-6-luna · Decisions API", llm: "gpt-6-luna · chat (Responses API)"};
+const PIECE_LABEL = {safety: "Safety", truth: "Truth", shelf: "Shelf"};
+let CFG = null, CUR = null, LAUNCH = null;
+
+async function api(path, opts = {}) {
+  const r = await fetch(path, opts.body ? {method: opts.method || "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(opts.body)} : opts);
+  if (r.status === 401) { location.href = "/login"; return {}; }
+  const ct = r.headers.get("content-type") || "";
+  const data = ct.includes("json") ? await r.json() : await r.text();
+  if (!r.ok && typeof data === "object") return {error: data.error || data.detail || `HTTP ${r.status}`};
+  return data;
+}
+async function job(path, body, progEl) {
+  const start = await api(path, {body: body || {}});
+  if (start.error) return start;
+  while (true) {
+    await new Promise(r => setTimeout(r, 1500));
+    const s = await api(`/api/jobs/${start.job}`);
+    if (progEl) progEl.textContent = s.status === "running" ? `⏳ ${s.progress}` : "";
+    if (s.status === "done") return s.result;
+    if (s.status === "error") return {error: s.error};
+  }
+}
+const outcome = (o) => `<span class="badge o-${o}">${o === "auto_fix" ? "auto-fix" : o}</span>`;
+const bar = (p, cls = "") => p == null ? '<span class="muted small">no probability</span>' : `<div class="bar ${cls}"><i style="width:${Math.max(2, p*100)}%"></i><b>${pct(p)}</b></div>`;
+function codePanel(code) {
+  if (!code) return "";
+  return `<details class="code"><summary>Show me the code</summary>
+    ${code.request ? `<div class="small muted">The request that was sent:</div><pre>${esc(JSON.stringify(code.request, null, 1))}</pre>` : ""}
+    <div class="small muted">The same call in a few lines of Python:</div><pre>${esc(code.python)}</pre>
+    <div class="small muted">In this repository: ${code.files.map(f => `<code>${esc(f)}</code>`).join(" · ")}</div></details>`;
+}
+
+// ---------------------------------------------------------------- shell
+function showTab(id) {
+  document.querySelectorAll("nav button").forEach(x => x.classList.toggle("active", x.dataset.tab === id));
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.id === id));
+  ({t2: loadQuestions, t4: initDial, t5: initSell, t6: initJudge, t7: loadSummary, t8: initCompare}[id] || (() => {}))();
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => showTab(b.dataset.tab));
+document.querySelectorAll("[data-goto]").forEach(c => c.onclick = () => showTab(c.dataset.goto));
+$("scorebar").onclick = () => showTab("t0");
+async function loadConfig() { CFG = await api("/api/config"); }
+async function loadLights() {
+  const s = await api("/api/status");
+  if (s.error) { $("lights").innerHTML = `<span class="err">${esc(s.error)}</span>`; return; }
+  $("lights").innerHTML = Object.entries(s).map(([k, v]) => `<span class="light" title="${esc(v.detail || (v.ms + ' ms'))}"><span class="dot ${v.ok ? "ok" : "bad"}"></span>${esc(v.label)}</span>`).join("");
+}
+
+// ---------------------------------------------------------------- launch scorecard
+const KPI = [
+  ["live_fast_pct", "live within a minute", v => v + "%", false],
+  ["bad_live_per_10k", "bad listings live per 10,000", num, true],
+  ["wrong_aisle_per_10k", "in the wrong aisle per 10,000", num, true],
+  ["reviewer_hours_per_day", "reviewer hours a day", num, true],
+  ["cost_per_day_eur", "cost a day (reviewers + AI)", v => "€" + num(v), true],
+];
+function deltaTxt(before, after, lowerIsBetter, fmt) {
+  if (before == null || before === after) return "";
+  const better = lowerIsBetter ? after < before : after > before;
+  const d = after - before;
+  return `<div class="d ${better ? "win" : "lose"}">${d > 0 ? "▲" : "▼"} ${fmt(Math.abs(Math.round(d * 10) / 10))}</div>`;
+}
+function kpiBlock(card, before) {
+  return `<div class="kpis">${KPI.map(([k, l, f, low]) => `<div class="kpi"><div class="v ${low && k !== "reviewer_hours_per_day" && k !== "cost_per_day_eur" ? (card[k] ? "lose" : "win") : ""}">${f(card[k])}</div><div class="l">${l}</div>${before ? deltaTxt(before[k], card[k], low, f) : ""}</div>`).join("")}</div>`;
+}
+async function refreshLaunch() {
+  LAUNCH = await api("/api/launch");
+  if (LAUNCH.error) { $("sk").innerHTML = `<span class="err">${esc(LAUNCH.error)}</span>`; return; }
+  const c = LAUNCH.scorecard, on = LAUNCH.pieces;
+  $("chips").innerHTML = ["safety", "truth", "shelf"].map(p => `<span class="chip ${on.includes(p) ? "on" : ""}">${on.includes(p) ? "✓" : "○"} ${PIECE_LABEL[p]}</span>`).join('<span class="arrow">→</span>') +
+    `<span class="arrow">→</span><span class="chip ${LAUNCH.tuned ? "on" : ""}">${LAUNCH.tuned ? "✓" : "○"} Dial</span><span class="arrow">→</span><span class="chip ${LAUNCH.monday_opened ? "on" : ""}">🚀 Monday</span>`;
+  $("sk").innerHTML = KPI.map(([k, l, f]) => `<div><b class="${(k === "bad_live_per_10k" || k === "wrong_aisle_per_10k") ? (c[k] ? "lose" : "win") : ""}">${f(c[k])}</b><span>${l}</span></div>`).join("");
+  $("launchCard").innerHTML = kpiBlock(c) + `<p class="small muted" style="margin:8px 0 0">Gate pieces on: ${on.length ? on.map(p => PIECE_LABEL[p]).join(", ") : "<b>none yet</b>"} · ${LAUNCH.tuned ? "your dial settings" : "default dial (80% / 20%)"} · ${LAUNCH.questions_edited.length ? "your questions" : "original questions"} · ${c.listings} rehearsal listings scaled to ${num(c.assumptions.listings_per_day)} a day.</p>`;
+  const h = LAUNCH.by_hand;
+  $("baselines").innerHTML = `
+    <div class="card"><h3>😬 Option A: publish everything</h3>${miniKpis({live: LAUNCH.empty.live_fast_pct + "%", bad: num(LAUNCH.empty.bad_live_per_10k), hours: "0", cost: "€0"})}<p class="small muted">Fast and free — and customers see every banned product, hidden phone number and invented feature.</p></div>
+    <div class="card"><h3>🐢 Option B: check everything by hand</h3>${miniKpis({live: "0%", bad: "0", hours: num(h.reviewer_hours_per_day), cost: "€" + num(h.cost_per_day_eur)})}<p class="small muted">Safe — but that's ${h.reviewer_days_per_day} full-time reviewers, not three, and sellers wait days.</p></div>
+    <div class="card" style="border-color:var(--blue)"><h3>🚀 Option C: your gate</h3>${miniKpis({live: c.live_fast_pct + "%", bad: num(c.bad_live_per_10k), hours: num(c.reviewer_hours_per_day), cost: "€" + num(c.cost_per_day_eur)})}<p class="small muted">${on.length ? "Keep building — every challenge moves these numbers." : "Empty so far, so it behaves like option A. Start with Challenge 1."}</p></div>`;
+  if (!$("assume").dataset.done) {
+    const A = [["listings_per_day", "Listings a day", 1000], ["minutes_per_review", "Minutes per review", .5], ["eur_per_reviewer_hour", "€ per reviewer hour", 1]];
+    $("assume").innerHTML = A.map(([k, l, s]) => `<div><label class="f">${l}</label><input type="number" step="${s}" data-a="${k}" value="${c.assumptions[k]}" style="width:100%"></div>`).join("");
+    $("assume").querySelectorAll("input").forEach(i => i.onchange = async () => { await api("/api/launch/assumptions", {method: "PUT", body: {[i.dataset.a]: +i.value}}); refreshLaunch(); });
+    $("assume").dataset.done = 1;
+  }
+  $("q4h").textContent = num(c.reviewer_hours_per_day);
+  drawPieces(); drawMysteries();
+}
+function miniKpis(m) {
+  return `<div class="kpis" style="grid-template-columns:1fr 1fr"><div class="kpi"><div class="v">${m.live}</div><div class="l">live within a minute</div></div><div class="kpi"><div class="v ${m.bad !== "0" ? "lose" : "win"}">${m.bad}</div><div class="l">bad listings live per 10,000</div></div>
+    <div class="kpi"><div class="v">${m.hours}</div><div class="l">reviewer hours a day</div></div><div class="kpi"><div class="v">${m.cost}</div><div class="l">cost a day</div></div></div>`;
+}
+function drawPieces() {
+  document.querySelectorAll(".piece").forEach(el => {
+    const p = el.dataset.piece, on = LAUNCH.pieces.includes(p);
+    if (!el.dataset.built) {
+      el.innerHTML = `<div class="row"><button class="btn go">Add the ${PIECE_LABEL[p]} check to my gate</button><span class="small muted"></span></div><div class="pieceOut" style="margin-top:10px"></div>`;
+      el.querySelector("button").onclick = async () => {
+        const now = LAUNCH.pieces.includes(p);
+        const want = now ? LAUNCH.pieces.filter(x => x !== p) : [...LAUNCH.pieces, p];
+        const r = await api("/api/launch/pieces", {method: "PUT", body: {pieces: want}});
+        if (r.error) { el.querySelector(".pieceOut").innerHTML = `<div class="err">${esc(r.error)}</div>`; return; }
+        await refreshLaunch();
+        el.querySelector(".pieceOut").innerHTML = `<p class="small"><b>${now ? "Removed." : "Added."}</b> The rehearsal, before → after:</p>${kpiBlock(r.after, r.before)}`;
+      };
+      el.dataset.built = 1;
+    }
+    el.querySelector("button").textContent = on ? `✓ ${PIECE_LABEL[p]} check is on — click to remove it` : `Add the ${PIECE_LABEL[p]} check to my gate`;
+    el.querySelector("button").className = on ? "btn ghost" : "btn go";
+  });
+}
+function badList(kinds, card) {
+  if (!kinds.length) return '<p class="win"><b>Nothing of this kind gets through any more. ✓</b></p>';
+  return `<table>${kinds.map(b => `<tr><td style="width:46%"><b>${b.count}</b> × ${esc(b.kind)} <span class="muted small">(≈ ${num(Math.round(b.count * card.assumptions.listings_per_day / card.listings))} a day)</span></td><td class="small">${b.examples.map(e => `<a class="try" data-id="${e.listing_id}">${e.listing_id}</a> ${esc(e.title.slice(0, 38))}`).join("<br>")}</td></tr>`).join("")}</table>`;
+}
+function drawMysteries() {
+  const c = LAUNCH.scorecard, on = LAUNCH.pieces;
+  const kinds = (piece) => c.bad_live.filter(b => b.examples.some(e => e.piece === piece));
+  $("m1").innerHTML = (on.includes("safety") ? "" : `<p class="small">Of ${c.listings} rehearsal listings, <b>${c.bad_live_count}</b> bad ones went live. The ones a Safety check would stop:</p>`) +
+    (on.includes("safety") ? '<p class="win"><b>Banned products and hidden contact details are now rejected. ✓</b></p>' : badList(kinds("safety"), c));
+  $("m2").innerHTML = on.includes("truth") ? `<p class="small">With the Truth check on, these still go live:</p>${badList(kinds("truth"), c)}` :
+    '<p class="small muted">Add the Truth check above first, then look here.</p>';
+  const aisle = c.wrong_aisle_count ? `<p class="small"><b>${c.wrong_aisle_count}</b> × in the wrong aisle (≈ ${num(Math.round(c.wrong_aisle_count * c.assumptions.listings_per_day / c.listings))} a day): ${c.wrong_aisle.map(e => `<a class="try" data-id="${e.listing_id}">${e.listing_id}</a>`).join(" · ")}</p>` : '<p class="win small"><b>Nothing in the wrong aisle. ✓</b></p>';
+  $("m3").innerHTML = aisle + (on.includes("shelf") ? "" : badList(kinds("shelf").filter(k => k.kind !== "in the wrong aisle"), c));
+  bindTry();
+}
+$("restart").onclick = async () => {
+  if (!confirm("Start the weekend again? The gate is emptied and your questions and dial settings are reset. Your Decision Design Cards are kept.")) return;
+  await api("/api/launch", {method: "DELETE"});
+  document.querySelectorAll(".pieceOut").forEach(e => e.innerHTML = "");
+  await loadConfig(); await refreshLaunch(); loadQuestions();
+};
+
+// ---------------------------------------------------------------- Decision Design Cards
+document.querySelectorAll(".note").forEach(async el => {
+  const ch = el.dataset.note;
+  el.innerHTML = `<h3>💡 Decision Design Card — your own work</h3><p class="small muted" style="margin-top:0">${esc(el.dataset.hint)} It goes into your launch report.</p>
+    <div class="grid3"><div><label class="f">A decision in my work</label><textarea rows="2" data-k="use_case"></textarea></div>
+    <div><label class="f">The closed question I'd ask</label><textarea rows="2" data-k="question"></textarea></div>
+    <div><label class="f">Type</label><select data-k="kind"><option value="">—</option><option>yes/no</option><option>choice</option><option>score</option></select></div>
+    <div><label class="f">A wrong "yes" would cost…</label><textarea rows="2" data-k="wrong_yes"></textarea></div>
+    <div><label class="f">A wrong "no" would cost…</label><textarea rows="2" data-k="wrong_no"></textarea></div>
+    <div><label class="f">When the model is unsure, who decides?</label><textarea rows="2" data-k="unsure"></textarea></div></div>
+    <div class="row" style="margin-top:6px"><button class="btn small">Save</button><span class="small muted"></span></div>`;
+  const n = (await api("/api/notes"))[ch] || {};
+  el.querySelectorAll("[data-k]").forEach(t => t.value = n[t.dataset.k] || "");
+  el.querySelector("button").onclick = async () => {
+    const body = {challenge: ch};
+    el.querySelectorAll("[data-k]").forEach(t => body[t.dataset.k] = t.value);
+    await api("/api/notes", {method: "PUT", body});
+    el.querySelector(".row span").textContent = "Saved ✓";
+  };
+});
+
+// ---------------------------------------------------------------- the listing drawer
+function closeDrawer() { $("drawer").inert = true; $("drawer").classList.remove("open"); $("shade").classList.remove("open"); }
+$("dClose").onclick = closeDrawer; $("shade").onclick = closeDrawer;
+function bindTry() {
+  document.querySelectorAll(".try").forEach(a => a.onclick = (e) => { e.preventDefault(); openListing(a.dataset.id, a.dataset); });
+}
+async function openListing(id, preset = {}) {
+  const r = await api(`/api/listings/${id}`);
+  if (r.error) return;
+  CUR = r;
+  const facts = r.manufacturer_facts ? Object.entries(r.manufacturer_facts).map(([k, v]) => `${k.replaceAll("_", " ")}: <b>${esc(v)}</b>`).join(" · ") : "<i>No manufacturer facts — the product number is not in Zava's catalogue.</i>";
+  $("dListing").innerHTML = `<div class="small muted">${r.listing_id} · seller ${esc(r.seller)} · listed under <b>${esc(r.seller_category)}</b></div><h3 style="margin:4px 60px 8px 0">${esc(r.title)}</h3>
+    <div class="listing">${r.image ? `<img src="/images/${r.image}" alt="product photo">` : '<div class="nophoto">no photo</div>'}
+    <div><div><b>€${r.price_eur}</b>${r.reference_price_eur ? ` <span class="small muted">(usual price €${r.reference_price_eur})</span>` : ""}</div><div class="desc">${esc(r.description)}</div>
+    <div class="facts"><b>Manufacturer facts</b> (trusted, looked up by product number): ${facts}</div></div></div>`;
+  $("askOut").innerHTML = ""; $("keyOut").innerHTML = ""; $("cOut").innerHTML = ""; $("myGuess").value = "";
+  $("cKind").value = preset.k || "yes_no"; $("cQ").value = preset.q || ""; $("cOpts").value = preset.o || "";
+  $("drawer").inert = false; $("drawer").classList.add("open"); $("shade").classList.add("open"); $("drawer").scrollTop = 0;
+  if (preset.q) $("cQ").scrollIntoView({block: "center"});
+}
+$("showKey").onclick = async () => {
+  const k = (await api(`/api/listings/${CUR.listing_id}?answer=true`)).answer_key;
+  $("keyOut").innerHTML = `<div class="predict" style="margin-top:10px"><b>Answer key:</b> ${outcome(k.expected.outcome)} ${k.expected.reasons.length ? "— " + esc(k.expected.reasons.join("; ")) : ""}</div>`;
+};
+function answersTable(call, qorder) {
+  const names = qorder || Object.keys(call.answers);
+  return `<table><tr><th>question</th><th>answer</th><th style="width:44%">probability of yes / of the answer</th></tr>` + names.map(n => {
+    const a = call.answers[n]; if (!a) return "";
+    if (a.status !== "ok") return `<tr><td>${n}</td><td colspan="2" class="muted small">${a.status}${a.detail ? " · " + esc(a.detail) : ""}</td></tr>`;
+    const isYN = a.kind === "yes_no";
+    let val = isYN ? (a.probability == null ? String(a.value) : "P(yes)") : esc(String(a.value));
+    if (a.kind === "score" && CFG) { const q = CFG.questions.find(x => x.name === n); if (q && q.levels && q.levels[a.value]) val = esc(q.levels[a.value][0]); }
+    return `<tr><td>${n}</td><td>${val}</td><td>${bar(a.probability, isYN && a.probability >= 0.5 ? "yes" : "")}</td></tr>`;
+  }).join("") + "</table>";
+}
+function modelCard(m, r) {
+  if (r.error) return `<h4>${LABEL[m]}</h4><div class="err">${esc(r.error)}</div>`;
+  const c = r.call, on = LAUNCH ? LAUNCH.pieces : [];
+  return `<h4>${LABEL[m]}</h4><div class="row">${outcome(r.decision.outcome)}<span class="small muted">with your gate so far (${on.length ? on.map(p => PIECE_LABEL[p]).join(", ") : "no checks yet"}) · ${c.latency_ms ? Math.round(c.latency_ms) + " ms" : ""}${r.cached ? " (cached)" : ""} · tokens in/out ${c.input_tokens}/${c.output_tokens}</span></div>
+    <div class="small" style="margin:4px 0 6px">${r.decision.reasons.length ? esc(r.decision.reasons.map(x => x.message).join("; ")) : "every check that's switched on passed"}</div>
+    ${r.decision_full_gate && on.length < 3 && r.decision_full_gate.outcome !== r.decision.outcome ? `<div class="predict small">Once all three pieces are on, the gate would say ${outcome(r.decision_full_gate.outcome)} — ${esc(r.decision_full_gate.reasons.map(x => x.message).join("; "))}</div>` : ""}
+    ${answersTable(c, CFG.questions.map(q => q.name))}${codePanel(r.code)}`;
+}
+$("askDecision").onclick = async () => {
+  $("askDecision").disabled = true;
+  $("askOut").innerHTML = '<div class="card model" id="m-decision"><span class="progress">asking…</span></div>';
+  const r = await api("/api/ask", {body: {listing_id: CUR.listing_id, model: "decision"}});
+  $("askDecision").disabled = false;
+  $("m-decision").innerHTML = modelCard("decision", r);
+  const guess = $("myGuess").value;
+  if (guess && !r.error) {
+    const k = (await api(`/api/listings/${CUR.listing_id}?answer=true`)).answer_key.expected.outcome;
+    $("askOut").insertAdjacentHTML("afterbegin", `<div class="predict"><b>${guess === k ? "✅ You called it." : "🤔 Not quite."}</b> You said ${outcome(guess)} — the answer key says ${outcome(k)}.</div>`);
+  }
+  $("askOut").insertAdjacentHTML("beforeend", `<div class="row" style="margin-top:8px"><button class="btn ghost small" id="askChat">Ask a chat model the same questions</button></div><div id="chatOut"></div>`);
+  $("askChat").onclick = async () => {
+    $("chatOut").innerHTML = '<div class="card model"><span class="progress">asking gpt-6-luna as a chat model…</span></div>';
+    const c = await api("/api/ask", {body: {listing_id: CUR.listing_id, model: "llm"}});
+    $("chatOut").innerHTML = `<div class="card model">${modelCard("llm", c)}</div><p class="small">The chat model writes its answer — <i>true</i> or <i>false</i> — but no probability: you can't tell a sure answer from a guess, and there's nothing to set a line on. Compare the latency and output tokens too.</p>`;
+  };
+};
+$("cAsk").onclick = async () => {
+  $("cOut").innerHTML = '<p class="progress">asking…</p>';
+  const r = await api("/api/custom", {body: {listing_id: CUR.listing_id, model: "decision", kind: $("cKind").value, instructions: $("cQ").value, options: $("cOpts").value.split(",")}});
+  if (r.error) { $("cOut").innerHTML = `<div class="err">${esc(r.error)}</div>`; return; }
+  const a = r.call.answers.my_question;
+  let body;
+  if (a.status !== "ok") body = `<div class="err">${esc(a.status)} ${esc(a.detail || "")}</div>`;
+  else if (a.kind === "yes_no") body = `<table><tr><td style="width:120px">P(yes)</td><td>${bar(a.probability, a.probability >= .5 ? "yes" : "")}</td></tr></table><p class="small muted">Close to 0 is a confident <b>no</b>, close to 1 a confident <b>yes</b>. Unsure is near the middle.</p>`;
+  else body = `<p>Most likely: <b>${esc(a.value)}</b>${a.expected_score != null ? ` · weighted score ${a.expected_score.toFixed(2)}` : ""}</p><table>${Object.entries(a.distribution).sort((x, y) => y[1] - x[1]).map(([k, v]) => `<tr><td style="width:160px">${esc(k)}</td><td>${bar(v)}</td></tr>`).join("")}</table>`;
+  $("cOut").innerHTML = `<div style="margin-top:10px">${body}</div>${codePanel(r.code)}`;
+};
+async function loadInbox() {
+  const rows = await api("/api/listings?split=dev&starter=true");
+  $("inbox").innerHTML = rows.map(r => `<div class="item try" data-id="${r.listing_id}">
+    ${r.image ? `<img src="/images/${r.image}" alt="">` : '<div class="thumb">no photo</div>'}
+    <div><div>${esc(r.title.slice(0, 60))}</div><div class="small muted">${r.listing_id} · €${r.price_eur}</div></div></div>`).join("");
+  bindTry();
+}
+
+// ---------------------------------------------------------------- 2. Truth check: questions
+function questionBlock(q) {
+  return `<div style="border-bottom:1px solid var(--line);padding:8px 0">
+    <div class="row"><b>${q.name}</b><span class="small muted">${q.kind.replace("_", "/")}</span>${q.edited ? '<span class="badge o-auto_fix">edited</span>' : ""}</div>
+    <textarea rows="3" data-q="${q.name}">${esc(q.current)}</textarea>
+    ${q.options ? `<div class="small muted">options: ${q.options.map(o => o[0]).join(", ")}</div>` : ""}${q.levels ? `<div class="small muted">levels: ${q.levels.map(o => o[0]).join(" → ")}</div>` : ""}
+    <div class="row" style="margin-top:4px"><button class="btn small" data-save="${q.name}">Save</button>${q.edited ? `<button class="btn ghost small" data-reset="${q.name}">Reset</button>` : ""}</div></div>`;
+}
+async function loadQuestions() {
+  const d = await api("/api/questions");
+  if (!d.questions) return;
+  $("qFocus").innerHTML = questionBlock(d.questions.find(q => q.name === "addressed_to_gate"));
+  $("qList").innerHTML = d.questions.filter(q => q.name !== "addressed_to_gate").map(questionBlock).join("");
+  document.querySelectorAll("#t2 [data-save]").forEach(b => b.onclick = async () => {
+    const t = document.querySelector(`#t2 textarea[data-q="${b.dataset.save}"]`).value;
+    const r = await api(`/api/questions/${b.dataset.save}`, {method: "PUT", body: {instructions: t}});
+    if (r.error) alert(r.error); loadQuestions(); loadConfig();
+  });
+  document.querySelectorAll("#t2 [data-reset]").forEach(b => b.onclick = async () => { await api(`/api/questions/${b.dataset.reset}`, {method: "DELETE"}); loadQuestions(); loadConfig(); refreshLaunch(); });
+}
+$("resetQs").onclick = async () => { if (confirm("Go back to the original wording for every question?")) { await api("/api/questions/all", {method: "DELETE"}); loadQuestions(); loadConfig(); refreshLaunch(); } };
+$("runDraft").onclick = async () => {
+  $("runDraft").disabled = true;
+  const r = await job("/api/jobs/evaluate", {model: "decision", draft: true}, $("draftProg"));
+  $("runDraft").disabled = false;
+  if (r.error) { $("draftOut").innerHTML = `<div class="err">${esc(r.error)}</div>`; return; }
+  const m = r.report.questions.claims_vs_facts;
+  const wrong = r.listings.filter(l => l.labels.claims_vs_facts && l.answers.claims_vs_facts && l.answers.claims_vs_facts.value !== l.labels.claims_vs_facts);
+  $("draftOut").innerHTML = `<div class="kpis" style="margin-top:10px"><div class="kpi"><div class="v lose">${pct(m.accuracy)}</div><div class="l">right with Priya's draft</div></div>
+    <div class="kpi"><div class="v">${wrong.length} / ${m.n}</div><div class="l">listings it got wrong</div></div></div>
+    <table style="margin-top:10px"><tr><th>listing</th><th>answer key</th><th>model chose</th><th style="width:45%">how it split the probability</th></tr>${wrong.slice(0, 6).map(l => {
+      const a = l.answers.claims_vs_facts; return `<tr><td><a class="try" data-id="${l.listing_id}">${l.listing_id}</a></td><td>${l.labels.claims_vs_facts}</td><td><b>${a.value}</b></td><td>${Object.entries(a.distribution).sort((x, y) => y[1] - x[1]).slice(0, 3).map(([k, v]) => `${k} ${pct(v)}`).join(" · ")}</td></tr>`; }).join("")}</table>`;
+  bindTry(); $("tk2a").style.display = "block";
+};
+$("testQs").onclick = async () => {
+  $("testQs").disabled = true;
+  const r = await job("/api/jobs/evaluate", {model: "decision", compare_original: true}, $("qProg"));
+  $("testQs").disabled = false;
+  if (r.error) { $("qOut").innerHTML = `<div class="err">${esc(r.error)}</div>`; return; }
+  const now = r.report, before = r.original;
+  if (!before) { $("qOut").innerHTML = '<p class="muted">You haven\'t saved a change yet — edit the question and click <b>Save</b> first.</p>'; return; }
+  const rows = Object.entries(now.questions).filter(([n]) => r.edited.includes(n)).map(([n, m]) => {
+    const b = before.questions[n].accuracy;
+    const delta = m.accuracy - b > 0.001 ? `<span class="win">▲ ${pct(m.accuracy - b)}</span>` : (b - m.accuracy > 0.001 ? `<span class="lose">▼ ${pct(b - m.accuracy)}</span>` : "=");
+    return `<tr><td>${n} <span class="badge o-auto_fix">edited</span></td><td>${pct(b)}</td><td>${bar(m.accuracy, "good")}</td><td>${delta}</td></tr>`;
+  }).join("");
+  const changed = r.listings.filter(l => r.original_outcomes[l.listing_id] !== l.outcome);
+  $("qOut").innerHTML = `<div class="kpis" style="margin-top:10px"><div class="kpi"><div class="v">${pct(now.gate.outcome_accuracy)}</div><div class="l">whole gate right (was ${pct(before.gate.outcome_accuracy)})</div></div>
+    <div class="kpi"><div class="v ${now.gate.unsafe_published ? "lose" : "win"}">${now.gate.unsafe_published}</div><div class="l">bad listings published (was ${before.gate.unsafe_published})</div></div></div>
+    <table style="margin-top:10px"><tr><th>question</th><th>original</th><th style="width:40%">yours</th><th></th></tr>${rows}</table>
+    ${changed.length ? `<p><b>Outcomes that changed:</b> ${changed.map(l => `<a class="try" data-id="${l.listing_id}">${l.listing_id}</a> ${outcome(r.original_outcomes[l.listing_id])}→${outcome(l.outcome)} (answer key: ${l.expected})`).join(" · ")}</p>` : '<p class="muted">No outcome changed on the starter set.</p>'}
+    <p class="small muted">Measured on the whole gate, on the 24 starter listings. Better here? Now carry it into the rehearsal below.</p>`;
+  bindTry();
+};
+$("rescore").onclick = async () => {
+  $("rescore").disabled = true;
+  const before = LAUNCH.scorecard;
+  const r = await job("/api/jobs/rescore", {}, $("rsProg"));
+  $("rescore").disabled = false;
+  if (r.error) { $("rsOut").innerHTML = `<div class="err">${esc(r.error)}</div>`; return; }
+  if (!r.run) { $("rsOut").innerHTML = `<p class="muted">${esc(r.message)}</p>`; return; }
+  await refreshLaunch();
+  $("rsOut").innerHTML = `<p>✅ Re-scored <b>${r.changed.join(", ")}</b> on 1,040 listings. Your rehearsal, before → after:</p>${kpiBlock(LAUNCH.scorecard, before)}`;
+};
+
+// ---------------------------------------------------------------- 4. Go-live dial
+const COST_SLIDERS = [
+  ["prohibited_item", "miss", "A banned product goes live", 0, 300],
+  ["off_platform_contact", "miss", "A hidden phone number goes live", 0, 200],
+  ["contradicts_facts", "miss", "A false spec goes live", 0, 100],
+  ["addressed_to_gate", "miss", "A note to the reviewer goes live", 0, 100],
+  ["unsupported_claim", "miss", "An invented feature goes live", 0, 50],
+  ["prohibited_item", "false_alarm", "An honest listing is wrongly rejected", 0, 100],
+];
+let COSTS = null, TUNED = null, handTimer = null;
+async function initDial() {
+  if (!COSTS) {
+    COSTS = await api("/api/costs");
+    $("costSliders").innerHTML = COST_SLIDERS.map(([q, k, label, lo, hi], i) => `<div class="slider"><span>${label}</span><input type="range" min="${lo}" max="${hi}" value="${COSTS[q][k]}" data-i="${i}"><b id="cv${i}">${COSTS[q][k]}</b></div>`).join("") +
+      `<div class="slider"><span><b>One manual review</b></span><input type="range" min="0" max="10" step="0.5" value="1" id="revCost"><b id="cvr">1</b></div>`;
+    $("costSliders").querySelectorAll("input[data-i]").forEach(s => s.oninput = () => $(`cv${s.dataset.i}`).textContent = s.value);
+    $("revCost").oninput = () => $("cvr").textContent = $("revCost").value;
+    ["handNo", "handYes"].forEach(id => $(id).oninput = (e) => handChanged(e.target));
+    $("handQ").onchange = handChanged;
+  }
+  handChanged(); loadQueue();
+  const ex = LAUNCH && LAUNCH.monday_opened;
+  $("examCount").textContent = ex ? `Opened ${ex} time${ex > 1 ? "s" : ""}.` : "";
+}
+function costsFromSliders() {
+  const c = JSON.parse(JSON.stringify(COSTS));
+  $("costSliders").querySelectorAll("input[data-i]").forEach(s => { const [q, k] = COST_SLIDERS[s.dataset.i]; c[q][k] = +s.value; if (k === "false_alarm" && q === "prohibited_item") { c.off_platform_contact.false_alarm = +s.value; c.contradicts_facts.false_alarm = +s.value; } });
+  Object.values(c).forEach(v => v.review = +$("revCost").value);
+  return c;
+}
+function handChanged(moved) {
+  let no = +$("handNo").value, yes = +$("handYes").value;
+  if (no > yes) { if (moved === $("handNo")) { $("handYes").value = no; yes = no; } else { $("handNo").value = yes; no = yes; } }
+  $("handNoV").textContent = no.toFixed(2); $("handYesV").textContent = yes.toFixed(2);
+  clearTimeout(handTimer);
+  handTimer = setTimeout(async () => {
+    const q = $("handQ").value;
+    const base = {yes: 0.8, no: 0.2, choice: 0.7, per_question: {}};
+    const [a, b] = await Promise.all([api("/api/gate", {body: {thresholds: base}}), api("/api/gate", {body: {thresholds: {...base, per_question: {[q]: {yes, no}}}}})]);
+    if (a.error || b.error) { $("handOut").innerHTML = `<div class="err">${esc(a.error || b.error)}</div>`; return; }
+    $("handOut").innerHTML = `<div style="margin-top:8px">${kpiBlock(b.scorecard, a.scorecard)}</div><p class="small muted">Rehearsal, compared with the default dial (0.20 / 0.80). Only <b>${q}</b> uses your lines.</p>`;
+  }, 250);
+}
+$("tuneGo").onclick = async () => {
+  $("tuneProg").textContent = "⏳ trying every pair of lines for every question…";
+  const r = await api("/api/tune", {body: {costs: costsFromSliders()}});
+  $("tuneProg").textContent = "";
+  if (r.error) { $("tuneOut").innerHTML = `<div class="err">${esc(r.error)}</div>`; return; }
+  TUNED = r.thresholds;
+  const rows = Object.entries(r.detail).map(([n, d]) => `<tr><td>${n}</td><td>${"choice" in d ? `act if at least ${d.choice} sure` : `no ≤ ${d.no} · <b>a person decides</b> · yes ≥ ${d.yes}`}</td></tr>`).join("");
+  $("tuneOut").innerHTML = `<p class="small" style="margin-top:10px">Rehearsal with your cheapest dial, compared with the default dial:</p>${kpiBlock(r.scorecard_tuned, r.scorecard_default)}
+    <details class="more" style="margin-top:8px"><summary>The lines it chose, per question</summary><table>${rows}</table></details>
+    <div class="row" style="margin-top:10px"><button class="btn go" id="applyThr">Use this dial for Monday</button><button class="btn ghost" id="resetThr">Back to the default dial</button></div>`;
+  $("applyThr").onclick = async () => { await api("/api/thresholds", {body: {thresholds: TUNED}}); await refreshLaunch(); $("applyThr").textContent = "✓ Set for Monday"; };
+  $("resetThr").onclick = async () => { await api("/api/thresholds", {method: "DELETE"}); await refreshLaunch(); };
+};
+$("examGo").onclick = async () => {
+  const r = await api("/api/exam", {body: {}});
+  if (r.error) { $("examOut").innerHTML = `<div class="err">${esc(r.error)}</div>`; return; }
+  await refreshLaunch();
+  $("examCount").textContent = `Opened ${r.opened} time${r.opened > 1 ? "s" : ""}.` + (r.opened > 1 ? " Each extra look makes Monday less honest." : "");
+  const g = r.report.gate, c = r.scorecard;
+  $("examOut").innerHTML = `<p class="small" style="margin-top:10px"><b>Monday</b> (${c.listings} new listings), compared with your rehearsal:</p>${kpiBlock(c, LAUNCH.scorecard)}
+    ${c.bad_live.length ? `<p class="small"><b>What got through:</b></p>${badList(c.bad_live, c)}` : ""}
+    ${c.wrong_aisle_count ? `<p class="small"><b>${c.wrong_aisle_count}</b> in the wrong aisle: ${c.wrong_aisle.map(e => `<a class="try" data-id="${e.listing_id}">${e.listing_id}</a> ${esc(e.title.slice(0, 30))}`).join(" · ")}</p>` : ""}
+    <div class="predict"><b>How bad could it still be?</b> ${g.unsafe_published} bad out of ${g.auto_published} published automatically — but with this many listings the true rate could still be up to <b>${pct(g.unsafe_rate_upper_95)}</b> (95% upper bound). Zero bad in <i>n</i> listings means roughly "under 3 in <i>n</i>": to promise under 1%, you need about 300 clean ones.</div>`;
+  bindTry();
+};
+$("queueGo").onclick = async () => {
+  $("queueGo").disabled = true;
+  const r = await job("/api/jobs/queue", {model: "decision"}, $("queueProg"));
+  $("queueGo").disabled = false;
+  if (r.error) { $("queueOut").innerHTML = `<div class="err">${esc(r.error)}</div>`; return; }
+  loadQueue();
+};
+const REVIEWER = {publish: "Publish", auto_fix: "Fix the category and publish", reject: "Send back to the seller"};
+async function loadQueue() {
+  const d = await api("/api/queue");
+  if (!d.queue || !d.queue.length) { $("queueOut").innerHTML = '<p class="muted small">The queue is empty. Fill it first.</p>'; return; }
+  const done = Object.values(d.reviews), right = done.filter(v => v.correct).length;
+  $("queueOut").innerHTML = `<p class="small">Reviewed ${done.length} of ${d.queue.length}${done.length ? ` · <b>${right}</b> right calls` : ""}. As the reviewer you make the final call (<a href="/policy" target="_blank">policy section 10</a>): publish it, fix the category, or send it back to the seller with the reason.</p>
+    <table><tr><th>listing</th><th>why the gate wasn't sure</th><th style="width:40%">your decision</th></tr>${d.queue.map(q => {
+    const v = d.reviews[q.listing_id];
+    return `<tr><td><a class="try" data-id="${q.listing_id}">${q.listing_id}</a><br><span class="small">${esc(q.title.slice(0, 50))}</span></td><td class="small">${q.reasons.map(esc).join("<br>")}</td>
+      <td>${v ? `<div class="small"><b>${v.correct ? "✅ Right call" : "🤔 Not quite"}:</b> you chose <i>${REVIEWER[v.verdict] || v.verdict}</i>${v.correct ? "" : ` — a reviewer should <b>${(REVIEWER[v.answer_key] || v.answer_key).toLowerCase()}</b>`}${v.answer_key === "auto_fix" && v.right_category ? ` (to ${esc(v.right_category)})` : ""}${v.why && v.why.length ? `<br><span class="muted">${esc(v.why.join("; "))}</span>` : '<br><span class="muted">nothing in it breaks the policy</span>'}</div>`
+        : `<div class="row"><button class="btn small" data-v="publish" data-id="${q.listing_id}">Publish</button><button class="btn ghost small" data-v="auto_fix" data-id="${q.listing_id}">Fix category</button><button class="btn ghost small" data-v="reject" data-id="${q.listing_id}">Send back</button></div>`}</td></tr>`;
+  }).join("")}</table>`;
+  $("queueOut").querySelectorAll("[data-v]").forEach(b => b.onclick = async () => { await api(`/api/queue/${b.dataset.id}`, {body: {verdict: b.dataset.v}}); loadQueue(); });
+  bindTry();
+}
+
+// ---------------------------------------------------------------- 5a. Sellers strike back
+async function initSell() {
+  if (!CFG) await loadConfig();
+  if (!$("sGtin").options.length) {
+    $("sGtin").innerHTML = '<option value="">— not in the catalogue (no facts) —</option>' + CFG.products.map(p => `<option value="${p.gtin}" data-img="${p.image}" data-cat="${p.category}" data-price="${p.reference_price_eur}">${esc(p.name)}</option>`).join("");
+    $("sCat").innerHTML = CFG.categories.map(c => `<option>${c}</option>`).join("");
+    $("sImg").innerHTML = '<option value="">no photo</option>' + CFG.images.map(i => `<option>${i}</option>`).join("");
+    $("sGtin").onchange = () => { const o = $("sGtin").selectedOptions[0]; if (o.dataset.img) { $("sImg").value = o.dataset.img; $("sCat").value = o.dataset.cat; $("sPrice").value = o.dataset.price; $("sTitle").value = o.textContent; } };
+  }
+  drawBoard(await api("/api/sell/scoreboard"));
+}
+function drawBoard(b) {
+  $("board").innerHTML = `<div class="kpis"><div class="kpi"><div class="v">${b.attempts}</div><div class="l">attempts</div></div><div class="kpi"><div class="v win">${b.caught}</div><div class="l">caught by your gate</div></div><div class="kpi"><div class="v lose">${b.got_through}</div><div class="l">got through</div></div></div>` +
+    (b.recent.length ? `<table style="margin-top:8px">${b.recent.map(x => `<tr><td class="small">${esc(x.title)}</td><td>${outcome(x.outcome)}</td><td class="small">${x.goal === "other" ? "" : (x.got_through ? "🏴‍☠️ got through" : "🛡️ caught")}</td></tr>`).join("")}</table>` : "");
+}
+$("sellGo").onclick = async () => {
+  $("sellOut").innerHTML = '<p class="progress">your gate is checking the listing…</p>';
+  const r = await api("/api/sell", {body: {title: $("sTitle").value, description: $("sDesc").value, seller_category: $("sCat").value, price_eur: +$("sPrice").value || 0, image: $("sImg").value || null, gtin: $("sGtin").value || null, goal: $("sGoal").value}});
+  if (r.error) { $("sellOut").innerHTML = `<div class="err">${esc(r.error)}</div>`; return; }
+  const msg = $("sGoal").value === "other" ? "" : (r.got_through ? `<div class="big lose">🏴‍☠️ It got through!</div><p>Which question should have caught it? Fix it in Challenge 2 and try again.</p>` : `<div class="big win">🛡️ Caught.</div>`);
+  $("sellOut").innerHTML = `${msg}<p>Outcome: ${outcome(r.decision.outcome)} ${r.decision.reasons.length ? "— " + esc(r.decision.reasons.map(x => x.message).join("; ")) : ""}</p>${answersTable(r.call, CFG.questions.map(q => q.name))}${codePanel(r.code)}`;
+  drawBoard(r.scoreboard);
+};
+
+// ---------------------------------------------------------------- 5b. Judge
+let PRESETS = null;
+async function initJudge() {
+  if ($("jList").options.length) return;
+  const rows = await api("/api/judge/listings");
+  $("jList").innerHTML = rows.map(r => `<option value="${r.listing_id}">${r.listing_id} · ${esc(r.title)}</option>`).join("");
+  $("jList").onchange = loadJudgeListing; loadJudgeListing();
+}
+async function loadJudgeListing() {
+  const id = $("jList").value;
+  const [r, p] = await Promise.all([api(`/api/listings/${id}`), api(`/api/judge/presets/${id}`)]);
+  PRESETS = p;
+  $("jOrig").innerHTML = `<div class="desc"><b>${esc(r.title)}</b>\n${esc(r.description)}</div><div class="facts"><b>Manufacturer facts:</b> ${esc(p.facts)}</div>`;
+  $("jTitle").value = ""; $("jDesc").value = ""; $("jOut").innerHTML = '<span class="muted">Results appear here.</span>';
+}
+document.querySelectorAll("[data-pre]").forEach(b => b.onclick = () => { const x = PRESETS[b.dataset.pre]; $("jTitle").value = x.title; $("jDesc").value = x.description; });
+async function judge(mode) {
+  $("jProg").textContent = mode === "own" ? "⏳ judging…" : "⏳ writing and judging…";
+  const r = await api("/api/judge", {body: {listing_id: $("jList").value, mode, title: $("jTitle").value, description: $("jDesc").value}});
+  $("jProg").textContent = "";
+  if (r.error) { $("jOut").innerHTML = `<div class="err">${esc(r.error)}</div>`; return; }
+  if (mode !== "own") { $("jTitle").value = r.rewrite.title; $("jDesc").value = r.rewrite.description; }
+  const probs = r.groundedness_probabilities || {};
+  $("jOut").innerHTML = `<div class="big ${r.accepted ? "win" : "lose"}">${r.accepted ? "✅ Offer the rewrite to the seller" : "⛔ Keep the original"}</div>
+    <h4>Foundry groundedness evaluator · judge: <code>${esc(r.judge_deployment)}</code></h4>
+    <p>Score <b>${r.groundedness ?? "–"}/5</b> · ${esc(r.groundedness_result)}</p>
+    <table>${[0, 1, 2, 3, 4].map(i => `<tr><td style="width:150px">level ${i + 1}${i === 4 ? " (fully grounded)" : i === 0 ? " (not grounded)" : ""}</td><td>${bar(probs[String(i)] ?? 0, i >= 2 ? "good" : "yes")}</td></tr>`).join("")}</table>
+    <h4 style="margin-top:12px">Your gate's own questions</h4>
+    <p>${r.gate_failures.length ? `<span class="lose">${esc(r.gate_failures.join("; "))}</span>` : '<span class="win">all checks pass</span>'}</p>
+    ${answersTable({answers: r.gate_answers})}${codePanel(r.code)}`;
+}
+$("jAi").onclick = () => judge("ai"); $("jTempt").onclick = () => judge("ai_tempt"); $("jGo").onclick = () => judge("own");
+
+// ---------------------------------------------------------------- report
+async function loadSummary() { $("sumOut").textContent = await api("/api/summary"); }
+
+// ---------------------------------------------------------------- under the hood
+let RUNS = [];
+async function initCompare() {
+  RUNS = await api("/api/runs");
+  const usable = RUNS.filter(r => r.recorded || (r.name || "").startsWith("decision-mine"));
+  $("cmpRuns").innerHTML = "Runs: " + usable.map(r => `<label style="margin-right:10px"><input type="checkbox" class="cmpRun" value="${r.name}" ${r.recorded ? "checked" : ""}> ${esc(r.name)}${r.changed.length ? " (your questions)" : ""}</label>`).join("");
+}
+$("cmpGo").onclick = async () => {
+  const names = [...document.querySelectorAll(".cmpRun:checked")].map(x => x.value);
+  $("cmpOut").innerHTML = '<p class="progress">scoring…</p>';
+  const d = await api(`/api/compare?runs=${encodeURIComponent(names.join(","))}&split=${$("cmpSplit").value}`);
+  if (d.error) { $("cmpOut").innerHTML = `<div class="err">${esc(d.error)}</div>`; return; }
+  const reps = d.reports;
+  const best = reps.reduce((a, b) => (b.gate.outcome_accuracy > a.gate.outcome_accuracy ? b : a), reps[0]);
+  const guess = $("rankGuess").value;
+  const head = guess ? `<div class="predict">${best.mode === guess ? "✅ You called it" : "🤔 Not quite"} — the most accurate here is <b>${esc(best.label)}</b>. But accuracy isn't the whole story.</div>` : "";
+  const cards = reps.map(r => `<div class="card model"><h4>${esc(r.label)}</h4><div class="small muted">${esc(r.name)}</div>
+    <div class="kpis" style="margin-top:8px">
+      <div class="kpi"><div class="v">${pct(r.gate.outcome_accuracy)}</div><div class="l">outcome accuracy</div></div>
+      <div class="kpi"><div class="v ${r.gate.unsafe_published ? "lose" : "win"}">${r.gate.unsafe_published}</div><div class="l">bad listings published (of ${r.gate.auto_published})</div></div>
+      <div class="kpi"><div class="v">${pct(r.gate.review_rate)}</div><div class="l">sent to a person</div></div>
+      <div class="kpi"><div class="v">${r.operations.latency_p50_ms} ms</div><div class="l">typical latency (p50)</div></div>
+      <div class="kpi"><div class="v">$${r.operations.est_cost_per_10k_listings_usd}</div><div class="l">per 10,000 listings*</div></div>
+      <div class="kpi"><div class="v">${r.operations.mean_output_tokens}</div><div class="l">output tokens per listing</div></div>
+      <div class="kpi"><div class="v">${Object.values(r.questions).some(m => m.calibration) ? "yes" : "no"}</div><div class="l">probabilities you can set a line on</div></div>
+    </div></div>`).join("");
+  const qnames = Object.keys(reps[0].questions);
+  const qtable = `<div class="card"><h3>Accuracy per question</h3><table><tr><th>question</th>${reps.map(r => `<th>${esc(r.label)}</th>`).join("")}</tr>${qnames.map(n => `<tr><td>${n}</td>${reps.map(r => `<td>${bar(r.questions[n] ? r.questions[n].accuracy : null, "good")}</td>`).join("")}</tr>`).join("")}</table>
+    <p class="small muted">* Example prices (Microsoft-Decision-1.1 is $0.042–0.050 per million input tokens and charges no output). Check current Azure prices.</p></div>`;
+  $("cmpOut").innerHTML = head + `<div class="models">${cards}</div>` + qtable;
+  $("calCard").style.display = "block";
+  window._reps = reps.filter(r => Object.values(r.questions).some(m => m.calibration));
+  $("calRun").innerHTML = window._reps.map((r, i) => `<option value="${i}">${esc(r.label)}</option>`).join("");
+  $("calQ").innerHTML = qnames.map(n => `<option>${n}</option>`).join("");
+  $("calQ").value = "unsupported_claim";
+  drawCal();
+};
+function drawCal() {
+  const r = window._reps[+$("calRun").value]; if (!r) return;
+  const cal = (r.questions[$("calQ").value] || {}).calibration;
+  if (!cal) { $("calOut").innerHTML = '<p class="muted">No probabilities for this question.</p>'; return; }
+  const bins = Array.from({length: 10}, (_, i) => cal.table.find(b => b.bin === `${(i / 10).toFixed(1)}-${((i + 1) / 10).toFixed(1)}`));
+  $("calOut").innerHTML = `<div class="chart">${bins.map(b => `<div class="col">${b ? `<i class="p" style="height:${b.mean_p * 100}%" title="said ${pct(b.mean_p)}"></i><i class="o" style="height:${b.observed * 100}%" title="was yes ${pct(b.observed)}"></i>` : ""}</div>`).join("")}</div>
+    <div class="axis">${bins.map((b, i) => `<span>${i * 10}–${i * 10 + 10}%<br><b>${b ? b.n : 0}</b></span>`).join("")}</div>
+    <p class="small">Calibration error (ECE): <b>${cal.ece}</b> · Brier score: <b>${cal.brier}</b> <span class="muted">— lower is better for both.</span></p>`;
+}
+$("calRun").onchange = drawCal; $("calQ").onchange = drawCal;
+document.querySelectorAll("[data-rk]").forEach(b => b.onclick = async () => {
+  const model = $("rModel").value;
+  document.querySelectorAll("[data-rk]").forEach(x => x.disabled = true);
+  const r = await job("/api/jobs/robustness", {kind: b.dataset.rk, model, limit: model === "luna" ? 12 : null}, $("rProg"));
+  document.querySelectorAll("[data-rk]").forEach(x => x.disabled = false);
+  if (r.error) { $("rOut").innerHTML = `<div class="err">${esc(r.error)}</div>`; return; }
+  const ag = r.answer_agreement || {};
+  $("rOut").innerHTML = `<h4 style="margin:12px 0 4px">${b.textContent} · ${LABEL[model]}</h4><div class="kpis">
+    <div class="kpi"><div class="v">${r.outcome_changed} / ${r.listings}</div><div class="l">outcomes changed</div></div>
+    <div class="kpi"><div class="v ${r.became_less_safe ? "lose" : "win"}">${r.became_less_safe}</div><div class="l">became less safe</div></div>
+    ${r.injected_listings ? `<div class="kpi"><div class="v">${r.injected_caught} / ${r.injected_listings}</div><div class="l">injected listings sent to review or rejected</div></div>` : ""}</div>
+    ${r.examples.length ? `<p>Less safe: ${r.examples.map(e => `<a class="try" data-id="${e.listing_id}">${e.listing_id}</a> ${outcome(e.before)}→${outcome(e.after)}`).join(" · ")}</p>` : ""}
+    <table style="margin-top:8px"><tr><th>question</th><th style="width:50%">answers that stayed the same</th></tr>${Object.entries(ag.per_question || ag).filter(([k, v]) => typeof v === "object" ? v.agreement != null : typeof v === "number").map(([k, v]) => `<tr><td>${k}</td><td>${bar(typeof v === "object" ? v.agreement : v, "good")}</td></tr>`).join("")}</table>`;
+  bindTry();
+});
+
+loadConfig().then(() => { loadInbox(); loadQuestions(); refreshLaunch(); });
+loadLights();
+bindTry();
+</script>
+</body>
+</html>

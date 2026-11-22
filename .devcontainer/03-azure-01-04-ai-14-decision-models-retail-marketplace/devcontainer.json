@@ -1,0 +1,81 @@
+{
+  // Launch Day at Zava (Decision Models for a Retail Marketplace) — GitHub Codespaces / VS Code Dev Containers.
+  // Optional Build track: attendees bring their own GitHub account for Codespaces (the lab doesn't
+  // provide one); Azure Cloud Shell is the default and needs no GitHub account.
+  // Python + uv + Azure CLI. post-create.sh installs dependencies and seeds src/.env.
+  "name": "Azure / AI / Decision Models Retail Marketplace",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12-bookworm",
+
+  "features": {
+    "ghcr.io/devcontainers/features/azure-cli:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "version": "latest"
+    }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.debugpy",
+        "ms-azuretools.vscode-azureresourcegroups",
+        "GitHub.copilot",
+        "GitHub.copilot-chat"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/src/.venv/bin/python",
+        "python.terminal.activateEnvironment": true,
+        // Scope Pylance to the hack's code so it never indexes the whole repo or the venv.
+        "python.analysis.include": ["src"],
+        "python.analysis.exclude": ["**/.venv", "**/node_modules", "**/__pycache__", "**/.*"],
+        // Hide facilitator/authoring/container folders from attendees in the Explorer
+        // (container only). VS Code defaults are repeated because this object replaces them.
+        "files.exclude": {
+          "**/.git": true,
+          "**/.svn": true,
+          "**/.hg": true,
+          "**/.DS_Store": true,
+          "**/Thumbs.db": true,
+          "labautomation": true,
+          ".github": true,
+          ".devcontainer": true
+        },
+        // Open Markdown (README, challenges) rendered by default in the container.
+        "workbench.editorAssociations": {
+          "*.md": "vscode.markdown.preview.editor"
+        }
+      }
+    }
+  },
+
+  // Launch Day console (uvicorn ui.app:app --port 8000)
+  "forwardPorts": [8000],
+  "portsAttributes": {
+    "8000": { "label": "Launch Day console", "onAutoForward": "openBrowser" }
+  },
+
+  // Runs once after the container is created, from workspaceFolder (the hack folder).
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "postAttachCommand": "bash /workspaces/${localWorkspaceFolderBasename}/.devcontainer/welcome.sh",
+
+  "remoteUser": "vscode",
+
+  // Keep the Python venv on a container volume instead of the bind-mounted workspace:
+  // Docker Desktop (Windows/macOS) file sharing fails with I/O errors on venv-sized installs.
+  "mounts": [
+    "source=dm-market-venv-${devcontainerId},target=/workspaces/${localWorkspaceFolderBasename}/03-Azure/01-04-AI/14_Decision_Models_Retail_Marketplace/src/.venv,type=volume"
+  ],
+
+  // ${localWorkspaceFolderBasename} = the repo/fork name (e.g. microhack-labuser-0001),
+  // so this works for uniquely named forks in Codespaces and for local clones.
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}/03-Azure/01-04-AI/14_Decision_Models_Retail_Marketplace",
+
+  "remoteEnv": {
+    "hackFolder": "/workspaces/${localWorkspaceFolderBasename}/03-Azure/01-04-AI/14_Decision_Models_Retail_Marketplace",
+    "PYTHONPATH": "/workspaces/${localWorkspaceFolderBasename}/03-Azure/01-04-AI/14_Decision_Models_Retail_Marketplace/src"
+  }
+}

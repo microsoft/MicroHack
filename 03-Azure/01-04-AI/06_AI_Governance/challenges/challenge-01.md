@@ -136,7 +136,47 @@ for d in json.load(sys.stdin):
 "
 ```
 
-#### A.5 — Validate before you start
+#### A.5 — Open network access on three resources
+
+An Azure Policy on the subscription turns **public network access off** (and shared-key
+access off on storage) for new resources. The notebooks and the usage-logging pipeline
+connect over public endpoints, so open these resources once. Do **step 1 first** on each
+resource: without the tag, the policy reverts your change.
+
+> [!IMPORTANT]
+> Do this before challenges 4 and 5. Each change can take 1-2 minutes to apply.
+
+**1. Storage account (used by the usage-ingestion Logic App)** — needed for challenge 5
+
+1. Open the storage account in your resource group → **Tags** → add `SecurityControl` =
+   `Ignore` → **Apply**.
+2. **Networking** → **Public network access**: **Enabled from all networks** → **Save**.
+3. **Configuration** → **Allow storage account key access**: **Enabled** → **Save**.
+4. Open the Logic App `la-usage-ingestion-<TOKEN>` → **Overview** → **Restart**. Under **Workflows**, both
+   `ai-usage-ingestion` and `pii-usage-ingestion` should show as enabled.
+
+Without this the Logic App returns 503, the designer shows *"Cannot read properties of
+undefined (reading 'headers')"*, and no usage logs reach Cosmos DB.
+
+**2. Cosmos DB account** — needed for challenge 5
+
+1. **Tags** → add `SecurityControl` = `Ignore` → **Apply**.
+2. **Networking** → **Public network access**: **All networks** → **Save**.
+
+Without this, notebook 5 prints *"No analytics summary to send (DataFrame is empty)"*.
+
+**3. Key Vault `kv-spoke-<TOKEN>`** — needed for challenge 4 (optional)
+
+1. **Tags** → add `SecurityControl` = `Ignore` → **Apply**.
+2. **Networking** → **Enabled from all networks** → **Apply**.
+3. **Access control (IAM)** → **Add role assignment** → **Key Vault Secrets User** → assign
+   it to **your own user**.
+
+Without this, notebook 4 prints *"Key Vault unreachable (HttpResponseError); using APIM
+credentials instead"*. The notebook still works through the APIM fallback, so you can
+skip this step.
+
+#### A.6 — Validate before you start
 
 ```bash
 cd challenges/workshop
@@ -205,10 +245,11 @@ resource group, your location, and `LLM Backends: 1 backend(s) configured`.
 | Symptom | Fix |
 |---------|-----|
 | Setup cell raises a missing-key error | That key isn't in your `.env` (and no `azd` environment supplied it) — see Part A. The error message tells you which key is missing and whether a `.env` file was found. |
-| `LLM_BACKEND_CONFIG` fails to parse | It must be one unbroken line, with no surrounding quotes, ending in `}]}]`. A missing final bracket is the usual cause — run the validation snippet in Part A.5, which reports the exact position. |
+| `LLM_BACKEND_CONFIG` fails to parse | It must be one unbroken line, with no surrounding quotes, ending in `}]}]`. A missing final bracket is the usual cause — run the validation snippet in Part A.6, which reports the exact position. |
 | You fixed `.env` but the notebook reports the old error | The kernel caches environment values from startup. Restart the Jupyter kernel and re-run. |
 | `ResourceGroupNotFound` for a resource group you can see in the portal | Your `az` CLI is signed in to a *different* tenant (commonly your corporate account). The portal session and the CLI session are independent. Run `az account show` — if the user isn't `labuser-XXXX@emea.microhack.cloud`, redo the `az login` in Part A.1. |
 | `AuthorizationFailed` on `Microsoft.Resources/deployments/...` over a **subscription** scope | You're running an older copy of the notebooks. All deployments must be resource-group scoped (`az deployment group create`); you hold Owner on your own resource group but only Reader on the subscription. Re-download the challenge files. |
+| Challenge 4 warns *Key Vault unreachable*, or challenge 5 shows an empty analytics DataFrame or the Logic App returns 503 | Network access is still closed by policy. Complete Part A.5 (tag first, then open access), wait 1-2 minutes, and re-run. |
 | Backend deployment succeeds but test calls 401/403 | APIM RBAC / managed-identity propagation can take a minute after a fresh deployment — wait and retry. |
 | A model call fails with a region/quota error | Model availability is region-specific; double-check the model/SKU you configured is available in your lab's region. |
 

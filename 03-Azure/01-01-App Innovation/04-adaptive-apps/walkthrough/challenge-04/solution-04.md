@@ -6,7 +6,7 @@ Duration: 45-75 minutes
 
 ## Coach notes
 
-**Hosted Console:** complete Challenge 03, then install the portfolio and resource
+**Hosted Lab:** complete Challenge 03, then install the portfolio and resource
 types with the exercises below.
 [Console setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md)
 supplies cluster connections only. Generate each participant's local

@@ -7,7 +7,7 @@ supporting lab tools, without requiring local installations. Continue to use the
 Azure portal for portal-based tasks. No Kubernetes cluster or Docker daemon runs
 inside this container; the lab platforms run in Azure.
 
-## Set up Codespaces (recommended)
+### Set up Codespaces (recommended)
 
 1. Sign in with a **personal GitHub account**. Optionally set **Settings >
    Codespaces > Default idle timeout** at
@@ -15,7 +15,7 @@ inside this container; the lab platforms run in Azure.
    **before creating the Codespace**. The default is 30 minutes; you can choose
    5-240 minutes, subject to organization policy. The setting applies to new
    Codespaces.
-2. Open the **repository home page**,  [microsoft/MicroHack](https://github.com/microsoft/MicroHack),
+2. Open the **repository home page**, [microsoft/MicroHack](https://github.com/microsoft/MicroHack),
    while signed in to GitHub. Above the file list, select the green **Code**
    button, then the **Codespaces** tab. This is the repository's Code menu, not
    a menu inside VS Code.
@@ -24,7 +24,7 @@ inside this container; the lab platforms run in Azure.
 
    In the **top-right corner of the Codespaces tab**, select **...**, then **New
    with options**. Do not use the quick-create button: this repository has
-   multiple devcontainers, and you must choose the Adaptive Apps one.
+   multiple devcontainers, and you must choose **Azure/App Innovation/Adaptive-Apps**
 
    <a href="https://docs.github.com/assets/images/help/codespaces/default-machine-type.png"><img src="https://docs.github.com/assets/images/help/codespaces/default-machine-type.png" alt="GitHub documentation example showing the Codespaces three-dot menu and New with options" width="420"></a>
 
@@ -33,15 +33,14 @@ inside this container; the lab platforms run in Azure.
    repository names and existing Codespaces may differ. If the **Codespaces**
    tab is missing, check that you are signed in. Alternatively, open
    [Create a codespace](https://github.com/codespaces/new), select
-   **djong1/MicroHack**, and continue with the options below.
-3. Select branch **djong1-challenge-3-connections**, devcontainer configuration
+   **microsoft/MicroHack**, and continue with the options below.
+3. Select branch **main**, devcontainer configuration
    **Azure / App Innovation / Adaptive Apps**, and a **2-core** machine, then
    **Create codespace**. The configuration file is
-   [`.devcontainer/03-azure-01-01-app-innovation-04-adaptive-apps/devcontainer.json`](../../../../.devcontainer/03-azure-01-01-app-innovation-04-adaptive-apps/devcontainer.json).
+   [`.devcontainer/03-azure-01-01-app-innovation-04-adaptive-apps/devcontainer.json`](../../../../../.devcontainer/03-azure-01-01-app-innovation-04-adaptive-apps/devcontainer.json).
    Wait for the post-create setup to finish before using the terminal. If this
-   configuration is not offered, use the
-   [local Dev Container setup](../walkthrough/challenge-01/solution-01.md#recommended-devcontainer)
-   instead of the default Codespace.
+   configuration is not offered, use the local Dev Container path instead of
+   the default Codespace.
 4. In **Terminal > New Terminal**, open **Bash**, sign in to Azure with your
    workshop account, and select your assigned lab subscription:
 
@@ -63,13 +62,11 @@ inside this container; the lab platforms run in Azure.
    `03-Azure/01-01-App Innovation/04-adaptive-apps`. Run the workshop commands
    from that directory in **Bash**; run `pwsh` when PowerShell 7 is needed.
    Check the installed tools with the commands in
-   [Verify and troubleshoot](../walkthrough/challenge-01/solution-01.md#verify-and-troubleshoot),
-   then continue with the shared
-   [access checks](../walkthrough/challenge-01/solution-01.md#required-access-and-capacity)
-   and [verification checklist](../walkthrough/challenge-01/solution-01.md#verification-checklist),
-   not the manual installation instructions.
+   [Verify and troubleshoot](#verify-and-troubleshoot), then skip the remaining
+   environment setup sections and continue at
+   [Required access and capacity](#required-access-and-capacity).
 
-## Terminals, breaks and saved work
+### Terminals, breaks and saved work
 
 - **Multiple terminals:** use **Terminal > New Terminal** or the terminal panel's
   **+** button. Leave Bastion tunnels and port-forwards running in their own
@@ -85,7 +82,7 @@ inside this container; the lab platforms run in Azure.
 - **Browser access:** use the Ports view's forwarded HTTPS URLs, not browser
   `localhost`. Organizers must validate the Bastion connection and the frontend,
   Keycloak, and identity redirect URLs before the event; see
-  [Console setup](../docs/console-setup.md#optional-extensions-and-hosted-browsers).
+  [Console setup](../../docs/console-setup.md#optional-extensions-and-hosted-browsers).
   Challenge 10's GitHub Copilot app / Radius Canvas work still requires a host
   installation, not just a Codespace.
 - **Finish for the day:** use **Codespaces: Stop Codespace** in the Command

@@ -6,7 +6,7 @@ Duration: 60-90 minutes
 
 ## Coach notes
 
-**Hosted Console:** after Challenges 03-04, source `artifacts/console-env.sh`.
+**Hosted Lab:** after Challenges 03-04, source `artifacts/console-env.sh`.
 Use the supplied ACR, resource group, and region. Skip registry creation;
 complete the recipe exercises below.
 
@@ -225,10 +225,10 @@ rad group switch rg-trading
 > produces a duplicated hostname and causes Radius recipe downloads to fail with
 > `RecipeDownloadFailed` / `no such host`.
 >
-> Hosted participants should source `artifacts/console-env.sh` and retain its supplied
+> Hosted Lab participants should source `artifacts/console-env.sh` and retain its supplied
 > `ACR_NAME`.
 
-**Hosted MicroHack / Lab:** reuse the supplied registry; do not run the creation block.
+**Hosted Lab:** reuse the supplied registry; do not run the creation block.
 Source and verify your supplied values:
 
 ```bash

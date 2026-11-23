@@ -8,6 +8,8 @@
 - [**MicroHack challenges**](#microhack-challenges)
 - [**Contributors**](#contributors)
 
+**Tech talk:** [First light](techtalk/README.md), a 23-minute talk with animated slides to open the hack.
+
 ## MicroHack introduction
 
 The first wave of business AI answered questions: a chatbot over your documents, a copilot that drafts an email. Useful, but a person still did the work. The next wave is different. Agents now **do the work themselves**: they open the files, run the calculations, split a big job between helpers, update the systems your teams use every day, and hand back a finished result. People set the goal and make the decisions; agents carry out the steps in between. Organisations that work this way are what Microsoft calls **frontier firms**.

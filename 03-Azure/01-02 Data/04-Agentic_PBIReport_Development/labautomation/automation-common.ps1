@@ -1,6 +1,6 @@
 Set-StrictMode -Version Latest
 
-function Get-LabFingerprint {
+function ConvertTo-LabCanonicalJson {
     param([Parameter(Mandatory)][object]$Value)
     # Canonical ordering makes hashes independent of JSON/object key order.
     function ConvertTo-CanonicalValue($Item) {
@@ -12,7 +12,12 @@ function Get-LabFingerprint {
         if ($Item -is [array]) { return ,@($Item | ForEach-Object { ConvertTo-CanonicalValue $_ }) }
         return $Item
     }
-    $json = ConvertTo-CanonicalValue $Value | ConvertTo-Json -Depth 40 -Compress
+    return ConvertTo-CanonicalValue $Value | ConvertTo-Json -Depth 40 -Compress
+}
+
+function Get-LabFingerprint {
+    param([Parameter(Mandatory)][object]$Value)
+    $json = ConvertTo-LabCanonicalJson $Value
     return [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($json))).ToLowerInvariant()
 }
 
@@ -25,114 +30,128 @@ function Assert-LabPublicUri {
     }
 }
 
-function Assert-LabRelativePath {
-    param([string]$Value)
-    if ([string]::IsNullOrWhiteSpace($Value) -or $Value -match '(^[\\/]|:|(^|[\\/])\.\.?([\\/]|$))' -or
-        $Value -match '(?i)(^|[\\/])(coach|solutions?|walkthrough)([\\/]|$)') {
-        throw 'Staged paths must be relative, traversal-free and must not contain coach solutions.'
+function Read-LabSettings {
+    $settings = Import-PowerShellDataFile -LiteralPath (Join-Path $PSScriptRoot 'lab-settings.psd1')
+    if ($settings.SourceRef -notmatch '^[a-f0-9]{40}$') { throw 'Student source must use an immutable commit.' }
+    foreach ($asset in @($settings.Tools) + @($settings.Skills) + @($settings.Extensions)) {
+        Assert-LabPublicUri $asset.uri
+        if ($asset.sha256 -notmatch '^[a-f0-9]{64}$') { throw 'Every asset needs a SHA256 digest.' }
     }
+    foreach ($name in 'powershell', 'git', 'node', 'vscode', 'copilot', 'azure-cli', 'python') {
+        $tool = @($settings.Tools | Where-Object name -EQ $name)
+        if ($tool.Count -ne 1 -or $tool[0].version -notmatch '^\d+\.\d+\.\d+$') { throw "Missing or unpinned tool: $name" }
+    }
+    return $settings
 }
 
-function Assert-LabCidr {
-    param([string]$Value)
-    $parts = $Value.Split('/')
-    $ip = $null
-    if ($parts.Count -ne 2 -or -not [Net.IPAddress]::TryParse($parts[0], [ref]$ip) -or
-        $ip.AddressFamily -ne [Net.Sockets.AddressFamily]::InterNetwork -or
-        $parts[1] -notmatch '^\d+$' -or [int]$parts[1] -lt 24 -or [int]$parts[1] -gt 32 -or
-        $parts[0] -eq '0.0.0.0' -or $ip.IsIPv6Multicast) {
-        throw 'RDP requires an approved explicit IPv4 /24 through /32 source CIDR; wildcard Internet access is prohibited.'
+function Get-LabPlatformContext {
+    param([string]$SubscriptionId, [string[]]$PreferredLocation, [string[]]$AllowedEntraUserIds)
+    if ($SubscriptionId -notmatch '^[a-fA-F0-9-]{36}$') { throw 'A platform subscription ID is required.' }
+    if ($AllowedEntraUserIds.Count -eq 0 -or
+        @($AllowedEntraUserIds | Select-Object -Unique).Count -ne $AllowedEntraUserIds.Count -or
+        @($AllowedEntraUserIds | Where-Object { $_ -notmatch '^[a-fA-F0-9-]{36}$' }).Count) {
+        throw 'Platform participant IDs must be nonempty, unique GUIDs.'
     }
+    $context = Invoke-LabAzureOperation { Get-AzContext -ErrorAction Stop } 'Read Azure context'
+    if ($context.Subscription.Id -ne $SubscriptionId) { throw 'Azure context subscription mismatch; hooks never authenticate or switch context.' }
+    $settings = Read-LabSettings
+    $regions = @($PreferredLocation | ForEach-Object { $_.Split(',') } |
+        ForEach-Object { $_.Trim().ToLowerInvariant() } | Where-Object { $_ } | Select-Object -Unique)
+    if ($regions.Count -eq 0) { $regions = @($settings.DefaultRegion) }
+    foreach ($region in $regions) {
+        if ($region -notmatch '^[a-z0-9]+$') { throw 'Invalid preferred Azure region.' }
+    }
+    foreach ($provider in 'Microsoft.Fabric', 'Microsoft.Compute', 'Microsoft.Network') {
+        $registration = @(Invoke-LabAzureOperation { Get-AzResourceProvider -ProviderNamespace $provider -ErrorAction Stop } 'Read resource-provider registration')
+        if (@($registration | Where-Object RegistrationState -EQ 'Registered').Count -eq 0) {
+            $null = Invoke-LabAzureOperation { Register-AzResourceProvider -ProviderNamespace $provider -ErrorAction Stop } "Register $provider"
+            throw "$provider registration requested. Wait for registration to finish, then retry."
+        }
+    }
+    return @{ Settings = $settings; Regions = $regions; Context = $context }
 }
 
-function Read-LabEventConfiguration {
-    param([string]$Path = $env:MHH_EVENT_CONFIG)
-    if (-not $Path -or -not [IO.Path]::IsPathFullyQualified($Path) -or -not (Test-Path -LiteralPath $Path -PathType Leaf)) {
-        throw 'Set MHH_EVENT_CONFIG to an absolute private approved event JSON file before any launch.'
-    }
-    $json = Get-Content -LiteralPath $Path -Raw -ErrorAction Stop
-    if (-not (Test-Json -Json $json -SchemaFile (Join-Path $PSScriptRoot 'event-config.schema.json') -ErrorAction Stop)) {
-        throw 'Event configuration failed schema validation.'
-    }
-    $config = $json | ConvertFrom-Json -AsHashtable
-    if (-not $config.approved) { throw 'Event launch is blocked: configuration not approved.' }
-    foreach ($entry in $config.evidence.GetEnumerator()) {
-        if (-not $entry.Value.verified -or [string]::IsNullOrWhiteSpace($entry.Value.reference)) {
-            throw "Event launch is blocked: missing verified evidence for $($entry.Key)."
+function Get-LabCapacityAdministrator {
+    param([string[]]$ParticipantIds)
+    # Read only the caller's oid claim; no Graph directory permission is required.
+    $access = Invoke-LabAzureOperation { Get-AzAccessToken -ResourceUrl 'https://management.azure.com/' -ErrorAction Stop } 'Resolve deployment principal'
+    $credential = $null
+    try {
+        $token = if ($access.Token -is [securestring]) {
+            $credential = [pscredential]::new('token', $access.Token)
+            $credential.GetNetworkCredential().Password
+        } else { [string]$access.Token }
+        $part = $token.Split('.')[1].Replace('-', '+').Replace('_', '/')
+        $part = $part.PadRight($part.Length + ((4 - $part.Length % 4) % 4), '=')
+        $claims = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($part)) | ConvertFrom-Json
+        $objectId = [string]$claims.oid
+        if ($objectId -notmatch '^[a-fA-F0-9-]{36}$' -or $objectId -in $ParticipantIds) {
+            throw 'Deployment principal must be a nonparticipant capacity administrator.'
+        }
+        return $objectId
+    } finally { $token = $null; $credential = $null; $access = $null }
+}
+
+function Get-LabRegionImage {
+    param([string]$SubscriptionId, [string[]]$Regions, [hashtable]$Settings)
+    $fabricSkus = @()
+    $next = "/subscriptions/$SubscriptionId/providers/Microsoft.Fabric/skus?api-version=2023-11-01"
+    for ($page = 0; $next; $page++) {
+        if ($page -ge 20) { throw 'Fabric SKU metadata pagination exceeded its bound.' }
+        $fabric = Invoke-LabArmRequest -Path $next
+        $fabricSkus += @($fabric.value)
+        $next = if ($fabric.ContainsKey('nextLink')) { $fabric.nextLink } else { $null }
+        if ($next) {
+            $next = ConvertTo-LabArmPath $next
+            if ((($next.Split('?')[0] -split '/')[2]) -ne $SubscriptionId) {
+                throw 'Fabric SKU pagination changed subscription.'
+            }
         }
     }
-    if ($config.sizing.measuredConcurrentNotebooks -gt $config.sizing.measuredParticipantsPerSubscription) {
-        throw 'Measured concurrent notebooks cannot exceed the measured participant envelope.'
+    $network = Invoke-LabAzureOperation { Get-AzResourceProvider -ProviderNamespace 'Microsoft.Network' -ErrorAction Stop } 'Read network regions'
+    $bastionLocations = @($network.ResourceTypes | Where-Object ResourceTypeName -EQ 'bastionHosts' | ForEach-Object Locations |
+        ForEach-Object { $_.Replace(' ', '').ToLowerInvariant() })
+    foreach ($region in $Regions) {
+        $sku = @($fabricSkus | Where-Object {
+            $_.name -eq 'F16' -and $region -in @($_.locations | ForEach-Object { $_.Replace(' ', '').ToLowerInvariant() })
+        })
+        if ($sku.Count -eq 0 -or $region -notin $bastionLocations) {
+            Write-Warning "Skipping ${region}: F16 or Bastion is unavailable in provider metadata."
+            continue
+        }
+        $image = $Settings.Image
+        $versions = Invoke-LabArmRequest -Path "/subscriptions/$SubscriptionId/providers/Microsoft.Compute/locations/$region/publishers/$($image.publisher)/artifacttypes/vmimage/offers/$($image.offer)/skus/$($image.sku)/versions?api-version=2024-03-01"
+        $available = @($versions | Where-Object name -Match '^\d+\.\d+\.\d+$' | Sort-Object { [version]$_.name } -Descending)
+        if ($available.Count -eq 0) { Write-Warning "Skipping ${region}: Windows image has no available version."; continue }
+        $resolved = $image.Clone()
+        $resolved.version = $available[0].name
+        return @{ Region = $region; Image = $resolved }
     }
-    if ($config.participants.Count -gt $config.sizing.measuredParticipantsPerSubscription * $config.subscriptionIds.Count) {
-        throw 'Roster exceeds the approved measured envelope.'
-    }
-    if ($config.cost.perParticipantDailyUsd -lt 1 -or $config.cost.sharedDailyUsd -le 0) {
-        throw 'Real cost approval required; platform silently substitutes a $25 per-lab estimate below $1.'
-    }
-    $forecast = ($config.cost.retentionHours / 24) * (
-        $config.participants.Count * $config.cost.perParticipantDailyUsd +
-        $config.subscriptionIds.Count * $config.cost.sharedDailyUsd)
-    if ($forecast -gt $config.cost.budgetUsd) { throw 'Approved forecast exceeds the event budget.' }
-    $ids = @($config.participants | ForEach-Object objectId)
-    if (@($ids | Select-Object -Unique).Count -ne $ids.Count) { throw 'Participant identities must be unique.' }
-    $scopes = @($config.participants | ForEach-Object { "$($_.subscriptionId)/$($_.resourceGroupName)" })
-    if (@($scopes | Select-Object -Unique).Count -ne $scopes.Count) { throw 'Participant resource groups must be unique.' }
-    foreach ($sub in $config.subscriptionIds) {
-        if (@($config.participants | Where-Object subscriptionId -EQ $sub).Count -gt $config.sizing.measuredParticipantsPerSubscription) {
-            throw 'Subscription roster exceeds measured cohort size.'
+    throw 'No preferred region advertises F16, Bastion and the Windows image. Check region availability; no paid deployment was attempted.'
+}
+
+function Get-LabGuestConfiguration {
+    param([hashtable]$Settings)
+    $files = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'student-files.json') -Raw | ConvertFrom-Json -AsHashtable
+    return @{
+        bootstrap = Get-LabFingerprint @{ script = (Get-Content -LiteralPath (Join-Path $PSScriptRoot 'bootstrap.ps1') -Raw).Replace("`r`n", "`n") }
+        source = @{ ref = $Settings.SourceRef; files = $files }
+        tools = $Settings.Tools; skills = $Settings.Skills; extensions = $Settings.Extensions
+        npm = @{
+            package = (Get-Content -LiteralPath (Join-Path $PSScriptRoot 'npm-runtime\package.json') -Raw).Replace("`r`n", "`n")
+            lock = (Get-Content -LiteralPath (Join-Path $PSScriptRoot 'npm-runtime\package-lock.json') -Raw).Replace("`r`n", "`n")
         }
     }
-    foreach ($participant in $config.participants) {
-        if ($participant.subscriptionId -notin $config.subscriptionIds) { throw 'Roster subscription not approved.' }
-        if ($participant.objectId -in $config.capacityAdministrators) { throw 'Participants must not be shared capacity administrators.' }
-        if ($participant.resourceGroupName -like 'rg-apbi-shared-*') { throw 'Participant group collides with reserved shared scope.' }
-        Assert-LabCidr $participant.sourceAddressPrefix
-    }
-    foreach ($asset in @($config.bootstrap, $config.source) + @($config.tools)) { Assert-LabPublicUri $asset.uri }
-    if (-not $config.source.uri.Contains($config.source.ref) -or -not $config.bootstrap.uri.Contains($config.source.ref)) {
-        throw 'Source and bootstrap URLs must include the approved immutable source commit.'
-    }
-    if (([uri]$config.bootstrap.uri).AbsolutePath -notmatch '/bootstrap\.ps1$') { throw 'Bootstrap URI must end in /bootstrap.ps1.' }
-    foreach ($path in @($config.source.root, $config.source.banking, $config.source.insurance, $config.source.briefs,
-            $config.source.manifest, $config.source.dictionary, $config.source.generator, $config.source.generatorCli,
-            $config.hosts.cliSkills, $config.hosts.cliMcp, $config.hosts.vscodeSkills, $config.hosts.vscodeMcp)) {
-        Assert-LabRelativePath $path
-    }
-    if ($config.source.banking -eq $config.source.insurance) { throw 'Both distinct CSV scenarios are required.' }
-    foreach ($tool in $config.tools) {
-        if ($tool.version -match '(?i)latest|preview|\*' -or $tool.version -notmatch '\d') { throw 'Only explicit approved tool versions are supported.' }
-        Assert-LabRelativePath $tool.executable
-        if ($tool.name -eq 'node' -and [int]($tool.version.Split('.')[0]) -lt 22) { throw 'Obsolete Node runtime not supported.' }
-    }
-    if (@($config.tools.name | Select-Object -Unique).Count -ne $config.tools.Count) { throw 'Duplicate tool packages.' }
-    foreach ($required in 'git', 'node', 'vscode', 'copilot', 'azure-cli', 'python') {
-        if ($required -notin $config.tools.name) { throw "Missing pinned tool package: $required" }
-    }
-    if ($config.vm.image.version -match '(?i)latest|\*' -or $config.vm.image.version -notmatch '^\d+\.\d+\.\d+$') {
-        throw 'An exact approved Windows image version is required.'
-    }
-    return $config
 }
 
 function Invoke-LabAzureOperation {
     param([scriptblock]$Operation, [string]$Description)
     # Never rethrow provider bodies: deployment failures can echo protected parameters.
-    try { & $Operation 3>$null 4>$null 5>$null 6>$null }
-    catch { throw [InvalidOperationException]::new("$Description failed. Inspect Azure operation status privately; provider response suppressed.") }
-}
-
-function Assert-LabContext {
-    param([hashtable]$Config, [string]$SubscriptionId, [string[]]$PreferredLocation)
-    if ($SubscriptionId -notin $Config.subscriptionIds) { throw 'Subscription is not approved.' }
-    $regions = @($PreferredLocation | ForEach-Object { $_.Split(',') } | ForEach-Object { $_.Trim() })
-    if ($Config.region -notin $regions) { throw 'Approved region must be explicitly provided by the platform; no automatic region fallback.' }
-    $context = Invoke-LabAzureOperation { Get-AzContext -ErrorAction Stop } 'Read Azure context'
-    if ($context.Subscription.Id -ne $SubscriptionId) { throw 'Azure context subscription mismatch; hooks never authenticate or switch context.' }
-    foreach ($provider in 'Microsoft.Fabric', 'Microsoft.Compute', 'Microsoft.Network') {
-        $registration = @(Invoke-LabAzureOperation { Get-AzResourceProvider -ProviderNamespace $provider -ErrorAction Stop } 'Read resource-provider registration')
-        if (@($registration | Where-Object RegistrationState -EQ 'Registered').Count -eq 0) { throw "Administrator must register $provider before launch." }
+    try {
+        if (Get-Command Update-MhhToken -ErrorAction SilentlyContinue) { Update-MhhToken | Out-Null }
+        & $Operation 3>$null 4>$null 5>$null 6>$null
     }
+    catch { throw [InvalidOperationException]::new("$Description failed. Inspect Azure operation status privately; provider response suppressed.") }
 }
 
 function Assert-LabResourceGroup {
@@ -144,7 +163,7 @@ function Assert-LabResourceGroup {
         $null = Invoke-LabAzureOperation { New-AzResourceGroup -Name $Name -Location $Location -Tag $Tags -ErrorAction Stop } 'Create owned shared resource group'
         return
     }
-    if ($group[0].Location -ne $Location) { throw 'Resource group region differs; refusing destructive fallback.' }
+    # An RG's metadata location need not match its resources' deployment region.
     $resources = @(Invoke-LabAzureOperation { Get-AzResource -ResourceGroupName $Name -ErrorAction Stop } 'Inspect resource ownership')
     $existingTags = $group[0].Tags
     $hasOwnershipTag = $existingTags -and @($Tags.Keys | Where-Object { $existingTags.ContainsKey($_) }).Count -gt 0
@@ -224,8 +243,9 @@ function Invoke-LabArmRequest {
             try { $body = $response.Content | ConvertFrom-Json -AsHashtable -ErrorAction Stop }
             catch { throw 'Invalid JSON from ARM.' }
         }
-        $operationStatus = if ($body -and $body.ContainsKey('status')) { $body['status'] } else { '' }
-        $resourceState = if ($body -and $body.ContainsKey('properties') -and $body.properties.ContainsKey('provisioningState')) {
+        $objectBody = $body -is [System.Collections.IDictionary]
+        $operationStatus = if ($objectBody -and $body.ContainsKey('status')) { $body['status'] } else { '' }
+        $resourceState = if ($objectBody -and $body.ContainsKey('properties') -and $body.properties -and $body.properties.ContainsKey('provisioningState')) {
             $body.properties['provisioningState']
         } else { '' }
         if ($operationStatus -in 'Failed', 'Canceled', 'Cancelled' -or $resourceState -in 'Failed', 'Canceled', 'Cancelled') {

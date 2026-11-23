@@ -33,6 +33,8 @@ identity, resource group and workspace, valid Power BI authoring entitlement, a
 GitHub Copilot seat and an approved available model. Shared F16 compute does not
 provide an author license or isolate workspaces. Do not grant capacity admin to
 participants. Workspace creation/assignment permissions must be preflighted.
+VMs are private, reached through shared Azure Bastion; deployment hooks use
+platform inputs and checked-in nonsecret settings, not a private config mount.
 
 Participant: know basic tables, relationships and aggregations. Start with
 [host readiness](resources/host-readiness.md), inspect the local

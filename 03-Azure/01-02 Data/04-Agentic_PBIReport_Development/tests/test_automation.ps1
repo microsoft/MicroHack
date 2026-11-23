@@ -46,69 +46,25 @@ try {
     Assert-True (Test-Json -Json $defaults -SchemaFile "$repo\lab-defaults-schema.json") 'Platform defaults schema'
     $defaultsObject = $defaults | ConvertFrom-Json
     Assert-True (($defaultsObject.groups -join ',') -eq 'GHCPUsers,M365-E5-Users' -and $defaultsObject.Quality -eq 'Testing') 'Requested activation groups and Testing'
-    Assert-Throws { Read-LabEventConfiguration "$lab\event-config.example.json" } ''
-    Assert-Throws { Read-LabEventConfiguration 'relative.json' } 'absolute private'
     $sub = '11111111-1111-1111-1111-111111111111'
     $user = '22222222-2222-2222-2222-222222222222'
     $admin = '33333333-3333-3333-3333-333333333333'
-    $ref = 'a' * 40
-    $config = Get-Content -LiteralPath "$lab\event-config.example.json" -Raw | ConvertFrom-Json -AsHashtable
-    $config.eventId = 'offline-fixture'
-    $config.approved = $true
-    $config.subscriptionIds = @($sub)
-    $config.region = 'testregion'
-    $config.capacityAdministrators = @($admin)
-    $config.participants = @(@{objectId=$user; subscriptionId=$sub; resourceGroupName='rg-test'; sourceAddressPrefix='192.0.2.1/32'})
-    $config.sizing = @{measuredParticipantsPerSubscription=2; measuredConcurrentNotebooks=1}
-    $config.cost = @{perParticipantDailyUsd=1; sharedDailyUsd=1; budgetUsd=100; retentionHours=4; approvedBy='OFFLINE FIXTURE NOT EVENT APPROVAL'; priceDate='2026-01-01'}
-    foreach ($key in @($config.evidence.Keys)) { $config.evidence[$key] = @{verified=$true; reference='OFFLINE FIXTURE ONLY'} }
-    $config.vm = @{size='Standard_Test'; image=@{publisher='test';offer='test';sku='test';version='1.2.3'}; licenseType='None'; osDiskSizeGB=128; accessMode='PrivateRdp'}
-    $config.bootstrap = @{uri="https://example.com/$ref/bootstrap.ps1"; sha256=('b'*64)}
-    $config.source = @{uri="https://example.com/$ref/source.zip"; sha256=('c'*64);ref=$ref;root='archive\lab';banking='datasets\banking';insurance='datasets\insurance';briefs='briefs';manifest='datasets\manifest.json';dictionary='datasets\dictionary.md';generator='datasets\generate_data.py';generatorCli='datasets\generate-data.py'}
-    $config.hosts = @{cliSkills='host\cli\skills';cliMcp='host\cli\mcp-config.json';vscodeSkills='host\vscode\skills';vscodeMcp='host\vscode\mcp.json'}
-    foreach ($tool in $config.tools) { $tool.version='22.1.1';$tool.uri="https://example.com/$($tool.name).zip";$tool.sha256='d'*64;$tool.executable='bin\tool.exe' }
-    if (-not $SkipFileSystem) {
-    $configPath = Join-Path $scratch 'config.json'
-    function Save-Fixture { $config | ConvertTo-Json -Depth 40 | Set-Content -LiteralPath $configPath }
-    Save-Fixture
-    $loaded = Read-LabEventConfiguration $configPath
-    Assert-True ($loaded.eventId -eq 'offline-fixture') 'Valid synthetic configuration (not a tested cloud combination)'
-    $config.approved=$false; Save-Fixture
-    Assert-Throws { Read-LabEventConfiguration $configPath } 'not approved'
-    $config.approved=$true
-    $config.evidence.automaticSqlEndpoint.verified=$false; Save-Fixture
-    Assert-Throws { Read-LabEventConfiguration $configPath } 'automaticSqlEndpoint'
-    $config.evidence.automaticSqlEndpoint.verified=$true
-    $config.capacityAdministrators=@($user); Save-Fixture
-    Assert-Throws { Read-LabEventConfiguration $configPath } 'capacity administrators'
-    $config.capacityAdministrators=@($admin)
-    $config.participants += $config.participants[0].Clone(); Save-Fixture
-    Assert-Throws { Read-LabEventConfiguration $configPath } 'identities must be unique'
-    $config.participants=@($config.participants[0])
-    $config.source.banking='walkthrough\banking'; Save-Fixture
-    Assert-Throws { Read-LabEventConfiguration $configPath } 'coach solutions'
-    $config.source.banking='datasets\banking'
-    $config.tools[1].version='18.20.0'; Save-Fixture
-    Assert-Throws { Read-LabEventConfiguration $configPath } 'Obsolete Node'
-    $config.tools[1].version='22.1.1'
-    $config.vm.image.version='latest'; Save-Fixture
-    Assert-Throws { Read-LabEventConfiguration $configPath } ''
-    $config.vm.image.version='1.2.3'
-    $config.participants[0].sourceAddressPrefix='0.0.0.0/0'; Save-Fixture
-    Assert-Throws { Read-LabEventConfiguration $configPath } 'RDP requires'
-    $config.participants[0].sourceAddressPrefix='192.0.2.1/32'
-    $config.source.uri='https://example.com/main.zip'; Save-Fixture
-    Assert-Throws { Read-LabEventConfiguration $configPath } 'immutable source commit'
+    $settings = Read-LabSettings
+    Assert-True ($settings.Tools.Count -eq 7) 'Seven real checksum-pinned tool packages'
+    $guest = Get-LabGuestConfiguration $settings
+    Assert-True ($guest.source.files.Count -eq 25) 'Both scenarios and required support files supplied without a private config'
+    $npmLock = $guest.npm.lock | ConvertFrom-Json -AsHashtable
+    Assert-True ($npmLock.packages['node_modules/@microsoft/powerbi-report-authoring-cli'].version -eq '0.1.1') 'Report CLI lock supplied'
+    foreach ($package in $npmLock.packages.Values) {
+        if ($package.ContainsKey('resolved')) {
+            Assert-True ($package.integrity -match '^sha512-' -and $package.resolved -match '^https://') 'Transitive package HTTPS/SHA512 lock'
+        }
     }
-    $sourceAllowlist = @(Get-LabSourceArchiveAllowlist $config)
-    Assert-True ('archive\lab\datasets\dictionary.md' -in $sourceAllowlist) 'Production source allowlist explicitly includes dataset dictionary'
     foreach ($bad in 'http://example.com/a', 'https://example.com/a?token=x', 'https://user:pass@example.com/a') {
         Assert-Throws { Assert-LabPublicUri $bad } 'public HTTPS'
     }
-    foreach ($bad in '..\banking', 'C:\banking', 'banking\..\solutions', 'walkthrough\answer.md') {
-        Assert-Throws { Assert-LabRelativePath $bad } 'relative'
-    }
     Assert-True ((Get-LabFingerprint @{b=2;a=@{d=4;c=3}}) -eq (Get-LabFingerprint @{a=@{c=3;d=4};b=2})) 'Canonical hash stable under key ordering'
+    Assert-True ((ConvertTo-LabCanonicalJson @{b=2;a=@{d=4;c=3}}) -ceq (ConvertTo-LabCanonicalJson @{a=@{c=3;d=4};b=2})) 'Guest wire JSON is deterministic across hashtable ordering'
     Assert-True ((Get-LabFingerprint @{a=1}) -ne (Get-LabFingerprint @{a=2})) 'Configuration drift changes fingerprint'
     Assert-True ((Get-LabRetryDelay '7') -eq 7) 'Retry-After seconds'
     Assert-True ((Get-LabRetryDelay ([DateTimeOffset]::UtcNow.AddSeconds(60).ToString('R'))) -gt 50) 'Retry-After HTTP date'
@@ -122,6 +78,9 @@ try {
     function Invoke-AzRestMethod { param($Method,$Path,$ErrorAction) if(-not $script:responses.Count){throw 'Unexpected request'}; $script:responses.Dequeue() }
     function Start-Sleep { param($Seconds) $script:lastDelay=$Seconds }
     function Add-Response($Status,$Body,$Headers=@{}) { $script:responses.Enqueue([pscustomobject]@{StatusCode=$Status;Content=$Body;Headers=$Headers}) }
+    Add-Response 200 '[{"name":"1.0.0"},{"name":"1.0.1"}]'
+    $result=@(Invoke-LabArmRequest -Path "/subscriptions/$sub/resources?api-version=1")
+    Assert-True ($result.Count -eq 2 -and $result[1].name -eq '1.0.1') 'ARM array responses are not mistaken for LRO objects'
     Add-Response 202 '{}' @{'Azure-AsyncOperation'="https://management.azure.com/subscriptions/$sub/operations/a?api-version=1";'Retry-After'='2'}
     Add-Response 200 '{"status":"Succeeded"}'
     $result=Invoke-LabArmRequest -Path "/subscriptions/$sub/resources?api-version=1"
@@ -188,6 +147,12 @@ try {
     $zip=[IO.Compression.ZipFile]::Open($badZip,[IO.Compression.ZipArchiveMode]::Create)
     $null=$zip.CreateEntry('..\escape.txt'); $zip.Dispose()
     Assert-Throws { Expand-VerifiedZip $badZip (Join-Path $scratch 'unsafe') } 'Unsafe ZIP'
+    New-Item -ItemType Directory -Path "$scratch\tree-source" | Out-Null
+    Set-Content -LiteralPath "$scratch\tree-source\SKILL.md" -Value '# Synthetic retry fixture'
+    Copy-StudentTree "$scratch\tree-source" "$scratch\tree-destination"
+    Copy-StudentTree "$scratch\tree-source" "$scratch\tree-destination"
+    Assert-True ((Test-Path -LiteralPath "$scratch\tree-destination\SKILL.md") -and
+        -not (Test-Path -LiteralPath "$scratch\tree-destination\tree-source")) 'Skill staging retries merge content without nesting source directories'
     $studentZip=Join-Path $scratch 'source.zip'
     $zip=[IO.Compression.ZipFile]::Open($studentZip,[IO.Compression.ZipArchiveMode]::Create)
     $null=$zip.CreateEntry('archive/lab/datasets/banking/Table.csv')
@@ -196,33 +161,37 @@ try {
     Expand-VerifiedZip $studentZip "$scratch\selected" -AllowedRelativePaths @('archive\lab\datasets\banking')
     Assert-True (Test-Path -LiteralPath "$scratch\selected\archive\lab\datasets\banking\Table.csv") 'Allowlisted source extracted'
     Assert-True (-not (Test-Path -LiteralPath "$scratch\selected\archive\lab\walkthrough")) 'Coach solution never extracted'
-    $dictionaryZip = Join-Path $scratch 'dictionary-regression.zip'
-    $zip = [IO.Compression.ZipFile]::Open($dictionaryZip, [IO.Compression.ZipArchiveMode]::Create)
-    try {
-        $entries = @{
-            'archive/lab/datasets/banking/Table.csv' = "Id`n1"
-            'archive/lab/datasets/insurance/Table.csv' = "Id`n2"
-            'archive/lab/datasets/manifest.json' = '{}'
-            'archive/lab/datasets/dictionary.md' = '# Synthetic dictionary regression fixture'
-            'archive/lab/datasets/generate_data.py' = '# Synthetic generator fixture'
-            'archive/lab/datasets/generate-data.py' = '# Synthetic CLI fixture'
-            'archive/lab/briefs/banking-business-brief.md' = '[Dictionary](../datasets/dictionary.md)'
-            'archive/lab/briefs/insurance-business-brief.md' = '[Dictionary](../datasets/dictionary.md)'
-            'archive/lab/walkthrough/answer.md' = 'Never extract this coach fixture'
+    # Exercise the production selective downloader with local bytes, not a network request.
+    function Get-VerifiedAsset($Asset, [string]$Destination) {
+        $prefix = "https://raw.githubusercontent.com/microsoft/MicroHack/$($settings.SourceRef)/03-Azure/01-02%20Data/04-Agentic_PBIReport_Development/"
+        if (-not $Asset.uri.StartsWith($prefix)) { throw 'Unexpected source URI.' }
+        $relative = [uri]::UnescapeDataString($Asset.uri.Substring($prefix.Length))
+        $start = [Diagnostics.ProcessStartInfo]::new('git')
+        $start.WorkingDirectory = $repo
+        $start.UseShellExecute = $false
+        $start.RedirectStandardOutput = $true
+        foreach ($argument in @('cat-file','blob',"$($settings.SourceRef):03-Azure/01-02 Data/04-Agentic_PBIReport_Development/$relative")) {
+            $start.ArgumentList.Add($argument)
         }
-        foreach ($entry in $entries.GetEnumerator()) {
-            $writer = [IO.StreamWriter]::new($zip.CreateEntry($entry.Key).Open())
-            try { $writer.Write($entry.Value) } finally { $writer.Dispose() }
-        }
-    } finally { $zip.Dispose() }
-    $extracted = Join-Path $scratch 'dictionary-extracted'
-    Expand-VerifiedZip $dictionaryZip $extracted -AllowedRelativePaths (Get-LabSourceArchiveAllowlist $config)
-    $extractedRoot = Get-SafeSourcePath $extracted $config.source.root
-    Assert-True (Test-Path -LiteralPath "$extractedRoot\datasets\dictionary.md") 'Actual archive allowlist extracts dictionary'
-    Assert-True (-not (Test-Path -LiteralPath "$extractedRoot\walkthrough")) 'Dictionary regression excludes coach source'
+        $process = [Diagnostics.Process]::Start($start)
+        $stream = [IO.File]::Create($Destination)
+        try { $process.StandardOutput.BaseStream.CopyTo($stream) }
+        finally { $stream.Dispose() }
+        $process.WaitForExit()
+        try {
+            if ($process.ExitCode -ne 0 -or (Get-FileHash -LiteralPath $Destination -Algorithm SHA256).Hash -ne $Asset.sha256) {
+                throw 'Committed source descriptor checksum mismatch.'
+            }
+        } finally { $process.Dispose() }
+    }
     $stagedStudent = Join-Path $scratch 'dictionary-student'
-    Copy-LabStudentSource -SourceRoot $extractedRoot -StudentRoot $stagedStudent -Source $config.source
-    Assert-True ((Get-Content -LiteralPath "$stagedStudent\datasets\dictionary.md" -Raw) -eq $entries['archive/lab/datasets/dictionary.md']) 'Production final copy preserves dictionary content'
+    Copy-LabStudentFiles $guest.source $stagedStudent
+    Assert-CsvManifest $stagedStudent
+    $dictionary = @($guest.source.files | Where-Object target -EQ 'datasets/dictionary.md')[0]
+    Assert-True ((Get-FileHash "$stagedStudent\datasets\dictionary.md").Hash -eq $dictionary.sha256) 'Production staging preserves committed dictionary bytes, independent of autocrlf'
+    Assert-True (-not (Test-Path -LiteralPath "$stagedStudent\walkthrough")) 'Student staging excludes coach source'
+    $badSource = @{ref=$settings.SourceRef;files=@(@{path='datasets/../walkthrough/answer.md';target='datasets/answer.md';sha256=('a'*64)})}
+    Assert-Throws { Copy-LabStudentFiles $badSource "$scratch\bad-student" } 'Unsafe student'
     foreach ($scenario in 'banking', 'insurance') {
         $brief = Join-Path "$stagedStudent\briefs" "$scenario-business-brief.md"
         $link = [regex]::Match((Get-Content -LiteralPath $brief -Raw), '\]\(([^)]+dictionary\.md)\)').Groups[1].Value
@@ -242,7 +211,7 @@ try {
     Add-Content -LiteralPath "$scratch\student\datasets\banking\Table.csv" -Value '2'
     Assert-Throws { Assert-CsvManifest "$scratch\student" } 'checksum/size'
     }
-    $coverage = if ($SkipFileSystem) { 'Filesystem regressions SKIPPED (read-only subset).' } else { 'Includes actual archive extraction and final student-copy regressions in unique OS temp.' }
+    $coverage = if ($SkipFileSystem) { 'Filesystem regressions SKIPPED (read-only subset).' } else { 'Includes actual archive extraction and selective student staging with real CSV checksum verification in unique OS temp.' }
     Write-Output "PASS: $script:passed offline automation assertions. $coverage No cloud checks performed."
 } finally {
     if ($scratch -and (Test-Path -LiteralPath $scratch)) { Remove-Item -LiteralPath $scratch -Recurse -Force }

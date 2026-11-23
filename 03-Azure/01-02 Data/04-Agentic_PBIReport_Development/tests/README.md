@@ -10,6 +10,7 @@ $env:PYTHONIOENCODING = 'utf-8'
 python -B -m unittest discover -s "$hack\tests" -p 'test_*.py' -v
 python -B "$hack\tests\check-structure.py"
 & "$hack\tests\test_automation.ps1"
+& "$hack\tests\test_platform_hooks.ps1"
 az bicep build --file "$hack\labautomation\main.bicep" --outfile "$env:TEMP\agentic-pbi-main.json"
 az bicep build --file "$hack\labautomation\shared.bicep" --outfile "$env:TEMP\agentic-pbi-shared.json"
 git diff --check
@@ -25,6 +26,24 @@ repository links. For deeply nested Windows worktrees, pass an absolute
 `\\?\C:\...` filename to the checker to avoid false missing-file results at the
 normal Windows path-length limit.
 
+`test_platform_hooks.ps1` runs both actual hook scripts with Azure/platform
+boundary doubles and `MHH_EVENT_CONFIG` absent. It exercises shared provisioning,
+ordered region selection, retained exact image versions, two participant VMs,
+stable retries, secure password parameters, complete guest payload construction,
+RG metadata-region differences, preserved platform tags and explicit rejection
+of bad scope/identity/context and unsuccessful deployment states. It also checks
+empty region preferences, paginated/display-name SKU metadata, capacity Active
+waiting, paused-capacity rejection and preservation of unrelated capacities. No Azure call,
+authentication, installation or machine configuration occurs.
+
+`test_automation.ps1` checks runtime settings/pins, schemas and signatures,
+ownership/implicit disks, ARM polling/failure paths and real temporary ZIP
+extraction. Its selective-downloader double stages the actual 25 allowlisted
+source files from the pinned Git blobs in OS temp and verifies CSV bytes/checksums
+and dictionary links. It checks canonical guest JSON and repeat skill-tree copying.
+It does not install Windows tools, run the guest bootstrap, perform interactive
+first-login initialization, test MCP connectivity or certify a live tenant.
+
 `test_packaging.py` applies this lab's documented audience removals and separate
 ZIP exclusions to the current source, checks local Markdown file targets with
 case-sensitive paths on both published sides, and writes/reads representative
@@ -36,7 +55,7 @@ stay on the published sides, not in the ZIPs. Its fixtures catch links to remove
 automation/solutions and wrong-case targets. Scratch ZIPs are removed automatically.
 These tests model the template contract, not the actual platform importer,
 variants, injected banners, link fragments, external websites, private host
-payloads or VM bootstrap execution. Inspect actual import/navigation/downloads
+VM bootstrap execution. Inspect actual import/navigation/downloads
 in the authorized pilot before claiming platform acceptance.
 
 Generate both coach PBIR examples into fresh temporary output folders with

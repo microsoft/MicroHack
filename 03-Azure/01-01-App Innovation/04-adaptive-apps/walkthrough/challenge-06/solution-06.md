@@ -6,7 +6,7 @@ Duration: 45-75 minutes
 
 ## Coach notes
 
-**Hosted prerequisites:** complete the workstation portion of Challenge 01 and
+**Hosted Lab prerequisites:** complete the workstation portion of Challenge 01 and
 [Console setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md).
 Console supplies infrastructure only. Validate/explore 02 without reprovisioning,
 then complete 03-05 to install Radius, create workspaces and abstractions (including

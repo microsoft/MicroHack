@@ -9,6 +9,8 @@
 - [**MicroHack Challenges**](#microhack-challenges)
 - [**Contributors**](#contributors)
 
+**Opening tech talk:** a 22-minute deck for facilitators, [Nothing crosses the line](techtalk/README.md).
+
 ---
 
 ## MicroHack Introduction

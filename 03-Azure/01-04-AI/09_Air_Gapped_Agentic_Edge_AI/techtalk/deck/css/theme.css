@@ -1,0 +1,299 @@
+/* =======================================================================
+   DRAFTING SHEET: theme for "Nothing crosses the line", the Air-Gapped Agentic Edge AI tech talk.
+   Concept: every slide is a sheet of an engineering drawing. Off-white drafting paper, a fine
+   blueprint grid, blue line work that draws itself, Lucida Console annotations on leaders, and a
+   title block on every sheet. One signature object: the air gap drawn as a sealed, hatched boundary
+   with a single gate. Safety red is used for one thing only: what must not cross the line.
+   ======================================================================= */
+
+:root {
+  --paper: #F4F1E8;
+  --paper-2: #FBF9F3;
+  --ink: #1D4F9C;
+  --ink-2: #4F78B8;
+  --ink-soft: rgba(29, 79, 156, 0.55);
+  --ink-faint: rgba(29, 79, 156, 0.14);
+  --text: #16233A;
+  --muted: #5A6679;
+  --dim: #8A93A3;
+  --red: #D3202A;
+  --cue: #1D4F9C;
+
+  --head: "Franklin Gothic Medium", "Franklin Gothic", "Libre Franklin", "Arial Narrow", Arial, sans-serif;
+  --cond: "Franklin Gothic Medium Cond", "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
+  --body: "Segoe UI", system-ui, -apple-system, sans-serif;
+  --mono: "Lucida Console", "Lucida Sans Typewriter", Monaco, Consolas, monospace;
+}
+
+/* ---------- the drafting paper ---------- */
+.reveal-viewport { background: #E9E5D9; }
+.reveal { font-family: var(--body); color: var(--text); -webkit-font-smoothing: antialiased; }
+.reveal .slides section {
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(rgba(29, 79, 156, 0.11) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(29, 79, 156, 0.11) 1px, transparent 1px),
+    linear-gradient(rgba(29, 79, 156, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(29, 79, 156, 0.045) 1px, transparent 1px);
+  background-size: 80px 80px, 80px 80px, 16px 16px, 16px 16px;
+  background-position: 16px 16px;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+/* The sheet border: a heavy frame and a fine inner line. */
+.reveal .slides section::before {
+  content: ''; position: absolute; inset: 14px; border: 1.5px solid var(--ink); pointer-events: none; z-index: 0;
+}
+.reveal .slides section::after {
+  content: ''; position: absolute; inset: 19px; border: 0.75px solid var(--ink-soft); pointer-events: none; z-index: 0;
+}
+.reveal .progress { color: var(--ink); height: 3px; background: transparent; }
+.reveal .controls { color: var(--ink); }
+.reveal .controls .controls-arrow { opacity: 0.55; }
+.reveal p, .reveal h1, .reveal h2, .reveal h3 { margin: 0; }
+.reveal h1, .reveal h2, .reveal h3 { font-family: var(--head); font-weight: normal; text-transform: none; color: var(--text); letter-spacing: -0.01em; }
+
+/* ---------- shared hierarchy ---------- */
+.kicker { position: absolute; left: 56px; top: 42px; font: 12px var(--mono); letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink); }
+.reveal h2.title { position: absolute; left: 54px; top: 62px; font-size: 44px; line-height: 1.05; white-space: nowrap; }
+.subtitle { position: absolute; left: 56px; top: 116px; font-size: 19px; color: var(--muted); white-space: nowrap; }
+.moral { position: absolute; left: 56px; font: 30px var(--cond); color: var(--text); white-space: nowrap; }
+.moral .ink { color: var(--ink); }
+.moral .red { color: var(--red); }
+.foot { position: absolute; left: 56px; width: 720px; bottom: 26px; font: 10.5px var(--mono); color: var(--muted); white-space: nowrap; }
+.ink { color: var(--ink); } .red { color: var(--red); } .mono { font-family: var(--mono); } .muted { color: var(--muted); }
+
+/* ---------- the title block on every sheet ---------- */
+.tblock {
+  position: absolute; left: 800px; top: 656px; width: 360px; height: 44px; display: grid;
+  grid-template-columns: 1.7fr 0.8fr 0.8fr 0.55fr; border: 1.2px solid var(--ink); background: var(--paper-2); z-index: 1;
+}
+.tblock > div { border-left: 0.75px solid var(--ink-soft); padding: 4px 7px; }
+.tblock > div:first-child { border-left: 0; }
+.tblock .l { font: 7.5px var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.tblock .v { margin-top: 5px; font: 12px var(--cond); color: var(--ink); white-space: nowrap; }
+.tblock .rev .v { font-family: var(--mono); font-size: 11px; }
+
+/* ---------- controls on paper ---------- */
+.ctl { top: 36px; right: 40px; }
+.ctl button { border-color: var(--ink-soft); background: var(--paper-2); color: var(--ink); font-family: var(--body); border-radius: 2px; }
+.ctl button:hover:not(:disabled), .ctl button:focus-visible { color: var(--text); }
+.ctl .cue { font-family: var(--mono); }
+.ctl .cue::before { border-radius: 0; transform: rotate(45deg); }
+
+/* ---------- line work ---------- */
+svg.art { position: absolute; left: 0; top: 0; width: 1280px; height: 720px; overflow: visible; }
+.ln { fill: none; stroke: var(--ink); stroke-width: 1.6; }
+.ln.thin { stroke-width: 1; }
+.ln.soft { stroke: var(--ink-soft); }
+.ln.dash { stroke-dasharray: 5 4; }
+.ln.red { stroke: var(--red); stroke-width: 2; }
+.ln.red.dash { stroke-dasharray: 6 4; }
+.fillw { fill: var(--paper-2); }
+.svgt { font: 11px var(--mono); fill: var(--ink); }
+.svgt.m { fill: var(--muted); }
+.svgt.r { fill: var(--red); }
+.svgt.b { font: 15px var(--cond); fill: var(--text); }
+.arrowhead { fill: var(--ink); }
+.arrowhead.r { fill: var(--red); }
+.xmark { stroke: var(--red); stroke-width: 2.6; fill: none; stroke-linecap: square; }
+
+/* The air gap: two rules, section hatching between them, a gate that opens once. */
+.gap-rule { fill: none; stroke: var(--ink); stroke-width: 1.8; }
+.gap-hatch { fill: url(#hatch); }
+.gap-jamb { stroke: var(--ink); stroke-width: 2.2; }
+.gap-seal { fill: var(--ink); }
+.gap-tag { font: 10px var(--mono); letter-spacing: 0.2em; fill: var(--ink); text-anchor: middle; }
+.side-tag { font: 11px var(--mono); letter-spacing: 0.2em; fill: var(--muted); }
+
+/* Parts: drafted boxes with a label. */
+.part { position: absolute; border: 1.4px solid var(--ink); background: var(--paper-2); padding: 7px 10px; box-sizing: border-box; }
+.part .n { font: 16px var(--cond); color: var(--text); white-space: nowrap; }
+.part .d { margin-top: 3px; font: 10.5px var(--mono); color: var(--muted); white-space: nowrap; }
+.part.lit { box-shadow: 4px 4px 0 var(--ink-faint); border-width: 2px; }
+.part.dim { opacity: 0.35; }
+.room-tag { position: absolute; font: 10.5px var(--mono); letter-spacing: 0.1em; color: var(--ink); white-space: nowrap; }
+
+/* Leaders: a line with a dot at the object and a mono note at the end. */
+.note { position: absolute; font: 11.5px var(--mono); line-height: 1.5; color: var(--text); white-space: nowrap; }
+.note b { font-weight: normal; color: var(--ink); }
+.note.r, .note.r b { color: var(--red); }
+.lead-dot { fill: var(--ink); }
+
+/* The travelling parcel: an approved bundle crossing the gate. */
+.parcel { width: 26px; height: 18px; border-radius: 0; background: var(--paper-2); border: 1.6px solid var(--ink); box-shadow: 3px 3px 0 var(--ink-faint); }
+.parcel::after { content: ''; position: absolute; left: 11px; top: 0; bottom: 0; width: 1.6px; background: var(--ink); }
+.pen { width: 9px; height: 9px; background: var(--ink); box-shadow: 0 0 0 3px rgba(29, 79, 156, 0.18); }
+.pen.red { background: var(--red); box-shadow: 0 0 0 3px rgba(211, 32, 42, 0.18); }
+
+/* Stamps: a revision or approval stamp lands with a small tilt. */
+.stamp { position: absolute; padding: 6px 12px 5px; border: 2.4px solid var(--ink); color: var(--ink); font: 15px var(--mono); letter-spacing: 0.14em; text-transform: uppercase; white-space: nowrap; transform: rotate(-4deg); background: rgba(251, 249, 243, 0.8); }
+.stamp small { display: block; margin-top: 3px; font-size: 9.5px; letter-spacing: 0.08em; text-transform: none; }
+.stamp.red { border-color: var(--red); color: var(--red); }
+
+/* Revision cloud and triangle */
+.rcloud { fill: none; stroke: var(--ink); stroke-width: 1.6; }
+.rtri { fill: var(--paper-2); stroke: var(--ink); stroke-width: 1.5; }
+.rtri-n { font: 11px var(--mono); fill: var(--ink); text-anchor: middle; }
+
+/* =======================================================================
+   COVER: the sheet itself is the cover. Title left, the gap drawing right, the title block filled in.
+   ======================================================================= */
+.cover .cv-event { position: absolute; left: 72px; top: 118px; font: 12px var(--mono); letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink); }
+.reveal .cover h1 { position: absolute; left: 68px; top: 150px; font-size: 92px; line-height: 0.98; letter-spacing: -0.02em; color: var(--text); }
+.reveal .cover h1 .ink { color: var(--ink); }
+.cover .cv-sub { position: absolute; left: 72px; top: 362px; width: 520px; font-size: 22px; line-height: 1.38; color: var(--muted); }
+.cv-block { position: absolute; left: 56px; top: 580px; width: 1168px; height: 78px; display: grid; grid-template-columns: 2.1fr 1.5fr 1fr 0.8fr 0.6fr; border: 1.6px solid var(--ink); background: var(--paper-2); }
+.cv-block > div { border-left: 0.75px solid var(--ink-soft); padding: 12px 16px; }
+.cv-block > div:first-child { border-left: 0; }
+.cv-block .l { font: 9px var(--mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+.cv-block .v { margin-top: 10px; font: 21px var(--cond); color: var(--text); white-space: nowrap; }
+.cv-block .v.s { font-size: 17px; }
+.cv-block .v.ink { color: var(--ink); }
+.cover .tblock { display: none; }
+
+/* =======================================================================
+   CHAPTERS: a drawing index. The current sheet is boxed and given a revision triangle.
+   ======================================================================= */
+.chapter .ch-label { position: absolute; left: 72px; top: 214px; font: 12px var(--mono); letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink); }
+.reveal .chapter h1 { position: absolute; left: 68px; top: 244px; font-size: 96px; line-height: 1; white-space: nowrap; }
+.chapter .ch-sub { position: absolute; left: 72px; top: 362px; font-size: 22px; color: var(--muted); white-space: nowrap; }
+.idx { position: absolute; left: 744px; top: 214px; width: 440px; }
+.idx .ih { font: 10px var(--mono); letter-spacing: 0.2em; color: var(--muted); padding-bottom: 8px; border-bottom: 1.4px solid var(--ink); }
+.idx .row { position: relative; display: grid; grid-template-columns: 70px 1fr 90px; align-items: center; height: 62px; border-bottom: 0.75px solid var(--ink-soft); }
+.idx .row .no { font: 30px var(--cond); color: var(--dim); }
+.idx .row .t { font-size: 18px; color: var(--dim); white-space: nowrap; }
+.idx .row .st { font: 9.5px var(--mono); letter-spacing: 0.14em; color: var(--dim); text-align: right; }
+.idx .row.done .no, .idx .row.done .t { color: var(--muted); }
+.idx .row.cur .no, .idx .row.cur .t { color: var(--ink); }
+.idx .row.cur .st { color: var(--ink); }
+.idx-art { position: absolute; left: 0; top: 0; width: 1280px; height: 720px; overflow: visible; pointer-events: none; }
+
+/* =======================================================================
+   SCENES
+   ======================================================================= */
+/* 3: the line */
+.gap .inside-part { width: 210px; }
+.gap .plist { position: absolute; left: 92px; top: 404px; width: 452px; border: 1.4px solid var(--ink); background: var(--paper-2); }
+.gap .plist .ph { padding: 6px 12px; font: 10px var(--mono); letter-spacing: 0.18em; color: var(--ink); border-bottom: 1px solid var(--ink); }
+.gap .plist .pr { display: grid; grid-template-columns: 26px 1fr auto; padding: 0 12px; height: 27px; align-items: center; border-bottom: 0.75px solid var(--ink-faint); font-size: 15px; }
+.gap .plist .pr:last-child { border-bottom: 0; }
+.gap .plist .pr .i { font: 11px var(--mono); color: var(--muted); }
+.gap .plist .pr .q { font: 11px var(--mono); color: var(--ink); }
+
+/* 4: plan */
+.plan .part { height: 50px; }
+.plan .part.small { height: 44px; padding: 6px 8px; }
+.plan .part.small .n { font-size: 14px; }
+
+.plan .legend { position: absolute; left: 56px; top: 396px; width: 200px; }
+.plan .legend p { position: relative; height: 26px; padding-left: 28px; font: 11.5px/20px var(--mono); color: var(--text); white-space: nowrap; }
+.plan .legend p span { position: absolute; left: 0; top: 0; width: 18px; height: 18px; border: 1px solid var(--ink); border-radius: 50%; font: 11px/18px var(--mono); color: var(--ink); text-align: center; background: var(--paper-2); }
+
+/* 6: manifest */
+.manifest .mrow { position: absolute; left: 56px; width: 464px; height: 58px; border: 1.4px solid var(--ink); border-left-width: 4px; background: var(--paper-2); padding: 8px 12px; box-sizing: border-box; }
+.manifest .mrow .n { display: inline-block; font: 16px var(--cond); white-space: nowrap; }
+.manifest .mrow .d { margin-top: 4px; font: 10.5px var(--mono); color: var(--muted); white-space: nowrap; }
+.manifest .mrow .tick { position: absolute; right: 10px; top: 8px; font: 10px var(--mono); color: var(--ink); white-space: nowrap; }
+.manifest .mh { position: absolute; left: 56px; top: 170px; font: 10px var(--mono); letter-spacing: 0.2em; color: var(--ink); }
+.manifest .sh { position: absolute; left: 640px; top: 170px; font: 10px var(--mono); letter-spacing: 0.2em; color: var(--ink); }
+.manifest .store { position: absolute; left: 640px; width: 300px; height: 58px; border: 1.4px dashed var(--ink-soft); padding: 8px 12px; box-sizing: border-box; }
+.manifest .store .n { font: 16px var(--cond); color: var(--dim); white-space: nowrap; }
+.manifest .store .d { margin-top: 4px; font: 10.5px var(--mono); color: var(--dim); white-space: nowrap; }
+.manifest .store.full { border: 1.4px solid var(--ink); background: var(--paper-2); }
+.manifest .store.full .n { color: var(--text); }
+.manifest .store.full .d { color: var(--muted); }
+.manifest .gck { position: absolute; left: 960px; width: 250px; font: 11px var(--mono); color: var(--ink); white-space: nowrap; }
+
+/* 7: model store */
+.store7 .dot { fill: var(--ink); }
+.store7 .dot.dim { fill-opacity: 0.2; }
+.store7 .dot.pick { fill: var(--paper-2); stroke: var(--ink); stroke-width: 2.4; }
+.store7 .resolve { position: absolute; left: 64px; top: 466px; width: 476px; border: 1.4px solid var(--ink); background: var(--paper-2); padding: 10px 14px; box-sizing: border-box; font: 11.5px var(--mono); line-height: 1.75; white-space: nowrap; }
+.store7 .resolve b { font-weight: normal; color: var(--ink); }
+.store7 .stage { position: absolute; left: 812px; width: 392px; height: 56px; }
+.store7 .stage.cut { border-style: dashed; }
+
+/* 8: token */
+.sat .card { position: absolute; left: 404px; top: 176px; width: 380px; height: 300px; border: 1.6px solid var(--ink); background: var(--paper-2); box-sizing: border-box; }
+.sat .card .ch { padding: 8px 14px; font: 10px var(--mono); letter-spacing: 0.16em; color: var(--ink); border-bottom: 1px solid var(--ink); }
+.sat .fld { position: absolute; left: 418px; font: 11.5px var(--mono); color: var(--text); white-space: nowrap; }
+.sat .fld .k { color: var(--muted); }
+.sat .band { position: absolute; top: 508px; height: 50px; }
+
+/* 10: filter */
+.filter .axis-l { font: 10.5px var(--mono); fill: var(--muted); }
+.filter .pt { fill: var(--ink); }
+.filter .pt.drop { fill: var(--paper-2); stroke: var(--dim); stroke-width: 1.6; }
+.filter .pt.pass { fill: var(--ink); }
+.filter .pv { font: 10.5px var(--mono); fill: var(--text); text-anchor: middle; }
+.filter .pv.drop { fill: var(--dim); }
+.filter .topic { position: absolute; left: 904px; top: 190px; width: 316px; border: 1.4px solid var(--ink); background: var(--paper-2); }
+.filter .topic .th { padding: 7px 12px; font: 10px var(--mono); letter-spacing: 0.12em; color: var(--ink); border-bottom: 1px solid var(--ink); }
+.filter .topic .tr { padding: 8px 12px; font: 11.5px var(--mono); border-bottom: 0.75px solid var(--ink-faint); white-space: nowrap; }
+.filter .topic .tr:last-child { border-bottom: 0; }
+
+/* 11: wall */
+.wall .door-l { font: 11px var(--mono); fill: var(--ink); }
+
+/* 12: sealed */
+.seal .node { position: absolute; top: 250px; width: 122px; height: 58px; padding: 7px 8px; }
+.seal .node .n { font-size: 15px; white-space: normal; line-height: 1.1; }
+.seal .node.lit { background: #E6EDF8; }
+.seal .card12 { position: absolute; top: 384px; height: 96px; border: 1.4px solid var(--ink); background: var(--paper-2); padding: 9px 12px; box-sizing: border-box; font: 11.5px var(--mono); line-height: 1.6; white-space: nowrap; }
+.seal .card12 .h { font: 10px var(--mono); letter-spacing: 0.14em; color: var(--ink); }
+.seal .card12 b { font-weight: normal; color: var(--ink); }
+.seal .err { position: absolute; left: 60px; top: 330px; font: 12px var(--mono); line-height: 1.55; color: var(--red); white-space: nowrap; }
+.seal .rpm { position: absolute; left: 340px; top: 498px; }
+.seal .rpm .l { font: 10px var(--mono); letter-spacing: 0.18em; color: var(--muted); }
+.seal .rpm .big { margin-top: 2px; font: 64px var(--cond); line-height: 1; color: var(--text); white-space: nowrap; }
+.seal .rpm .big small { font-size: 22px; color: var(--muted); margin-left: 8px; }
+.seal .was { position: absolute; left: 600px; top: 520px; font: 12px var(--mono); line-height: 1.6; color: var(--muted); white-space: nowrap; }
+.seal .was b { font-weight: normal; color: var(--ink); }
+.seal .dimv { font: 13px var(--mono); fill: var(--ink); text-anchor: middle; }
+
+/* 13: guard */
+.guard .logrow { position: absolute; left: 56px; width: 560px; height: 80px; border: 1.4px solid var(--ink); background: var(--paper-2); padding: 9px 14px; box-sizing: border-box; font: 11.5px var(--mono); line-height: 1.6; white-space: nowrap; }
+.guard .logrow .h { font: 15px var(--cond); color: var(--text); font-family: var(--cond); }
+.guard .logrow .nul { color: var(--ink); padding: 0 2px; }
+.guard .gpart { height: 50px; }
+.guard .gpart.dead { opacity: 0.35; border-style: dashed; }
+.guard .gm { transition: opacity 500ms ease; }
+.guard.failed .gm { opacity: 0.3; }
+
+/* 14: lab and plant */
+.real .tbl { position: absolute; left: 56px; top: 172px; width: 1168px; border: 1.6px solid var(--ink); background: var(--paper-2); }
+.real .tr { position: relative; display: grid; grid-template-columns: 200px 1fr 1fr; border-bottom: 0.75px solid var(--ink-soft); }
+.real .tr:last-child { border-bottom: 0; }
+.real .tr > div { padding: 11px 16px; font-size: 15.5px; line-height: 1.35; border-left: 0.75px solid var(--ink-soft); }
+.real .tr > div:first-child { border-left: 0; font: 10.5px var(--mono); letter-spacing: 0.12em; color: var(--ink); text-transform: uppercase; padding-top: 14px; }
+.real .tr.hd > div { font: 10.5px var(--mono); letter-spacing: 0.16em; color: var(--ink); text-transform: uppercase; padding: 9px 16px; }
+.real .tr .m { font: 11px var(--mono); color: var(--muted); }
+
+/* 15: sign-off */
+.signoff .so-h { position: absolute; left: 72px; top: 110px; font: 12px var(--mono); letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink); }
+.reveal .signoff h2 { position: absolute; left: 68px; top: 140px; font-size: 64px; line-height: 1.05; white-space: nowrap; }
+.signoff .big-block { position: absolute; left: 56px; top: 330px; width: 1168px; border: 1.8px solid var(--ink); background: var(--paper-2); display: grid; grid-template-columns: 1.25fr 1fr; }
+.signoff .bb { padding: 14px 18px; border-left: 0.75px solid var(--ink-soft); }
+.signoff .bb:first-child { border-left: 0; }
+.signoff .bb .l { font: 9px var(--mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+.signoff .sheets { margin-top: 8px; }
+.signoff .sheets div { display: grid; grid-template-columns: 34px 1fr 90px; height: 27px; align-items: center; font-size: 15.5px; border-bottom: 0.75px solid var(--ink-faint); }
+.signoff .sheets div:last-child { border-bottom: 0; }
+.signoff .sheets .no { font: 11px var(--mono); color: var(--ink); }
+.signoff .sheets .w { font: 11px var(--mono); color: var(--muted); text-align: right; }
+.signoff .who { margin-top: 10px; font: 22px var(--cond); color: var(--text); white-space: nowrap; }
+.signoff .who2 { margin-top: 6px; font: 11px var(--mono); color: var(--muted); }
+.signoff .sentence { margin-top: 26px; font: 26px var(--cond); color: var(--ink); white-space: nowrap; }
+.signoff .tblock { display: none; }
+
+/* states set by the beats */
+.gap .redset { transition: opacity 600ms ease; }
+.gap.b1 .redset { opacity: 0.32; }
+.store7 .xin { transition: opacity 600ms ease; }
+.store7.sealed .xin { opacity: 0.3; }
+.sat .fld { white-space: pre; }
+.filter .bar { position: absolute; height: 8px; background: var(--ink); }
+.part, .seal .node { transition: background-color 400ms ease, box-shadow 400ms ease; }
+
+/* print: everything settled, the paper printed */
+@media print { .reveal .slides section { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }

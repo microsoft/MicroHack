@@ -226,7 +226,7 @@ rad group switch rg-trading
 > Hosted participants should source `artifacts/console-env.sh` and retain its supplied
 > `ACR_NAME`.
 
-**Hosted Console:** reuse the supplied registry; do not run the creation block.
+**Hosted MicroHack / Lab:** reuse the supplied registry; do not run the creation block.
 Source and verify your supplied values:
 
 ```bash
@@ -345,23 +345,19 @@ rad bicep publish \
   --target "br:${ACR_NAME}.azurecr.io/recipes/workload-identity-azure:1.0.8"
 ```
 
-Event Grid uses version `1.0.9` because its recipe now accepts the namespace name
-supplied by the environment. Do not overwrite an already published `1.0.8` artifact.
 The remaining AKS recipes already reference published GHCR templates and do not need
 republishing. Deploy the environment definition below to register the complete set,
 including the Azure SQL teaching recipe published and registered in Stage 2.
 
 The AKS environment definition registers Azure-backed implementations and the custom
 SQL recipe. PostgreSQL public access is restricted to the cluster's exact effective
-outbound IPs. The commands reject unsupported outbound types, public IP prefixes, and
-non-static IP resources rather than widening the database firewall.
+outbound IPs. The commands below is mostly about infra level access, at the end you can find the recipe registration.
 
 The environment supplies the same Event Grid namespace name to the broker and identity
 recipes. `iac/app.bicep` deploys the broker before either identity, so the `orders` topic
 space exists before role assignments and permission bindings are created. The identity
 recipe receives the AKS OIDC issuer and binds the application's service account
-(`default` unless overridden). This workshop uses one Trading broker per environment.
-The Radius Azure provisioning identity must be allowed to create managed identities,
+(`default` unless overridden). The Radius Azure provisioning identity must be allowed to create managed identities,
 federated credentials, and role assignments; resource Contributor alone cannot create
 role assignments.
 

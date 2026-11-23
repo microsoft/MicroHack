@@ -44,7 +44,7 @@
     <div class="cv-meta"><p class="l">Tech talk</p><p class="v">Offline Industrial Copilot</p></div>
   </div>
   <aside class="notes">
-    <p><b>[0:00, 1 minute]</b> The cover builds by itself. Let it settle.</p>
+    <p><b>[0:00, 1 minute]</b> I let the cover build and settle before I start.</p>
     <p>Good morning, and welcome. I'm Digvijay Chauhan, I'm a Solution Engineer at Microsoft, and today we are going to build something a bit unusual: an AI copilot that is designed to lose its internet connection.</p>
     <p>The little box on the right is the hero of the day. It's a laptop or a small industrial PC that sits next to the machines. Those blue pulses on the cable are the internet. By the end of the day, you will pull that cable out, and your copilot will keep answering.</p>
     <p>Before you start, I want to give you twenty minutes of why, and show you what we measured when we ran this hack end to end.</p>
@@ -114,10 +114,10 @@
   <p class="foot">The cloud path is illustrative. The answer is a recorded offline run: phi-4-mini on a laptop GPU, Foundry Local 0.14.</p>
   <span class="fragment beat"></span>
   <aside class="notes">
-    <p><b>[1:20, 2 minutes]</b> The slide builds on arrival: the tablet, the question, then the path to the cloud.</p>
+    <p><b>[1:20, 2 minutes]</b> I let the tablet and the question appear, then talk over the path to the cloud as it builds.</p>
     <p>Picture hall 3, at 02:14. There's one technician on the night shift, and a CNC milling machine has just stopped itself. The controller says error E-SPN-214, spindle vibration 9.4 millimetres per second.</p>
     <p>So the technician asks the obvious question: at what vibration level must this spindle be stopped? Normally that question goes from the tablet, through the plant network, through the firewall, out to the internet and up to a big model in the cloud.</p>
-    <p>And on a factory floor, that last link is the weak one. Plants have firewalls that say no, connections that drop, sites in the middle of nowhere, and sometimes a rule that production data does not leave the building. <i>(The link flickers and goes down.)</i> When that happens, the technician is left looking at three dots.</p>
+    <p>And on a factory floor, that last link is the weak one. Plants have firewalls that say no, connections that drop, sites in the middle of nowhere, and sometimes a rule that production data does not leave the building. <i>(I pause while the link flickers and goes down.)</i> When that happens, the technician is left looking at three dots.</p>
     <p><b>[click]</b> So we move the model. The question goes a few metres, to a device next to the machine, and comes back with an answer from the plant's own procedure, with the source. That is a real answer, recorded with the network blocked. It took 14 seconds on a laptop. Not instant, but it's there at 02:14, and it cites SOP-CNC-001.</p>
     <p>That's the whole idea of today: the answer has to live next to the machine.</p>
   </aside>
@@ -175,11 +175,11 @@
   <p class="foot">The agent calls the tools with function calling. Every tool reads or writes local files only.</p>
   <span class="fragment beat"></span>
   <aside class="notes">
-    <p><b>[3:20, 2 minutes 30]</b> The boundary draws first, then Foundry Local, the agent and the four tools, one at a time.</p>
+    <p><b>[3:20, 2 minutes 30]</b> I talk the room through the build as it happens: the boundary, Foundry Local, the agent, then the four tools one at a time.</p>
     <p>Here is what you build. Everything inside this dashed line is one laptop, or a small VM. Nothing inside it needs the internet.</p>
     <p>At the bottom is Foundry Local. It downloads models once, runs them on your GPU, NPU or CPU, and gives you an OpenAI-compatible endpoint on localhost. So your code uses the normal OpenAI SDK; only the base URL changes.</p>
     <p>On top of that sits the agent: a small language model, phi-4-mini, with function calling. It has four tools. Machine status reads a local JSON file. Maintenance tickets writes to a local file, and notice the badge: anything that changes something waits for a person to say yes. SOP search finds the right procedure with a local embedding model. And a fault classifier predicts what is about to break.</p>
-    <p><b>[click]</b> That classifier is the one piece that comes from the cloud. You train it in Azure Machine Learning, export it to ONNX, and copy it onto the device. <i>(The file travels down and lands.)</i> Then the cloud is not needed at run time. That's the pattern for the whole day: use the cloud to build, and the device to run.</p>
+    <p><b>[click]</b> That classifier is the one piece that comes from the cloud. You train it in Azure Machine Learning, export it to ONNX, and copy it onto the device. <i>(I wait for the file to land.)</i> Then the cloud is not needed at run time. That's the pattern for the whole day: use the cloud to build, and the device to run.</p>
   </aside>
 </section>
 
@@ -212,7 +212,7 @@
   <p class="foot">benchmark.py on a Snapdragon X Elite laptop, Foundry Local 0.14. Tool calls with tool_choice "required". Answers: 13 SOP questions checked for the right facts.</p>
   <span class="fragment beat"></span><span class="fragment beat"></span>
   <aside class="notes">
-    <p><b>[6:10, 3 minutes]</b> Arriving, the names come in and the speed bars race.</p>
+    <p><b>[6:10, 3 minutes]</b> I let the speed bars race before I say anything about them.</p>
     <p>In challenge 2, teams run a benchmark on three small models. These are our numbers, on a Snapdragon laptop. Look at speed first. qwen3 is the quickest at 27 tokens per second, phi-4-mini does 21, and the NPU build of qwen2.5 does 4, and it took 47 seconds just to load. If you stopped here, you'd pick qwen3.</p>
     <p><b>[click]</b> But an agent has to call tools. So we give each model 8 requests that need a tool and force a tool call. phi-4-mini gets 7 of 8 right. qwen3 gets 1. And the NPU build of qwen2.5 doesn't answer at all: on this Foundry Local version, any request that includes tools returns an HTTP 500. That is exactly the kind of thing you only find by trying.</p>
     <p><b>[click]</b> Last, answer quality on 13 questions from the procedures. phi-4-mini and qwen2.5 get all 13, qwen3 gets 9. So the fastest model is not the one that can use the tools. We pick phi-4-mini on the GPU, and the rest of the day runs on it.</p>
@@ -237,10 +237,10 @@
   <p class="foot">check_routing.py holdout · phi-4-mini on the GPU · other runs without the router scored 14 of 23.</p>
   <span class="fragment beat"></span>
   <aside class="notes">
-    <p><b>[9:10, 3 minutes]</b> The dots fill in one by one, each is a real request.</p>
+    <p><b>[9:10, 3 minutes]</b> I let the dots fill in for a few seconds before I start.</p>
     <p>Here's a surprise from challenge 3. Each dot is one request a technician might type, grouped by the tool that should answer it. With all four tools in front of it, phi-4-mini gets 19 of 23 right on this run. In other runs it was as low as 14.</p>
     <p>And look at the four misses. "Run a diagnosis on CNC-07." "Classify the condition of PRESS-02." Two ticket requests. Every single one went to machine status. The model sees a machine name and grabs the status tool.</p>
-    <p><b>[click]</b> The fix is a router, and it costs almost nothing. Before the model sees a request, we compare it with a short card for each tool, using the embedding model we already loaded for search. Then we show the model only the best match. <i>(The scan passes and the red dots flip.)</i> 23 of 23.</p>
+    <p><b>[click]</b> The fix is a router, and it costs almost nothing. Before the model sees a request, we compare it with a short card for each tool, using the embedding model we already loaded for search. Then we show the model only the best match. <i>(I let the scan pass and the red dots flip.)</i> 23 of 23.</p>
     <p>And look at the time: 230 seconds for the set instead of 778. Fewer tools in the prompt means less work for a small model. That's a lesson that applies far beyond the factory: on small models, give the model fewer choices.</p>
   </aside>
 </section>
@@ -272,9 +272,9 @@
   </div>
   <span class="fragment beat"></span>
   <aside class="notes">
-    <p><b>[12:10, 2 minutes 30]</b> The question streams in, the procedure lands, then the answer streams with its sources and the beams find the sections.</p>
+    <p><b>[12:10, 2 minutes 30]</b> I let the question, the procedure and the answer stream in, then point at the beams as they find the sections.</p>
     <p>Challenge 4 is about trust. A technician will not follow an answer they can't check. So the copilot answers from the plant's own procedures, and says where.</p>
-    <p>Same question as before. The agent decides to search, finds SOP-CNC-001, and answers with the exact limit: 7.1 millimetres per second, stop, high-priority ticket, do not restart. Every claim points back to a section of the document. <i>(Beams draw to the sections.)</i></p>
+    <p>Same question as before. The agent decides to search, finds SOP-CNC-001, and answers with the exact limit: 7.1 millimetres per second, stop, high-priority ticket, do not restart. Every claim points back to a section of the document. <i>(I point at the beams as they reach the sections.)</i></p>
     <p><b>[click]</b> And we measure it. 13 questions with a known right answer, plus 2 that the procedures can't answer, like the cafeteria menu. A simple pipeline that always retrieves first does well, but misses a fact and two citations. When the agent decides when and what to search, it gets all 13 on every measure, and it still refuses the two it should refuse. Saying "I couldn't find that in the SOPs" is a feature, not a failure.</p>
   </aside>
 </section>
@@ -301,8 +301,8 @@
   <p class="foot">Studio export checked against the hack's shortcut file. Times from predict_fault on the laptop; the first call warms up.</p>
   <span class="fragment beat"></span>
   <aside class="notes">
-    <p><b>[14:40, 2 minutes]</b> Both sides appear, the file travels, then the two fingerprints are compared character by character.</p>
-    <p>Challenge 5 shows the other half of the story: the cloud is still where you train. Teams open Azure Machine Learning, run a notebook on a compute instance, train a small classifier on sensor history, and export it to ONNX. On the left is the fingerprint of the file the studio produced. On the right is the file on the laptop. <i>(The characters light up.)</i> Identical, byte for byte. So teams who skip the cloud part with the shortcut get exactly the same model.</p>
+    <p><b>[14:40, 2 minutes]</b> I let both sides appear and the file travel across before I explain the fingerprints.</p>
+    <p>Challenge 5 shows the other half of the story: the cloud is still where you train. Teams open Azure Machine Learning, run a notebook on a compute instance, train a small classifier on sensor history, and export it to ONNX. On the left is the fingerprint of the file the studio produced. On the right is the file on the laptop. <i>(I wait while the characters light up.)</i> Identical, byte for byte. So teams who skip the cloud part with the shortcut get exactly the same model.</p>
     <p><b>[click]</b> 94 percent accuracy in the notebook. On the device, a prediction takes about a third of a millisecond. The first one takes 10 milliseconds because the runtime warms up. CNC-07 comes back as bearing wear, 98 percent. The agent calls this as a tool, so the technician just asks "what's wrong with CNC-07?"</p>
   </aside>
 </section>
@@ -339,12 +339,12 @@
   <p class="hero k-land">Everything still answers.</p>
   <span class="fragment beat"></span><span class="fragment beat"></span>
   <aside class="notes">
-    <p><b>[17:00, 3 minutes 30]</b> Arriving: the device, the cable with data flowing, eight cloud regions, and six green lamps. Pause here.</p>
+    <p><b>[17:00, 3 minutes 30]</b> I wait on the six green lamps and let the room look before I say a word.</p>
     <p>This is challenge 6, and it is my favourite moment of the day. On the left is everything the copilot can do. On the right is the internet: Foundry Local's catalog lives in eight Azure regions. Right now, everything is connected and everything is green.</p>
     <p>Now, let's pull the cable. <b>[click]</b></p>
-    <p><i>(The plug comes out. The regions fail one by one, the real error appears.)</i> That error is real, we recorded it: Foundry Local tried all eight regions and got a transport failure every time. So the internet is truly gone.</p>
+    <p><i>(I stay quiet while the plug comes out and the regions fail one by one.)</i> That error is real, we recorded it: Foundry Local tried all eight regions and got a transport failure every time. So the internet is truly gone.</p>
     <p>And now the copilot checks each capability again. The local model answers. Machine status. The fault prediction. The SOP answer with its sources. A ticket, after the technician approves it. Every lamp turns green again. All of it came from the device.</p>
-    <p>One more test, because this is where people get caught. <b>[click]</b> What if the service restarts while you're offline? A power cut, an update. <i>(The device goes dark and comes back.)</i> On Foundry Local 0.14, the models load from the local cache, phi-4-mini in about 5 seconds, the embedding model in about 3, and the whole copilot answers again. Everything still answers.</p>
+    <p>One more test, because this is where people get caught. <b>[click]</b> What if the service restarts while you're offline? A power cut, an update. <i>(I let the device go dark and come back.)</i> On Foundry Local 0.14, the models load from the local cache, phi-4-mini in about 5 seconds, the embedding model in about 3, and the whole copilot answers again. Everything still answers.</p>
     <p>A tip for the room: on a managed laptop, a firewall rule for "Internet" did not block Foundry Local for us. We had to block the programs themselves. The walkthrough has the exact rules. Test it, don't assume it.</p>
   </aside>
 </section>
@@ -361,7 +361,7 @@
     <g class="k-bloom" style="--d:700ms"><circle class="orb-e" cx="1060" cy="500" r="124"/><text class="orb-n" x="1060" y="502" style="fill:var(--amber)">Every shift</text><text class="orb-u" x="1060" y="528" style="fill:var(--amber)">runs on the floor</text></g>
   </svg>
   <aside class="notes">
-    <p><b>[20:30, 1 minute]</b> The two circles bloom, then the cable between them parts.</p>
+    <p><b>[20:30, 1 minute]</b> I let the two circles appear and the cable between them part before I speak.</p>
     <p>So if you remember one sentence from this morning: build it in the cloud, and prove it without the cloud. You train once, in Azure. It runs every shift, on the floor.</p>
     <p>You have six challenges, one laptop, and at the end, no internet. Your coaches have the walkthroughs, and every slow measurement has a quick mode, so nobody spends the afternoon waiting. Have fun pulling the cable.</p>
   </aside>

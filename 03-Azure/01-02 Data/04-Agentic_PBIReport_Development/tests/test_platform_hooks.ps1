@@ -31,6 +31,12 @@ $script:skuReads = 0
 $script:capacityStates = @('Creating','Active')
 $script:sleeps = 0
 $script:foreignSkuPage = $false
+$script:providerState = 'NotRegistered'
+$script:registrationPollsRemaining = 1
+$script:registrationRequests = @()
+$script:stallRegistration = $false
+$script:denyRegistration = $false
+$script:httpResponses = [Collections.Generic.List[Net.Http.HttpResponseMessage]]::new()
 $otherId="/subscriptions/$sub/resourceGroups/unrelated/providers/Microsoft.Fabric/capacities/other-capacity"
 $script:resources[$otherId]=[pscustomobject]@{
     ResourceId=$otherId;ResourceGroupName='unrelated';ResourceType='Microsoft.Fabric/capacities'
@@ -61,10 +67,20 @@ function Get-AzAccessToken {
 }
 function Get-AzResourceProvider {
     [CmdletBinding()]param($ProviderNamespace)
-    [pscustomobject]@{
-        RegistrationState='Registered'
-        ResourceTypes=@([pscustomobject]@{ResourceTypeName='bastionHosts';Locations=@('Sweden Central')})
+    if ($ProviderNamespace -eq 'Microsoft.Fabric' -and $script:providerState -eq 'Registering' -and -not $script:stallRegistration) {
+        if ($script:registrationPollsRemaining -gt 0) { $script:registrationPollsRemaining-- }
+        else { $script:providerState='Registered' }
     }
+    [pscustomobject]@{
+        RegistrationState=if($ProviderNamespace -eq 'Microsoft.Fabric'){$script:providerState}else{'Registered'}
+        ResourceTypes=@([pscustomobject]@{ResourceTypeName='bastionHosts';Locations=@('Switzerland North','Sweden Central')})
+    }
+}
+function Register-AzResourceProvider {
+    [CmdletBinding()]param($ProviderNamespace)
+    if ($script:denyRegistration) { throw 'Synthetic registration permission denial.' }
+    $script:registrationRequests += $ProviderNamespace
+    $script:providerState='Registering'
 }
 function Get-AzResourceGroup {
     [CmdletBinding()]param()
@@ -90,9 +106,10 @@ function Start-Sleep {
 }
 function Invoke-AzRestMethod {
     [CmdletBinding()]param($Method,$Path)
+    if ($Path -match 'Microsoft.Fabric' -and $script:providerState -ne 'Registered') { throw 'Fabric metadata queried before provider registration completed.' }
     $body = if ($Path -match '/Microsoft.Fabric/skus\?') {
         $script:skuReads++
-        if ($Path -match 'page=2') { '{"value":[{"name":"F16","locations":["Sweden Central"]}]}' }
+        if ($Path -match 'page=2') { '{"value":[{"name":"F16","locations":["Switzerland North","Sweden Central"]}]}' }
         else {
             $pageSub=if($script:foreignSkuPage){$user}else{$sub}
             @{value=@();nextLink="https://management.azure.com/subscriptions/$pageSub/providers/Microsoft.Fabric/skus?api-version=2023-11-01&page=2"} | ConvertTo-Json
@@ -112,7 +129,9 @@ function Invoke-AzRestMethod {
         $disk = $script:resources[$Path.Split('?')[0]]
         @{managedBy=$disk.ManagedBy} | ConvertTo-Json
     } else { throw "Unexpected offline ARM path: $Path" }
-    [pscustomobject]@{StatusCode=200;Content=$body;Headers=@{}}
+    $message=[Net.Http.HttpResponseMessage]::new()
+    $script:httpResponses.Add($message)
+    [pscustomobject]@{StatusCode=200;Content=$body;Headers=$message.Headers}
 }
 function Update-AzTag {
     [CmdletBinding()]param($ResourceId,$Operation,$Tag)
@@ -153,10 +172,13 @@ function New-AzResourceGroupDeployment {
 $previousConfig = [Environment]::GetEnvironmentVariable('MHH_EVENT_CONFIG')
 try {
     [Environment]::SetEnvironmentVariable('MHH_EVENT_CONFIG', $null)
-    $sharedArgs=@{SubscriptionId=$sub;PreferredLocation=@('unsupportedregion','swedencentral');AllowedEntraUserIds=@($user2,$user)}
+    $defaults=Get-Content -LiteralPath "$lab\lab-defaults.json" -Raw | ConvertFrom-Json
+    $sharedArgs=@{SubscriptionId=$sub;PreferredLocation=@('unsupportedregion',$defaults.preferredLocation);AllowedEntraUserIds=@($user2,$user)}
     $sharedOutput = @(. "$lab\shared-deploy-lab.ps1" @sharedArgs)
     Assert-True ($sharedOutput.Count -eq 2) 'Shared hook completes using exactly the supported platform contract'
-    Assert-True ($script:skuReads -eq 2 -and $script:sleeps -eq 1) 'F16 metadata pagination and Active readiness wait are exercised'
+    Assert-True ($script:skuReads -eq 2 -and $script:sleeps -eq 3) 'Registration, F16 metadata pagination and Active readiness waits are exercised'
+    Assert-True (($script:registrationRequests -join ',') -eq 'Microsoft.Fabric' -and $script:providerState -eq 'Registered') 'Missing Fabric provider is registered once and awaited before metadata/deployment'
+    Assert-True ($script:deployments[0].parameters.location -eq 'switzerlandnorth') 'Platform defaults actually deploy shared infrastructure in Switzerland North'
     Assert-True ($script:resources[$otherId].Tags.Owner -eq 'unrelated') 'Unrelated subscription capacities are neither blocked nor adopted'
     $firstImageReads=$script:imageReads
     [Environment]::SetEnvironmentVariable('MHH_EVENT_CONFIG', 'Z:\not-supplied-by-platform.json')
@@ -164,10 +186,11 @@ try {
     $defaultRegionArgs.PreferredLocation=@()
     $null = . "$lab\shared-deploy-lab.ps1" @defaultRegionArgs
     Assert-True ($script:imageReads -eq $firstImageReads -and $script:groups.Count -eq 1) 'Shared retry retains image, ownership and single scope'
+    Assert-True ($script:registrationRequests.Count -eq 1) 'Registered providers are not registered again on retry'
     foreach ($identity in @($user,$user2)) {
         $rg=if($identity -eq $user){'rg-participant-a'}else{'rg-participant-b'}
         $script:groups[$rg]=[pscustomobject]@{ResourceGroupName=$rg;Location='unsupportedregion';Tags=@{Platform='keep'}}
-        $argsForUser=@{DeploymentType='resourcegroup';SubscriptionId=$sub;ResourceGroupName=$rg;PreferredLocation=@('swedencentral');AllowedEntraUserIds=@($identity)}
+        $argsForUser=@{DeploymentType='resourcegroup';SubscriptionId=$sub;ResourceGroupName=$rg;PreferredLocation=@();AllowedEntraUserIds=@($identity)}
         $output=@(. "$lab\deploy-lab.ps1" @argsForUser)
         Assert-True ($output.Count -eq 4) 'Participant credentials and private Bastion connection output returned after success'
         Assert-True ($script:groups[$rg].Tags.Platform -eq 'keep') 'Platform tags retained despite different RG metadata region'
@@ -186,6 +209,25 @@ try {
     Assert-Throws { . "$lab\deploy-lab.ps1" -DeploymentType subscription -SubscriptionId $sub } 'Only the resourcegroup'
     Assert-Throws { . "$lab\deploy-lab.ps1" -DeploymentType resourcegroup -SubscriptionId $sub -AllowedEntraUserIds @($user,$user2) } 'Exactly one'
     Assert-True ($script:deployments.Count -eq $before) 'Invalid inputs cause no deployment'
+    $override=Get-LabPlatformContext $sub @('swedencentral') @($user)
+    Assert-True (($override.Regions -join ',') -eq 'swedencentral') 'An explicit platform region override remains authoritative'
+    $script:providerState='Registering'
+    $script:registrationPollsRemaining=0
+    $null=Get-LabPlatformContext $sub @() @($user)
+    Assert-True ($script:providerState -eq 'Registered' -and $script:registrationRequests.Count -eq 1) 'An already Registering Fabric provider is awaited without duplicate registration'
+    $before=$script:deployments.Count
+    $beforeSkus=$script:skuReads
+    $script:providerState='NotRegistered'
+    $script:stallRegistration=$true
+    Assert-Throws { . "$lab\shared-deploy-lab.ps1" @sharedArgs } 'registration wait limit'
+    Assert-True ($script:deployments.Count -eq $before -and $script:skuReads -eq $beforeSkus) 'Registration timeout prevents metadata requests and all deployments'
+    $script:providerState='NotRegistered'
+    $script:denyRegistration=$true
+    Assert-Throws { . "$lab\deploy-lab.ps1" @argsForUser } 'Register Microsoft.Fabric failed'
+    Assert-True ($script:deployments.Count -eq $before) 'Participant hook registration denial prevents deployment'
+    $script:denyRegistration=$false
+    $script:stallRegistration=$false
+    $script:providerState='Registered'
     $script:foreignSkuPage=$true
     Assert-Throws { Get-LabRegionImage $sub @('swedencentral') (Read-LabSettings) } 'pagination changed subscription'
     $script:foreignSkuPage=$false
@@ -197,5 +239,6 @@ try {
     Assert-Throws { . "$lab\deploy-lab.ps1" @argsForUser } 'did not complete successfully'
     Write-Output "PASS: $script:passed offline full-hook assertions. No cloud requests, installations or host changes."
 } finally {
+    foreach ($message in $script:httpResponses) { $message.Dispose() }
     [Environment]::SetEnvironmentVariable('MHH_EVENT_CONFIG', $previousConfig)
 }

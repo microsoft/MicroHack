@@ -7,6 +7,15 @@ $lab = Join-Path $hack 'labautomation'
 . (Join-Path $lab 'automation-common.ps1')
 . (Join-Path $lab 'bootstrap.ps1') -ConfigurationBase64 'e30='
 $script:passed = 0
+$script:httpResponses = [Collections.Generic.List[Net.Http.HttpResponseMessage]]::new()
+function New-TestHttpHeaders($Values = @{}) {
+    $message = [Net.Http.HttpResponseMessage]::new()
+    $script:httpResponses.Add($message)
+    foreach ($key in $Values.Keys) {
+        if (-not $message.Headers.TryAddWithoutValidation($key, [string[]]@($Values[$key]))) { throw 'Invalid HTTP header fixture.' }
+    }
+    return ,$message.Headers
+}
 function Assert-True([bool]$Condition, [string]$Message) {
     if (-not $Condition) { throw "FAIL: $Message" }
     $script:passed++
@@ -78,21 +87,31 @@ try {
     function Invoke-AzRestMethod { param($Method,$Path,$ErrorAction) if(-not $script:responses.Count){throw 'Unexpected request'}; $script:responses.Dequeue() }
     function Start-Sleep { param($Seconds) $script:lastDelay=$Seconds }
     function Add-Response($Status,$Body,$Headers=@{}) { $script:responses.Enqueue([pscustomobject]@{StatusCode=$Status;Content=$Body;Headers=$Headers}) }
-    Add-Response 200 '[{"name":"1.0.0"},{"name":"1.0.1"}]'
+    Add-Response 200 '[{"name":"1.0.0"},{"name":"1.0.1"}]' (New-TestHttpHeaders)
     $result=@(Invoke-LabArmRequest -Path "/subscriptions/$sub/resources?api-version=1")
     Assert-True ($result.Count -eq 2 -and $result[1].name -eq '1.0.1') 'ARM array responses are not mistaken for LRO objects'
-    Add-Response 202 '{}' @{'Azure-AsyncOperation'="https://management.azure.com/subscriptions/$sub/operations/a?api-version=1";'Retry-After'='2'}
-    Add-Response 200 '{"status":"Succeeded"}'
+    Add-Response 202 '{}' (New-TestHttpHeaders @{'azure-asyncoperation'="https://management.azure.com/subscriptions/$sub/operations/a?api-version=1";'retry-after'='2'})
+    Add-Response 200 '{"status":"Succeeded"}' (New-TestHttpHeaders)
     $result=Invoke-LabArmRequest -Path "/subscriptions/$sub/resources?api-version=1"
-    Assert-True ($result.status -eq 'Succeeded' -and $script:lastDelay -eq 2) 'LRO polls and honors Retry-After'
+    Assert-True ($result.status -eq 'Succeeded' -and $script:lastDelay -eq 2) 'Real HttpResponseHeaders LRO polling honors case-insensitive headers and Retry-After'
     Add-Response 201 '{}' @{'Azure-AsyncOperation'="/subscriptions/$sub/operations/a?api-version=1"}
     Add-Response 200 '{"status":"Succeeded"}'
     $result=Invoke-LabArmRequest -Path "/subscriptions/$sub/resources?api-version=1"
     Assert-True ($result.status -eq 'Succeeded') '201 with async header is not premature success'
+    Add-Response 202 '{}' (New-TestHttpHeaders @{'location'="/subscriptions/$sub/operations/location?api-version=1";'retry-after'='4'})
+    Add-Response 200 '{"status":"Succeeded"}' (New-TestHttpHeaders)
+    $result=Invoke-LabArmRequest -Path "/subscriptions/$sub/resources?api-version=1"
+    Assert-True ($result.status -eq 'Succeeded' -and $script:lastDelay -eq 4) 'Real HttpResponseHeaders Location fallback polls successfully'
     Add-Response 429 '{}' @{'Retry-After'='3'}
     Add-Response 200 '{"properties":{"provisioningState":"Succeeded"}}'
     $result=Invoke-LabArmRequest -Path "/subscriptions/$sub/resources?api-version=1"
     Assert-True ($result.properties.provisioningState -eq 'Succeeded' -and $script:lastDelay -eq 3) 'Throttle recovery'
+    Add-Response 503 '{}' (New-TestHttpHeaders @{'Retry-After'='6'})
+    Add-Response 200 '{}' (New-TestHttpHeaders)
+    $null=Invoke-LabArmRequest -Path "/subscriptions/$sub/resources?api-version=1"
+    Assert-True ($script:lastDelay -eq 6) 'Real HttpResponseHeaders transient failure honors Retry-After'
+    Add-Response 202 '{}' (New-TestHttpHeaders @{'Location'=@("/subscriptions/$sub/operations/a?api-version=1","/subscriptions/$sub/operations/b?api-version=1")})
+    Assert-Throws { Invoke-LabArmRequest -Path "/subscriptions/$sub/resources?api-version=1" } 'Invalid ARM Location header'
     Add-Response 200 '{"status":"Failed","error":{"message":"sensitive"}}'
     Assert-Throws { Invoke-LabArmRequest -Path "/subscriptions/$sub/resources?api-version=1" } 'failed or was cancelled'
     Add-Response 202 '{}' @{}
@@ -214,5 +233,6 @@ try {
     $coverage = if ($SkipFileSystem) { 'Filesystem regressions SKIPPED (read-only subset).' } else { 'Includes actual archive extraction and selective student staging with real CSV checksum verification in unique OS temp.' }
     Write-Output "PASS: $script:passed offline automation assertions. $coverage No cloud checks performed."
 } finally {
+    foreach ($message in $script:httpResponses) { $message.Dispose() }
     if ($scratch -and (Test-Path -LiteralPath $scratch)) { Remove-Item -LiteralPath $scratch -Recurse -Force }
 }

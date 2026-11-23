@@ -1,7 +1,7 @@
 @{
     # Nonsecret source defaults. Scope and identities always come from the platform.
     EventId = 'agentic-pbi-v1'
-    DefaultRegion = 'swedencentral'
+    DefaultRegion = 'switzerlandnorth'
     VmSize = 'Standard_D4s_v5'
     Image = @{ publisher = 'MicrosoftWindowsServer'; offer = 'WindowsServer'; sku = '2022-datacenter-g2' }
     OsDiskSizeGB = 128

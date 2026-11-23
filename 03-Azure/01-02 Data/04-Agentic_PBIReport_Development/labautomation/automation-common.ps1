@@ -64,8 +64,22 @@ function Get-LabPlatformContext {
     foreach ($provider in 'Microsoft.Fabric', 'Microsoft.Compute', 'Microsoft.Network') {
         $registration = @(Invoke-LabAzureOperation { Get-AzResourceProvider -ProviderNamespace $provider -ErrorAction Stop } 'Read resource-provider registration')
         if (@($registration | Where-Object RegistrationState -EQ 'Registered').Count -eq 0) {
-            $null = Invoke-LabAzureOperation { Register-AzResourceProvider -ProviderNamespace $provider -ErrorAction Stop } "Register $provider"
-            throw "$provider registration requested. Wait for registration to finish, then retry."
+            if (@($registration | Where-Object RegistrationState -EQ 'Registering').Count -eq 0) {
+                $null = Invoke-LabAzureOperation { Register-AzResourceProvider -ProviderNamespace $provider -ErrorAction Stop } "Register $provider"
+            }
+            $registered = $false
+            $deadline = [DateTimeOffset]::UtcNow.AddMinutes(10)
+            for ($attempt = 0; $attempt -lt 120; $attempt++) {
+                $remaining = [int][Math]::Floor(($deadline - [DateTimeOffset]::UtcNow).TotalSeconds)
+                if ($remaining -lt 1) { break }
+                Start-Sleep -Seconds ([Math]::Min(5, $remaining))
+                $registration = @(Invoke-LabAzureOperation { Get-AzResourceProvider -ProviderNamespace $provider -ErrorAction Stop } "Wait for $provider registration")
+                if (@($registration | Where-Object RegistrationState -EQ 'Registered').Count -gt 0) {
+                    $registered = $true
+                    break
+                }
+            }
+            if (-not $registered) { throw "$provider did not become Registered within the registration wait limit. No lab deployment was started; inspect provider registration before retrying." }
         }
     }
     return @{ Settings = $settings; Regions = $regions; Context = $context }
@@ -223,6 +237,24 @@ function ConvertTo-LabArmPath {
     throw 'Untrusted ARM polling URL.'
 }
 
+function Get-LabResponseHeader {
+    param([object]$Headers, [string]$Name)
+    if ($null -eq $Headers) { return $null }
+    $values = $null
+    if ($Headers -is [Net.Http.Headers.HttpHeaders]) {
+        if (-not $Headers.TryGetValues($Name, [ref]$values)) { return $null }
+    } elseif ($Headers -is [System.Collections.IDictionary]) {
+        $keys = @($Headers.Keys | Where-Object { $_ -ieq $Name })
+        if ($keys.Count -eq 0) { return $null }
+        $values = $Headers[$keys[0]]
+    } else { throw 'Unsupported ARM response header type.' }
+    $entries = @($values)
+    if ($entries.Count -ne 1 -or [string]::IsNullOrWhiteSpace([string]$entries[0])) {
+        throw "Invalid ARM $Name header."
+    }
+    return [string]$entries[0]
+}
+
 function Invoke-LabArmRequest {
     param(
         [ValidateSet('GET', 'POST', 'PUT', 'DELETE')][string]$Method = 'GET',
@@ -252,8 +284,8 @@ function Invoke-LabArmRequest {
             throw 'ARM operation failed or was cancelled.'
         }
         $headers = $response.Headers
-        $next = $headers['Azure-AsyncOperation']
-        if (-not $next) { $next = $headers['Location'] }
+        $next = Get-LabResponseHeader $headers 'Azure-AsyncOperation'
+        if (-not $next) { $next = Get-LabResponseHeader $headers 'Location' }
         $pending = $operationStatus -in 'InProgress', 'Running', 'Accepted' -or
             ($resourceState -and $resourceState -ne 'Succeeded')
         if ($operationStatus -and $operationStatus -notin 'Succeeded', 'InProgress', 'Running', 'Accepted') { throw 'Unknown ARM operation state.' }
@@ -266,7 +298,7 @@ function Invoke-LabArmRequest {
             }
             elseif ($status -eq 202) { throw 'ARM accepted the request without a supported polling URL.' }
         }
-        $delay = Get-LabRetryDelay $headers['Retry-After']
+        $delay = Get-LabRetryDelay (Get-LabResponseHeader $headers 'Retry-After')
         if ($timer.Elapsed.TotalSeconds + $delay -ge $TimeoutSeconds) { throw 'ARM Retry-After exceeds remaining operation deadline.' }
         Start-Sleep -Seconds $delay
     }

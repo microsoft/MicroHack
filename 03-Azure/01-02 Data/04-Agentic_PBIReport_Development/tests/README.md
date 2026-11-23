@@ -33,12 +33,21 @@ stable retries, secure password parameters, complete guest payload construction,
 RG metadata-region differences, preserved platform tags and explicit rejection
 of bad scope/identity/context and unsuccessful deployment states. It also checks
 empty region preferences, paginated/display-name SKU metadata, capacity Active
-waiting, paused-capacity rejection and preservation of unrelated capacities. No Azure call,
-authentication, installation or machine configuration occurs.
+waiting, paused-capacity rejection and preservation of unrelated capacities.
+Shared deployment uses the platform's Switzerland North default; the participant
+hook exercises its matching empty-preference fallback, and explicit overrides
+remain supported. Fabric starts unregistered in the fixture: registration must
+complete before metadata/deployment. Already-registering, timeout and
+permission-denied cases are also covered. ARM doubles return real .NET
+`HttpResponseHeaders`, not just hashtables. No Azure call, authentication,
+installation or machine configuration occurs.
 
 `test_automation.ps1` checks runtime settings/pins, schemas and signatures,
 ownership/implicit disks, ARM polling/failure paths and real temporary ZIP
-extraction. Its selective-downloader double stages the actual 25 allowlisted
+extraction. Polling tests exercise real `HttpResponseHeaders` for empty headers,
+`Azure-AsyncOperation`, `Location` and `Retry-After`, including transient failures
+and ambiguous-header rejection, while retaining dictionary compatibility.
+Its selective-downloader double stages the actual 25 allowlisted
 source files from the pinned Git blobs in OS temp and verifies CSV bytes/checksums
 and dictionary links. It checks canonical guest JSON and repeat skill-tree copying.
 It does not install Windows tools, run the guest bootstrap, perform interactive

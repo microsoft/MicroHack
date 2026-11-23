@@ -31,13 +31,19 @@ immutable student/skill sources and explicit tool/VSIX versions and SHA256 hashe
 These are source defaults, not measured cohort, budget or performance approvals.
 Review changes to this file normally; never add credentials or private identities.
 
-The shared hook tries the supplied region order against F16 and Bastion provider
-metadata, then resolves an available exact Windows image version. If no preference
-is supplied, its explicit fallback is `swedencentral`. The chosen region and image
+The platform default in `lab-defaults.json` is **Switzerland North**
+(`switzerlandnorth`), matching the hook's fallback when no preference is supplied.
+Explicit platform region overrides remain supported. The shared hook tries the
+supplied region order against F16 and Bastion provider metadata, then resolves
+an available exact Windows image version. The chosen region and image
 version are retained on the owned shared resources and reused on retries; `latest`
 is not passed to ARM. VM SKU availability, quota, Azure Policy and paid-service
-capacity can still reject deployment. A provider registration is requested if
-missing, then the hook stops and asks for a retry after registration completes.
+capacity can still reject deployment. Both hooks check `Microsoft.Fabric`,
+`Microsoft.Compute` and `Microsoft.Network` before provisioning. They register a
+missing provider and wait for `Registered` with a ten-minute budget and at most
+120 five-second polling waits per provider. An existing `Registering` state is
+waited on without another registration request. Denied or incomplete registration
+stops deployment explicitly; no missing-provider error is silently ignored.
 An RG's metadata location need not equal its resources' region.
 
 The shared capacity administrator is the **deployment principal's object ID**,
@@ -139,10 +145,16 @@ If enforcement is unavailable, stop admission until an explicit exception is
 approved. No private approval flag is invented or silently set to true.
 
 `Quality` remains `Testing`. The platform settings still need reviewed
-`labsPerSubscription`, costs and region values for the actual event. Omission is
+`labsPerSubscription`, costs and any region overrides for the actual event. Omission is
 not zero cost: platform defaults can use $25/day per participant and $0 shared,
 which do not describe an F16 plus Bastion/NAT fleet. Approve actual estimates
 and reimport the event settings before offering the lab to participants.
+Reimport these defaults (or update the existing event's region setting) to apply
+Switzerland North to an event created before this change; an already stored
+region override is not replaced by the hook.
+This does not relocate an existing deployment. Previously owned resources with
+different configuration/region tags still require explicit migration or rebuild
+review; do not delete or retag them just to bypass the ownership checks.
 
 ## Retries, ownership and diagnostics
 

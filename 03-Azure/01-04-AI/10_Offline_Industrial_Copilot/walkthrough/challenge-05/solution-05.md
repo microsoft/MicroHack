@@ -64,6 +64,8 @@ Please ensure that you successfully completed [Challenge 4](../../challenges/cha
 
    ![The compute instance is stopped](../../images/c5-aml-stopped.png)
 
+   *① Stopped: it no longer bills. Start it again from the same page if you need it.*
+
 💡 The point of the exercise is the **workflow**: cloud tools for training, a portable file for delivery, a small runtime on the device. This model is tiny, so you could also train it on your laptop with `python train_fault_classifier.py`.
 
 ### **Task 1 (shortcut): Read the notebook and use the ready-made model**

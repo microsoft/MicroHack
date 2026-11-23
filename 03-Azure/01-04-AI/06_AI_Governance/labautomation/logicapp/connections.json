@@ -1,0 +1,30 @@
+{
+  "serviceProviderConnections": {
+    "AzureCosmosDB": {
+      "displayName": "conn-cosmos-db",
+      "parameterSetName": "ManagedServiceIdentity",
+      "parameterValues": {
+        "authProvider": {
+          "Type": "ManagedServiceIdentity"
+        },
+        "accountUri": "@appsetting('CosmosDB_accountEndpoint')"
+      },
+      "serviceProvider": {
+        "id": "/serviceProviders/AzureCosmosDB"
+      }
+    },
+    "eventHub": {
+      "displayName": "conn-ai-usage-event-hub",
+      "parameterSetName": "ManagedServiceIdentity",
+      "parameterValues": {
+        "authProvider": {
+          "Type": "ManagedServiceIdentity"
+        },
+        "fullyQualifiedNamespace": "@appsetting('eventHub_fullyQualifiedNamespace')"
+      },
+      "serviceProvider": {
+        "id": "/serviceProviders/eventHub"
+      }
+    }
+  }
+}

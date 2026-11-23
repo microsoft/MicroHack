@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.49.2.45890",
-      "templateHash": "11658195552321977807"
+      "templateHash": "1550211353606101039"
     }
   },
   "parameters": {
@@ -81,6 +81,7 @@
     "cosmosAccountName": "[format('cos-citadel-{0}', parameters('resourceToken'))]",
     "eventHubNamespace": "[format('evh-citadel-{0}', parameters('resourceToken'))]",
     "eventHubName": "usage-events",
+    "piiEventHubName": "pii-usage-events",
     "keyVaultName": "[format('kv-hub-{0}', parameters('resourceToken'))]",
     "laName": "[format('law-citadel-{0}', parameters('resourceToken'))]",
     "aiName": "[format('appi-citadel-{0}', parameters('resourceToken'))]",
@@ -96,7 +97,7 @@
     "spokeAcrName": "[format('acrcitadel{0}', replace(parameters('resourceToken'), '-', ''))]",
     "cosmosApi": "2024-11-15",
     "aiServicesApi": "2025-04-01-preview",
-    "cosmosDatabaseName": "citadel-hub",
+    "cosmosDatabaseName": "ai-usage-db",
     "cosmosContainers": [
       {
         "name": "usage-events",
@@ -362,7 +363,9 @@
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.CognitiveServices/accounts', variables('hubFoundryAccountName'))]"
+        "[resourceId('Microsoft.CognitiveServices/accounts', variables('hubFoundryAccountName'))]",
+        "[resourceId('Microsoft.CognitiveServices/accounts/connections', variables('hubFoundryAccountName'), format('{0}-appinsights', variables('hubFoundryAccountName')))]",
+        "[resourceId('Microsoft.CognitiveServices/accounts/projects', variables('hubFoundryAccountName'), variables('hubFoundryProjectName'))]"
       ]
     },
     {
@@ -1011,11 +1014,23 @@
       ]
     },
     {
+      "type": "Microsoft.EventHub/namespaces/eventhubs",
+      "apiVersion": "2022-10-01-preview",
+      "name": "[format('{0}/{1}', variables('eventHubNamespace'), variables('piiEventHubName'))]",
+      "properties": {
+        "messageRetentionInDays": 1,
+        "partitionCount": 1
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.EventHub/namespaces', variables('eventHubNamespace'))]"
+      ]
+    },
+    {
       "type": "Microsoft.Storage/storageAccounts",
       "apiVersion": "2023-01-01",
       "name": "[variables('storageAccountName')]",
       "location": "[parameters('location')]",
-      "tags": "[parameters('tags')]",
+      "tags": "[union(parameters('tags'), createObject('SecurityControl', 'Ignore'))]",
       "sku": {
         "name": "Standard_LRS"
       },
@@ -1025,6 +1040,171 @@
         "minimumTlsVersion": "TLS1_2",
         "publicNetworkAccess": "Enabled"
       }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/fileServices/shares",
+      "apiVersion": "2023-01-01",
+      "name": "[format('{0}/default/{1}', variables('storageAccountName'), variables('logicAppName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2023-12-01",
+      "name": "[format('asp-{0}', variables('logicAppName'))]",
+      "location": "[parameters('location')]",
+      "tags": "[parameters('tags')]",
+      "sku": {
+        "name": "WS1",
+        "tier": "WorkflowStandard",
+        "capacity": 1
+      },
+      "kind": "elastic"
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2023-12-01",
+      "name": "[variables('logicAppName')]",
+      "location": "[parameters('location')]",
+      "tags": "[parameters('tags')]",
+      "kind": "functionapp,workflowapp",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', format('asp-{0}', variables('logicAppName')))]",
+        "httpsOnly": true,
+        "siteConfig": {
+          "minTlsVersion": "1.2",
+          "ftpsState": "Disabled",
+          "appSettings": [
+            {
+              "name": "FUNCTIONS_EXTENSION_VERSION",
+              "value": "~4"
+            },
+            {
+              "name": "FUNCTIONS_WORKER_RUNTIME",
+              "value": "node"
+            },
+            {
+              "name": "WEBSITE_NODE_DEFAULT_VERSION",
+              "value": "~20"
+            },
+            {
+              "name": "APP_KIND",
+              "value": "workflowapp"
+            },
+            {
+              "name": "AzureFunctionsJobHost__extensionBundle__id",
+              "value": "Microsoft.Azure.Functions.ExtensionBundle.Workflows"
+            },
+            {
+              "name": "AzureFunctionsJobHost__extensionBundle__version",
+              "value": "[1.*, 2.0.0)"
+            },
+            {
+              "name": "AzureWebJobsStorage",
+              "value": "[format('DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1};EndpointSuffix={2}', variables('storageAccountName'), listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2023-01-01').keys[0].value, environment().suffixes.storage)]"
+            },
+            {
+              "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
+              "value": "[format('DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1};EndpointSuffix={2}', variables('storageAccountName'), listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2023-01-01').keys[0].value, environment().suffixes.storage)]"
+            },
+            {
+              "name": "WEBSITE_CONTENTSHARE",
+              "value": "[variables('logicAppName')]"
+            },
+            {
+              "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+              "value": "[reference(resourceId('Microsoft.Insights/components', variables('aiName')), '2020-02-02').ConnectionString]"
+            },
+            {
+              "name": "eventHub_fullyQualifiedNamespace",
+              "value": "[format('{0}.servicebus.windows.net', variables('eventHubNamespace'))]"
+            },
+            {
+              "name": "eventHub_name",
+              "value": "[variables('eventHubName')]"
+            },
+            {
+              "name": "eventHub_pii_name",
+              "value": "[variables('piiEventHubName')]"
+            },
+            {
+              "name": "CosmosDB_accountEndpoint",
+              "value": "[reference(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosAccountName')), '2024-11-15').documentEndpoint]"
+            },
+            {
+              "name": "CosmosDBDatabase",
+              "value": "[variables('cosmosDatabaseName')]"
+            },
+            {
+              "name": "CosmosDBContainerUsage",
+              "value": "ai-usage-container"
+            },
+            {
+              "name": "CosmosDBContainerPII",
+              "value": "pii-usage-container"
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Insights/components', variables('aiName'))]",
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosAccountName'))]",
+        "[resourceId('Microsoft.Web/serverfarms', format('asp-{0}', variables('logicAppName')))]",
+        "[resourceId('Microsoft.Storage/storageAccounts/fileServices/shares', split(format('{0}/default/{1}', variables('storageAccountName'), variables('logicAppName')), '/')[0], split(format('{0}/default/{1}', variables('storageAccountName'), variables('logicAppName')), '/')[1], split(format('{0}/default/{1}', variables('storageAccountName'), variables('logicAppName')), '/')[2])]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+      ]
+    },
+    {
+      "copy": {
+        "name": "roleAssignmentsLogicAppStorage",
+        "count": "[length(createArray('b7e6dc6d-f1e8-4753-8033-0f276bb0955b', '974c5e8b-45b9-4653-ba55-5f855dd0fb88', '0a9a7e1f-b9d0-4cc4-a60d-0319b160aaa3'))]"
+      },
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
+      "name": "[guid(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), resourceId('Microsoft.Web/sites', variables('logicAppName')), createArray('b7e6dc6d-f1e8-4753-8033-0f276bb0955b', '974c5e8b-45b9-4653-ba55-5f855dd0fb88', '0a9a7e1f-b9d0-4cc4-a60d-0319b160aaa3')[copyIndex()])]",
+      "properties": {
+        "principalId": "[reference(resourceId('Microsoft.Web/sites', variables('logicAppName')), '2023-12-01', 'full').identity.principalId]",
+        "principalType": "ServicePrincipal",
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', createArray('b7e6dc6d-f1e8-4753-8033-0f276bb0955b', '974c5e8b-45b9-4653-ba55-5f855dd0fb88', '0a9a7e1f-b9d0-4cc4-a60d-0319b160aaa3')[copyIndex()])]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', variables('logicAppName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[resourceId('Microsoft.EventHub/namespaces', variables('eventHubNamespace'))]",
+      "name": "[guid(resourceId('Microsoft.EventHub/namespaces', variables('eventHubNamespace')), resourceId('Microsoft.Web/sites', variables('logicAppName')), 'AzureEventHubsDataReceiver')]",
+      "properties": {
+        "principalId": "[reference(resourceId('Microsoft.Web/sites', variables('logicAppName')), '2023-12-01', 'full').identity.principalId]",
+        "principalType": "ServicePrincipal",
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'a638d3c7-ab3a-418d-83e6-5f17a39d4fde')]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.EventHub/namespaces', variables('eventHubNamespace'))]",
+        "[resourceId('Microsoft.Web/sites', variables('logicAppName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments",
+      "apiVersion": "2024-11-15",
+      "name": "[format('{0}/{1}', variables('cosmosAccountName'), guid(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosAccountName')), resourceId('Microsoft.Web/sites', variables('logicAppName')), 'DataContributor'))]",
+      "properties": {
+        "principalId": "[reference(resourceId('Microsoft.Web/sites', variables('logicAppName')), '2023-12-01', 'full').identity.principalId]",
+        "roleDefinitionId": "[format('{0}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002', resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosAccountName')))]",
+        "scope": "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosAccountName'))]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosAccountName'))]",
+        "[resourceId('Microsoft.Web/sites', variables('logicAppName'))]"
+      ]
     },
     {
       "type": "Microsoft.ApiManagement/service",
@@ -1079,14 +1259,14 @@
         "credentials": {
           "endpointAddress": "[format('{0}.servicebus.windows.net', variables('eventHubNamespace'))]",
           "identityClientId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('apimMIName')), '2023-01-31').clientId]",
-          "name": "[variables('eventHubName')]"
+          "name": "[variables('piiEventHubName')]"
         },
         "isBuffered": true
       },
       "dependsOn": [
         "[resourceId('Microsoft.ApiManagement/service', variables('apimName'))]",
         "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('apimMIName'))]",
-        "[resourceId('Microsoft.EventHub/namespaces/eventhubs', variables('eventHubNamespace'), variables('eventHubName'))]",
+        "[resourceId('Microsoft.EventHub/namespaces/eventhubs', variables('eventHubNamespace'), variables('piiEventHubName'))]",
         "[extensionResourceId(resourceId('Microsoft.EventHub/namespaces', variables('eventHubNamespace')), 'Microsoft.Authorization/roleAssignments', guid(resourceId('Microsoft.EventHub/namespaces', variables('eventHubNamespace')), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('apimMIName')), 'AzureEventHubsDataSender'))]"
       ]
     },
@@ -1536,7 +1716,8 @@
       },
       "dependsOn": [
         "[resourceId('Microsoft.Insights/components', variables('aiName'))]",
-        "[resourceId('Microsoft.CognitiveServices/accounts', variables('hubFoundryAccountName'))]"
+        "[resourceId('Microsoft.CognitiveServices/accounts', variables('hubFoundryAccountName'))]",
+        "[resourceId('Microsoft.CognitiveServices/accounts/projects', variables('hubFoundryAccountName'), variables('hubFoundryProjectName'))]"
       ]
     },
     {
@@ -1558,7 +1739,8 @@
       },
       "dependsOn": [
         "[resourceId('Microsoft.Insights/components', variables('spokeAiName'))]",
-        "[resourceId('Microsoft.CognitiveServices/accounts', variables('spokeFoundryAccountName'))]"
+        "[resourceId('Microsoft.CognitiveServices/accounts', variables('spokeFoundryAccountName'))]",
+        "[resourceId('Microsoft.CognitiveServices/accounts/projects', variables('spokeFoundryAccountName'), variables('spokeFoundryProjectName'))]"
       ]
     },
     {
@@ -2271,6 +2453,10 @@
     "EVENT_HUB_CONNECTION_STRING": {
       "type": "string",
       "value": "[listKeys(format('{0}/AuthorizationRules/RootManageSharedAccessKey', resourceId('Microsoft.EventHub/namespaces', variables('eventHubNamespace'))), '2022-10-01-preview').primaryConnectionString]"
+    },
+    "LOGIC_APP_NAME": {
+      "type": "string",
+      "value": "[variables('logicAppName')]"
     },
     "STORAGE_ACCOUNT_NAME": {
       "type": "string",

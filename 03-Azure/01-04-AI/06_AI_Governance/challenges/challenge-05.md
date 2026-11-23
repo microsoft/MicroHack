@@ -60,14 +60,14 @@ Same prerequisite as every notebook in this MicroHack — see
 >   in the portal does **not** work — the change is reverted immediately, so the setting
 >   never changes. `CosmosDB_LocalAuth_Modify` likewise forces key auth off, so the
 >   notebook's `cosmos_auth_mode = "key"` fallback is unavailable too.
-> - The `pii-usage-container` has no writer in this lab: the usage-ingestion Logic App
->   that would move events from Event Hub into Cosmos is not deployed, so the query
->   would return zero records even with network access.
+> - The usage-ingestion Logic App (Event Hub → `pii-usage-container`) is deployed, so
+>   the container does receive records, but you still cannot query it without network
+>   access to Cosmos DB.
 >
 > The audit trail itself **does** work. The `pii-state-saving` policy fragment emits an
 > event to the `usage-events` Event Hub for every PII operation — check *Metrics →
 > Incoming Messages* on the Event Hub namespace in the portal to see them arrive. Only
-> the Cosmos-backed reporting layer built on top of it is missing.
+> the Cosmos-backed reporting query is unavailable from your machine.
 
 ## 🏁 Success criteria
 

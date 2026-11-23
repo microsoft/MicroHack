@@ -58,6 +58,7 @@ var apimName = 'apim-citadel-${resourceToken}'
 var cosmosAccountName = 'cos-citadel-${resourceToken}'
 var eventHubNamespace = 'evh-citadel-${resourceToken}'
 var eventHubName = 'usage-events'
+var piiEventHubName = 'pii-usage-events'
 var keyVaultName = 'kv-hub-${resourceToken}'
 var laName = 'law-citadel-${resourceToken}'
 var aiName = 'appi-citadel-${resourceToken}'
@@ -77,7 +78,7 @@ var spokeAcrName = 'acrcitadel${replace(resourceToken, '-', '')}'
 // ===== Computed Values =====
 var cosmosApi = '2024-11-15'
 var aiServicesApi = '2025-04-01-preview'
-var cosmosDatabaseName = 'citadel-hub'
+var cosmosDatabaseName = 'ai-usage-db'
 var cosmosContainers = [
   { name: 'usage-events', partitionKey: '/eventId' }
   { name: 'contracts', partitionKey: '/contractId' }
@@ -318,9 +319,15 @@ var llmBackendConfig = [
 // ===== Phase 4: Model Deployments to Hub Foundry Account =====
 // Each model deployed to support Notebooks 1-6
 // @batchSize(1) serializes deployments to avoid Cognitive Services account conflicts
+// Azure allows one write at a time on a Cognitive Services account (RequestConflict otherwise),
+// so account writes are chained: project -> App Insights connection -> model deployments.
 @batchSize(1)
 resource hubFoundryModelDeployments 'Microsoft.CognitiveServices/accounts/deployments@2025-04-01-preview' = [for (model, index) in aiFoundryModels: {
   parent: hubFoundryAccount
+  dependsOn: [
+    hubFoundryProject
+    hubFoundryAppInsightsConnection
+  ]
   name: replace(model.name, '.', '-')
   sku: {
     name: model.sku
@@ -972,11 +979,22 @@ resource eventHub 'Microsoft.EventHub/namespaces/eventhubs@2022-10-01-preview' =
   }
 }
 
+// Separate hub for PII audit events so each ingestion workflow reads its own stream.
+resource eventHubPii 'Microsoft.EventHub/namespaces/eventhubs@2022-10-01-preview' = {
+  parent: eventHubNamespace_resource
+  name: piiEventHubName
+  properties: {
+    messageRetentionInDays: 1
+    partitionCount: 1
+  }
+}
+
 // ===== Hub: Storage Account for Logic App =====
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   name: storageAccountName
   location: location
-  tags: tags
+  // Logic App Standard needs shared-key storage access; the tag asks the subscription's security policy to skip this account.
+  tags: union(tags, { SecurityControl: 'Ignore' })
   sku: {
     name: 'Standard_LRS'
   }
@@ -985,6 +1003,100 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
     accessTier: 'Hot'
     minimumTlsVersion: 'TLS1_2'
     publicNetworkAccess: 'Enabled'
+  }
+}
+
+// ===== Hub: Usage-ingestion Logic App (Event Hub -> Cosmos DB) =====
+// Workflows (labautomation/logicapp) are zip-deployed after the infra by deploy-lab.ps1.
+// Logic App Standard needs shared-key storage access and a reachable storage account.
+resource logicAppShare 'Microsoft.Storage/storageAccounts/fileServices/shares@2023-01-01' = {
+  name: '${storageAccount.name}/default/${logicAppName}'
+}
+
+resource logicAppPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
+  name: 'asp-${logicAppName}'
+  location: location
+  tags: tags
+  sku: {
+    name: 'WS1'
+    tier: 'WorkflowStandard'
+    capacity: 1
+  }
+  kind: 'elastic'
+}
+
+resource logicApp 'Microsoft.Web/sites@2023-12-01' = {
+  name: logicAppName
+  location: location
+  tags: tags
+  kind: 'functionapp,workflowapp'
+  identity: {
+    type: 'SystemAssigned'
+  }
+  properties: {
+    serverFarmId: logicAppPlan.id
+    httpsOnly: true
+    siteConfig: {
+      minTlsVersion: '1.2'
+      ftpsState: 'Disabled'
+      appSettings: [
+        { name: 'FUNCTIONS_EXTENSION_VERSION', value: '~4' }
+        { name: 'FUNCTIONS_WORKER_RUNTIME', value: 'node' }
+        { name: 'WEBSITE_NODE_DEFAULT_VERSION', value: '~20' }
+        { name: 'APP_KIND', value: 'workflowapp' }
+        { name: 'AzureFunctionsJobHost__extensionBundle__id', value: 'Microsoft.Azure.Functions.ExtensionBundle.Workflows' }
+        { name: 'AzureFunctionsJobHost__extensionBundle__version', value: '[1.*, 2.0.0)' }
+        { name: 'AzureWebJobsStorage', value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}' }
+        { name: 'WEBSITE_CONTENTAZUREFILECONNECTIONSTRING', value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}' }
+        { name: 'WEBSITE_CONTENTSHARE', value: logicAppName }
+        { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: aiHub.properties.ConnectionString }
+        { name: 'eventHub_fullyQualifiedNamespace', value: '${eventHubNamespace}.servicebus.windows.net' }
+        { name: 'eventHub_name', value: eventHubName }
+        { name: 'eventHub_pii_name', value: piiEventHubName }
+        { name: 'CosmosDB_accountEndpoint', value: cosmosAccount.properties.documentEndpoint }
+        { name: 'CosmosDBDatabase', value: cosmosDatabaseName }
+        { name: 'CosmosDBContainerUsage', value: 'ai-usage-container' }
+        { name: 'CosmosDBContainerPII', value: 'pii-usage-container' }
+      ]
+    }
+  }
+  dependsOn: [
+    logicAppShare
+  ]
+}
+
+resource roleAssignmentsLogicAppStorage 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for roleId in [
+  'b7e6dc6d-f1e8-4753-8033-0f276bb0955b' // Storage Blob Data Owner
+  '974c5e8b-45b9-4653-ba55-5f855dd0fb88' // Storage Queue Data Contributor
+  '0a9a7e1f-b9d0-4cc4-a60d-0319b160aaa3' // Storage Table Data Contributor
+]: {
+  name: guid(storageAccount.id, logicApp.id, roleId)
+  scope: storageAccount
+  properties: {
+    principalId: logicApp.identity.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', roleId)
+  }
+}]
+
+resource roleAssignmentLogicAppEventHubReceiver 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(eventHubNamespace_resource.id, logicApp.id, 'AzureEventHubsDataReceiver')
+  scope: eventHubNamespace_resource
+  properties: {
+    principalId: logicApp.identity.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'a638d3c7-ab3a-418d-83e6-5f17a39d4fde')
+  }
+}
+
+// Cosmos DB Built-in Data Contributor (data-plane RBAC; the account is keyless)
+resource cosmosLogicAppDataContributor 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2024-11-15' = {
+  parent: cosmosAccount
+  name: guid(cosmosAccount.id, logicApp.id, 'DataContributor')
+  properties: {
+    principalId: logicApp.identity.principalId
+    roleDefinitionId: '${cosmosAccount.id}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002'
+    scope: cosmosAccount.id
   }
 }
 
@@ -1036,12 +1148,12 @@ resource apimLoggerPiiUsageEventHub 'Microsoft.ApiManagement/service/loggers@202
     credentials: {
       endpointAddress: '${eventHubNamespace}.servicebus.windows.net'
       identityClientId: apimMI.properties.clientId
-      name: eventHubName
+      name: piiEventHubName
     }
     isBuffered: true
   }
   dependsOn: [
-    eventHub
+    eventHubPii
     roleAssignmentApimMiEventHubSender
   ]
 }
@@ -1401,6 +1513,9 @@ resource acrPullForSpokeProject 'Microsoft.Authorization/roleAssignments@2022-04
 // ===== Connect App Insights to Hub Foundry for Agent Tracing =====
 resource hubFoundryAppInsightsConnection 'Microsoft.CognitiveServices/accounts/connections@2025-04-01-preview' = {
   parent: hubFoundryAccount
+  dependsOn: [
+    hubFoundryProject
+  ]
   name: '${hubFoundryAccountName}-appinsights'
   properties: {
     category: 'AppInsights'
@@ -1420,6 +1535,9 @@ resource hubFoundryAppInsightsConnection 'Microsoft.CognitiveServices/accounts/c
 // ===== Connect App Insights to Spoke Foundry for Agent Tracing =====
 resource spokeFoundryAppInsightsConnection 'Microsoft.CognitiveServices/accounts/connections@2025-04-01-preview' = {
   parent: spokeFoundryAccount
+  dependsOn: [
+    spokeFoundryProject
+  ]
   name: '${spokeFoundryAccountName}-appinsights'
   properties: {
     category: 'AppInsights'
@@ -1471,6 +1589,7 @@ output SPOKE_APP_INSIGHTS_CONNECTION_STRING string = aiSpoke.properties.Connecti
 output EVENT_HUB_NAMESPACE string = eventHubNamespace_resource.name
 output EVENT_HUB_CONNECTION_STRING string = listKeys('${eventHubNamespace_resource.id}/AuthorizationRules/RootManageSharedAccessKey', eventHubNamespace_resource.apiVersion).primaryConnectionString
 
+output LOGIC_APP_NAME string = logicApp.name
 output STORAGE_ACCOUNT_NAME string = storageAccount.name
 output STORAGE_ACCOUNT_CONNECTION_STRING string = 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${listKeys(storageAccount.id, storageAccount.apiVersion).keys[0].value};EndpointSuffix=core.windows.net'
 

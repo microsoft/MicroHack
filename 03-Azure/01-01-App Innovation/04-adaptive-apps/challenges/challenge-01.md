@@ -15,7 +15,7 @@ inside this container; the lab platforms run in Azure.
    **before creating the Codespace**. The default is 30 minutes; you can choose
    5-240 minutes, subject to organization policy. The setting applies to new
    Codespaces.
-2. Open the **repository home page**, [djong1/MicroHack](https://github.com/djong1/MicroHack),
+2. Open the **repository home page**,  [microsoft/MicroHack](https://github.com/microsoft/MicroHack),
    while signed in to GitHub. Above the file list, select the green **Code**
    button, then the **Codespaces** tab. This is the repository's Code menu, not
    a menu inside VS Code.

@@ -82,8 +82,8 @@ While targeting AKS and workspace `ws-azure-prod`:
 1. Hosted: use the supplied `ACR_NAME` from `artifacts/console-env.sh` without
    recreating it. BYOS: create or select a globally unique, lowercase registry.
 2. Authenticate to the registry.
-3. Publish `iac/recipes/sql-server.bicep` and the workshop-owned Azure and Kubernetes
-   PostgreSQL recipes as version `1.0.8`. Never overwrite an existing version tag.
+3. Publish `iac/recipes/sql-server.bicep` as version `1.0.8`. Keep this task focused
+   on SQL; publish the other recipes in Tasks 3 and 4. Never overwrite an existing version tag.
 4. Register it as the default recipe for `Radius.Resources/sqlDatabases` in
    `env-azure-prod`.
 5. Verify that the registration refers to the expected OCI artifact.
@@ -91,7 +91,11 @@ While targeting AKS and workspace `ws-azure-prod`:
 If Docker is unavailable, use a temporary OCI authentication configuration rather than
 putting a registry token in source files.
 
-### Task 3: Register the complete AKS recipe set
+### Task 3: Publish and register the complete AKS recipe set
+
+Publish the workshop-owned Azure PostgreSQL and workload-identity recipes at version
+`1.0.8`, and the Event Grid MQTT recipe at version `1.0.9`. The Event Grid recipe now
+accepts the namespace name supplied by the environment.
 
 Deploy `iac/aks-env.bicep` as environment-as-code for:
 
@@ -101,15 +105,19 @@ Deploy `iac/aks-env.bicep` as environment-as-code for:
 - Kubernetes namespace `env-azure-prod`
 
 Provide the Azure subscription, lab resource group, managed Istio revision, custom SQL
-recipe path, pinned Azure PostgreSQL recipe path, and every exact static AKS egress IP as
-parameters. Reject unsupported outbound configurations rather than using broad firewall
-rules.
+recipe path, pinned Azure PostgreSQL, Event Grid MQTT, and workload-identity recipe paths,
+AKS OIDC issuer URL, and every exact static AKS egress IP as parameters. Confirm OIDC and
+workload identity are enabled. The broker and identity recipes must use the same Event
+Grid namespace. Reject unsupported outbound configurations rather than using broad
+firewall rules.
 
 The resulting mappings should include Azure-backed PostgreSQL, MQTT, workload
 identity, and AI implementations; in-cluster identity, governance, and guardrail
 components; and the custom Azure SQL recipe.
 
-### Task 4: Register the complete K3s recipe set
+### Task 4: Publish and register the complete K3s recipe set
+
+Publish the workshop-owned Kubernetes PostgreSQL recipe at version `1.0.8`.
 
 Switch both the Kubernetes context and Radius workspace to K3s, then deploy
 `iac/local-env.bicep` for:
@@ -142,6 +150,9 @@ Prepare a comparison that answers:
 - The custom SQL recipe is published to ACR at version `1.0.8`.
 - Both corrected PostgreSQL recipes are published to ACR at version `1.0.8` and
   registered without mutable `latest` references.
+- AKS registers the workshop Event Grid MQTT recipe at version `1.0.9` and the Azure
+  workload-identity recipe at version `1.0.8`, sharing the Event Grid namespace and
+  using the cluster's OIDC issuer.
 - The Azure PostgreSQL server name is deterministic and scoped to both the workshop's
   Azure resource group and the Radius resource ID.
 - Azure PostgreSQL permits only the exact static AKS egress IPs.

@@ -1,0 +1,50 @@
+{
+  "id": "energy",
+  "industry": "Energy utility",
+  "company": "Lumora Energy",
+  "prefix": "LE",
+  "tagline": "Gas and electricity supplier for homes across the fictional Zedshire region",
+  "greeting": "Thanks for calling Lumora Energy. I'm the virtual assistant, and you can ask for a person at any time. How can I help today?",
+  "products": [
+    "Standard variable tariff",
+    "Fixed 12-month tariff",
+    "Electric vehicle tariff",
+    "Prepayment"
+  ],
+  "appointment_type": "smart meter installation",
+  "voice_hint": "Warm, reassuring and clear",
+  "articles": [
+    {
+      "id": "KB-LE-001",
+      "title": "Checking who you are speaking to"
+    },
+    {
+      "id": "KB-LE-002",
+      "title": "Supporting customers who may be vulnerable"
+    },
+    {
+      "id": "KB-LE-003",
+      "title": "Complaints and escalation"
+    },
+    {
+      "id": "KB-LE-004",
+      "title": "Service levels and opening hours"
+    },
+    {
+      "id": "KB-LE-005",
+      "title": "Bills, estimated readings and meter readings"
+    },
+    {
+      "id": "KB-LE-006",
+      "title": "Smart meters and installation appointments"
+    },
+    {
+      "id": "KB-LE-007",
+      "title": "Payment difficulties and the priority services register"
+    },
+    {
+      "id": "KB-LE-008",
+      "title": "Power cuts"
+    }
+  ]
+}

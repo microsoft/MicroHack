@@ -1060,9 +1060,11 @@ Describe 'Console lab group credentials' {
 
 Describe 'Console LocalBox credential isolation' {
     BeforeAll {
+        . "$PSScriptRoot/../../labautomation/localbox-automation.ps1"
         function New-MhhStablePassword { [CmdletBinding()] param($Purpose, $Length) }
         function Update-MhhToken { [CmdletBinding()] param() }
         function Get-AzResourceGroupDeployment { [CmdletBinding()] param($ResourceGroupName, $Name) }
+        function Get-AzResourceGroupDeploymentOperation { [CmdletBinding()] param($ResourceGroupName, $DeploymentName) }
     }
     BeforeEach {
         $deployment = @{
@@ -1070,6 +1072,7 @@ Describe 'Console LocalBox credential isolation' {
         }
         Mock Update-MhhToken {}
         Mock Get-AzResourceGroupDeployment { $deployment }
+        Mock Get-AzResourceGroupDeploymentOperation { @() }
         Mock New-MhhStablePassword { 'mock-password-not-a-secret' }
         Mock Start-Sleep {}
     }
@@ -1140,8 +1143,14 @@ Describe 'LocalBox registration region contract' {
         $registration.DefaultValue.SafeGetValue() | Should -Be 'australiaeast'
         $hostRegion = $ast.ParamBlock.Parameters | Where-Object { $_.Name.VariablePath.UserPath -eq 'Location' }
         $hostRegion.DefaultValue.SafeGetValue() | Should -Be 'swedencentral'
-        $ast.Extent.Text | Should -Match 'azureLocalInstanceLocation\s*=\s*@\{\s*value\s*=\s*\$AzureLocalInstanceLocation\s*\}'
-        $ast.Extent.Text | Should -Match 'location\s*=\s*@\{\s*value\s*=\s*\$Location\s*\}'
+        if ($Path -like 'resources/manual-setup/*') {
+            $ast.Extent.Text | Should -Match '-AzureLocalInstanceLocation \$AzureLocalInstanceLocation'
+            $ast.Extent.Text | Should -Match '-Location \$Location'
+        }
+        else {
+            $ast.Extent.Text | Should -Match 'azureLocalInstanceLocation\s*=\s*@\{\s*value\s*=\s*\$AzureLocalInstanceLocation\s*\}'
+            $ast.Extent.Text | Should -Match 'location\s*=\s*@\{\s*value\s*=\s*\$Location\s*\}'
+        }
     }
     It 'uses Australia East registration while preserving shared host-region selection' {
         $errors = $null
@@ -1168,6 +1177,12 @@ Describe 'LocalBox registration region contract' {
 
 Describe 'Console LocalBox CLI failure propagation' {
     BeforeAll {
+        . "$PSScriptRoot/../../labautomation/localbox-credentials.ps1"
+        . "$PSScriptRoot/../../labautomation/localbox-automation.ps1"
+        function Update-MhhToken {}
+        function Get-AzResourceGroup { [CmdletBinding()] param() }
+        function Get-AzResource { [CmdletBinding()] param($ResourceGroupName) }
+        function Wait-LocalBoxDeployment { param($ResourceGroupName, $DeploymentName) }
         $deployer = [Management.Automation.Language.Parser]::ParseFile(
             "$PSScriptRoot/../../labautomation/deploy-localbox.ps1", [ref]$null, [ref]$null)
         $helper = $deployer.Find({
@@ -1229,11 +1244,18 @@ Invoke-AzJson @('deployment', 'group', 'validate', '--location', $Location) | Ou
 [pscustomobject]@{ ProvisioningState = 'Submitted'; Location = $Location }
 '@ | Set-Content (Join-Path $TestDrive 'deploy-localbox.ps1')
             $localBoxLocations = @('first-region', 'second-region')
+            $localBoxResourceGroupName = 'shared'
+            $candidateFailures = [Collections.Generic.List[string]]::new()
             $azureLocalResourceProviderObjectIds = @('test-object-id')
             $localBoxDeployment = $null
+            $cliState.Command = '[Console]::Error.WriteLine("SkuNotAvailable: capacity restriction"); exit 1'
+            Mock Update-MhhToken {}
+            Mock Get-AzResourceGroup {}
+            Mock Get-AzResource {}
+            Mock Wait-LocalBoxDeployment {}
             Mock az {
                 $cliState.Attempts++
-                if ($cliState.Attempts -eq 2) {
+                if ($cliState.Attempts -eq 3) {
                     & $nativeExecutable -NoProfile -NonInteractive -Command 'exit 0'
                 }
                 else {
@@ -1241,25 +1263,29 @@ Invoke-AzJson @('deployment', 'group', 'validate', '--location', $Location) | Ou
                 }
             }
         }
-        It 'tries the next region after the actual native regional failure' {
+        It 'tries both sizes then the next region after the actual native capacity failure' {
             . $fallback
             $localBoxDeployment.ProvisioningState | Should -Be 'Submitted'
             $localBoxDeployment.Location | Should -Be 'second-region'
-            Should -Invoke az -Times 2 -Exactly
+            Should -Invoke az -Times 3 -Exactly
         }
         It 'stops without retrying <Code>' -ForEach @(
             @{ Code = 'RequestDisallowedByPolicy' }
             @{ Code = 'AuthorizationFailed' }
             @{ Code = 'UnexpectedFailure' }
+            @{ Code = 'RequestDisallowedByAzure' }
         ) {
             $cliState.Command = "[Console]::Error.WriteLine('$Code'); exit 1"
             { . $fallback } | Should -Throw "*$Code*"
             Should -Invoke az -Times 1 -Exactly
         }
-        It 'preserves the regional failure when no fallback regions remain' {
+        It 'retains native failure details when no capacity candidates remain' {
             $localBoxLocations = @('first-region')
-            { . $fallback } | Should -Throw '*RequestDisallowedByAzure*locationineligible*'
-            Should -Invoke az -Times 1 -Exactly
+            . $fallback
+            $localBoxDeployment | Should -BeNullOrEmpty
+            $candidateFailures.Count | Should -Be 2
+            $candidateFailures -join '; ' | Should -Match 'SkuNotAvailable'
+            Should -Invoke az -Times 2 -Exactly
         }
     }
 }
@@ -1531,14 +1557,18 @@ Describe 'AKS Local Arc proxy RBAC' {
         $ast = [Management.Automation.Language.Parser]::ParseFile("$PSScriptRoot/../prepare-localbox.ps1", [ref]$null, [ref]$null)
         $guard = $ast.Find({ param($node)
             $node -is [Management.Automation.Language.IfStatementAst] -and
-            $node.Clauses[0].Item1.Extent.Text -eq '-not $Settings.SkipAks' -and
-            $node.Extent.Text -match 'Sync-LocalBoxAksProxyRole'
+            $node.Clauses[0].Item1.Extent.Text -eq '-not $Settings.SkipAks -and -not $aksVerificationPending' -and
+            $node.Extent.Text -match 'Complete-LocalBoxAksPreparation'
         }, $true)
         $guard | Should -Not -BeNullOrEmpty
         $reconcile = [scriptblock]::Create($guard.Extent.Text)
         $aksId = $clusterId
         $Settings = @{ SkipAks = $true; KubernetesRuntimeObjectId = $groupId }
         $metalLb = @{}
+        $aksVerificationPending = $false
+        $aksCompletion = @{ ClusterId = $clusterId; Expected = @{}; GroupId = $groupId; MetalLbPlan = @{}; RuntimeObjectId = $groupId }
+        Mock Wait-LocalBoxResource { @{ properties = @{ connectivityStatus = 'Connected' } } }
+        Mock Assert-LocalBoxProperties {}
         Mock Sync-LocalBoxAksProxyRole {}
         Mock Sync-LocalBoxMetalLb {}
         & $reconcile
@@ -2022,6 +2052,61 @@ Describe 'LocalBox failed image recovery' {
     }
 }
 
+Describe 'AKS ARM submission evidence' {
+    BeforeEach {
+        $arguments = @{ SubscriptionId = 'test'; ResourceGroupName = 'localbox'; ClusterName = 'localbox-aks'
+            CustomLocationId = 'custom'; Location = 'australiaeast' }
+        $deployment = @{ name = 'pciDeployment-localbox-aks'; properties = @{
+            provisioningState = 'Running'; correlationId = '10000000-0000-0000-0000-000000000001'
+            parameters = @{
+                clusterId = @{ value = '/subscriptions/test/resourceGroups/localbox/providers/Microsoft.Kubernetes/connectedClusters/localbox-aks' }
+                customLocation = @{ value = 'custom' }; provisionedClustersName = @{ value = 'localbox-aks' }
+                location = @{ value = 'australiaeast' }
+            }
+        } }
+        Mock Invoke-LocalBoxAz { $deployment }
+    }
+    It 'accepts only scoped correlated ARM submission states' -TestCases @(
+        @{ State = 'Accepted' }, @{ State = 'Running' }, @{ State = 'Succeeded' }
+    ) {
+        param($State)
+        $deployment.properties.provisioningState = $State
+        (Get-LocalBoxAksDeployment @arguments).properties.correlationId | Should -Be $deployment.properties.correlationId
+        Should -Invoke Invoke-LocalBoxAz -Times 1 -Exactly -ParameterFilter {
+            $Arguments[2] -eq 'show' -and $Arguments -contains '--subscription' -and $Arguments -contains 'test'
+        }
+    }
+    It 'does not invent submission evidence when no deployment exists' {
+        Mock Invoke-LocalBoxAz {}
+        Get-LocalBoxAksDeployment @arguments | Should -BeNullOrEmpty
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments[2] -eq 'show' }
+    }
+    It 'rejects failed canceled and unknown states' -TestCases @(
+        @{ State = 'Failed' }, @{ State = 'Canceled' }, @{ State = '' }
+    ) {
+        param($State)
+        $deployment.properties.provisioningState = $State
+        { Get-LocalBoxAksDeployment @arguments } | Should -Throw '*not accepted or successful*'
+    }
+    It 'rejects mismatched deployment parameters' -TestCases @(
+        @{ Field = 'clusterId' }, @{ Field = 'customLocation' }, @{ Field = 'provisionedClustersName' }, @{ Field = 'location' }
+    ) {
+        param($Field)
+        $deployment.properties.parameters[$Field].value = 'another-target'
+        { Get-LocalBoxAksDeployment @arguments } | Should -Throw '*does not match*'
+    }
+    It 'rejects missing correlation and ambiguous records' {
+        $deployment.properties.correlationId = ''
+        { Get-LocalBoxAksDeployment @arguments } | Should -Throw '*correlation contract*'
+        Mock Invoke-LocalBoxAz { $deployment; $deployment } -ParameterFilter { $Arguments[2] -eq 'list' }
+        { Get-LocalBoxAksDeployment @arguments } | Should -Throw '*Ambiguous*'
+    }
+    It 'propagates unreadable deployment evidence' {
+        Mock Invoke-LocalBoxAz { throw 'AuthorizationFailed' }
+        { Get-LocalBoxAksDeployment @arguments } | Should -Throw '*AuthorizationFailed*'
+    }
+}
+
 Describe 'LocalBox preparation dependency order' {
     BeforeAll {
         $source = ${function:Invoke-LocalBoxPreparation}.ToString()
@@ -2042,6 +2127,7 @@ Describe 'LocalBox preparation dependency order' {
         $imageId = 'image'
         $groupId = 'group'
         $metalLb = @{}
+        $aksVerificationPending = $false
         Mock Sync-LocalBoxResource { $events.Add("network:$($Id.Split('/')[-1])") }
         Mock Invoke-LocalBoxAz {
             if ($Arguments[0] -eq 'aksarc') {
@@ -2056,18 +2142,112 @@ Describe 'LocalBox preparation dependency order' {
         Mock Sync-LocalBoxImage { $events.Add('image') }
         Mock Sync-LocalBoxReferenceVm { $events.Add('reference') }
     }
-    It 'completes networks, AKS and MetalLB before importing the image and reference VM' {
+    It 'submits AKS asynchronously after networks and imports the image before joining AKS and MetalLB' {
         & $prepareWorkloads -Confirm:$false
-        $events -join ',' | Should -Be 'network:localbox-vm-lnet-vlan200,network:localbox-aks-lnet-vlan110,aks-validate,aks-create,proxy,metallb,image,reference'
+        $events -join ',' | Should -Be 'network:localbox-vm-lnet-vlan200,network:localbox-aks-lnet-vlan110,aks-validate,aks-create,image,proxy,metallb,reference'
+        Should -Invoke Invoke-LocalBoxAz -Times 1 -Exactly -ParameterFilter {
+            $Arguments[0] -eq 'aksarc' -and $Arguments -contains '--no-wait' -and $Arguments -notcontains '--validate'
+        }
+        Should -Invoke Invoke-LocalBoxAz -Times 1 -Exactly -ParameterFilter {
+            $Arguments[0] -eq 'aksarc' -and $Arguments -contains '--validate' -and $Arguments -notcontains '--no-wait'
+        }
         Should -Invoke Sync-LocalBoxImage -Times 1 -Exactly -ParameterFilter {
             $ClusterId -eq "$scope/providers/Microsoft.AzureStackHCI/clusters/localboxcluster" -and $CreateArguments -notcontains '--version'
         }
     }
-    It 'preserves completed infrastructure when the late image stage fails and does not start the reference VM' {
+    It 'retains serial provisioning as an explicit fallback' {
+        $Settings.SequentialProvisioning = $true
+        & $prepareWorkloads -Confirm:$false
+        $events -join ',' | Should -Be 'network:localbox-vm-lnet-vlan200,network:localbox-aks-lnet-vlan110,aks-validate,aks-create,proxy,metallb,image,reference'
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments -contains '--no-wait' }
+    }
+    It 'does not start a reference VM or claim AKS completion when image import fails' {
         Mock Sync-LocalBoxImage { $events.Add('image-failed'); throw 'Import failed' }
         { & $prepareWorkloads -Confirm:$false } | Should -Throw '*Import failed*'
-        $events -join ',' | Should -Be 'network:localbox-vm-lnet-vlan200,network:localbox-aks-lnet-vlan110,aks-validate,aks-create,proxy,metallb,image-failed'
+        $events -join ',' | Should -Be 'network:localbox-vm-lnet-vlan200,network:localbox-aks-lnet-vlan110,aks-validate,aks-create,image-failed'
         Should -Invoke Sync-LocalBoxReferenceVm -Times 0
+        Should -Invoke Wait-LocalBoxResource -Times 0
+    }
+    It 'does not start a reference VM when AKS fails after the image completes' {
+        Mock Wait-LocalBoxResource { throw 'AKS provisioning Failed' }
+        { & $prepareWorkloads -Confirm:$false } | Should -Throw '*AKS provisioning Failed*'
+        Should -Invoke Sync-LocalBoxImage -Times 1 -Exactly
+        Should -Invoke Sync-LocalBoxReferenceVm -Times 0
+        Should -Invoke Sync-LocalBoxMetalLb -Times 0
+    }
+    It 'does not import the image when asynchronous submission fails' {
+        Mock Invoke-LocalBoxAz { throw 'AKS submission failed' } -ParameterFilter { $Arguments -contains '--no-wait' }
+        { & $prepareWorkloads -Confirm:$false } | Should -Throw '*AKS submission failed*'
+        Should -Invoke Sync-LocalBoxImage -Times 0
+        Should -Invoke Sync-LocalBoxReferenceVm -Times 0
+    }
+    It 'reconciles the observed no-wait 404 only against a new accepted deployment' {
+        $receipt = @{ Reads = 0 }
+        Mock Get-LocalBoxAksDeployment {
+            $receipt.Reads++
+            if ($receipt.Reads -gt 1) {
+                @{ name = 'pciDeployment-localbox-aks'; properties = @{ provisioningState = 'Running'; correlationId = 'new' } }
+            }
+        }
+        Mock Invoke-LocalBoxAz {
+            $events.Add('aks-create')
+            throw "(ResourceNotFound) The Resource 'Microsoft.Kubernetes/connectedClusters/localbox-aks' was not found."
+        } -ParameterFilter { $Arguments -contains '--no-wait' }
+        & $prepareWorkloads -Confirm:$false
+        $events -join ',' | Should -Be 'network:localbox-vm-lnet-vlan200,network:localbox-aks-lnet-vlan110,aks-validate,aks-create,image,proxy,metallb,reference'
+        Should -Invoke Invoke-LocalBoxAz -Times 1 -Exactly -ParameterFilter { $Arguments -contains '--no-wait' }
+        Should -Invoke Get-LocalBoxAksDeployment -Times 2 -Exactly
+    }
+    It 'does not treat missing or stale deployment evidence as an accepted submission' -TestCases @(
+        @{ Existing = $false }, @{ Existing = $true }
+    ) {
+        param($Existing)
+        Mock Get-LocalBoxAksDeployment {
+            if ($Existing) { @{ properties = @{ correlationId = 'unchanged' } } }
+        }
+        Mock Invoke-LocalBoxAz {
+            throw "(ResourceNotFound) The Resource 'Microsoft.Kubernetes/connectedClusters/localbox-aks' was not found."
+        } -ParameterFilter { $Arguments -contains '--no-wait' }
+        { & $prepareWorkloads -Confirm:$false } | Should -Throw '*ResourceNotFound*'
+        Should -Invoke Sync-LocalBoxImage -Times 0
+        Should -Invoke Invoke-LocalBoxAz -Times 1 -Exactly -ParameterFilter { $Arguments -contains '--no-wait' }
+    }
+    It 'does not reconcile a 404 for an unrelated resource' {
+        Mock Get-LocalBoxAksDeployment {}
+        Mock Invoke-LocalBoxAz { throw '(ResourceNotFound) Microsoft.AzureStackHCI/logicalNetworks/missing' } -ParameterFilter { $Arguments -contains '--no-wait' }
+        { & $prepareWorkloads -Confirm:$false } | Should -Throw '*logicalNetworks/missing*'
+        Should -Invoke Get-LocalBoxAksDeployment -Times 1 -Exactly
+        Should -Invoke Sync-LocalBoxImage -Times 0
+    }
+    It 'overlaps image import with an existing accepted AKS deployment without recreating it' {
+        Mock Invoke-LocalBoxAz {
+            @{ id = "$scope/providers/Microsoft.Kubernetes/connectedClusters/localbox-aks" }
+        } -ParameterFilter { $Arguments[0] -eq 'resource' }
+        Mock Get-LocalBoxAksDeployment { @{ name = 'pciDeployment-localbox-aks'; properties = @{ provisioningState = 'Running' } } }
+        & $prepareWorkloads -Confirm:$false
+        $events -join ',' | Should -Be 'network:localbox-vm-lnet-vlan200,network:localbox-aks-lnet-vlan110,image,proxy,metallb,reference'
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments[0] -eq 'aksarc' }
+    }
+    It 'does not import the image or submit AKS after failed AKS validation' {
+        Mock Invoke-LocalBoxAz { throw 'AKS validation failed' } -ParameterFilter { $Arguments -contains '--validate' }
+        { & $prepareWorkloads -Confirm:$false } | Should -Throw '*AKS validation failed*'
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments -contains '--no-wait' }
+        Should -Invoke Sync-LocalBoxImage -Times 0
+    }
+    It 'preserves verification-before-image ordering when AKS already exists' {
+        Mock Invoke-LocalBoxAz {
+            if ($Arguments[0] -eq 'resource') { @{ id = "$scope/providers/Microsoft.Kubernetes/connectedClusters/localbox-aks" } }
+            elseif ($Arguments[0] -eq 'provider') { @{ registrationState = 'Registered' } }
+        }
+        & $prepareWorkloads -Confirm:$false
+        $events -join ',' | Should -Be 'network:localbox-vm-lnet-vlan200,network:localbox-aks-lnet-vlan110,proxy,metallb,image,reference'
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments[0] -eq 'aksarc' }
+    }
+    It 'does not submit asynchronous operations during WhatIf' {
+        & $prepareWorkloads -WhatIf
+        Should -Invoke Invoke-LocalBoxAz -Times 0 -ParameterFilter { $Arguments[0] -eq 'aksarc' }
+        Should -Invoke Wait-LocalBoxResource -Times 0
+        Should -Invoke Sync-LocalBoxImage -Times 1 -Exactly
     }
     It 'preserves the explicit SkipAks behavior while keeping the VM stages last' {
         $Settings.SkipAks = $true
@@ -2250,9 +2430,11 @@ exit 0
         $source = ${function:Invoke-LocalBoxPreparation}.ToString()
         $source | Should -Match 'Invoke-LocalBoxAz \(\$arguments \+ @\(''--validate''\)\) -TimeoutSeconds \$timeout -NoOutput'
         $source | Should -Match 'Invoke-LocalBoxAz \$arguments -TimeoutSeconds \$timeout -NoOutput'
-        $source | Should -Match 'Wait-LocalBoxResource \$instanceId'
-        $source | Should -Match 'Assert-LocalBoxProperties \$instance \$aksExpected'
-        $source | Should -Match 'Assert-LocalBoxProperties \$connected'
+        $source | Should -Match 'Invoke-LocalBoxAz \(\$arguments \+ @\(''--no-wait''\)\) -TimeoutSeconds \$timeout -NoOutput'
+        $completion = ${function:Complete-LocalBoxAksPreparation}.ToString()
+        $completion | Should -Match 'Wait-LocalBoxResource \$instanceId'
+        $completion | Should -Match 'Assert-LocalBoxProperties \$instance \$Expected'
+        $completion | Should -Match 'Assert-LocalBoxProperties \$connected'
     }
 }
 

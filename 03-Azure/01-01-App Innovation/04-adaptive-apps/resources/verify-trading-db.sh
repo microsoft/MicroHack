@@ -25,11 +25,52 @@ trap cleanup EXIT
 echo "Kubernetes context: $(kubectl config current-context)"
 echo "Application namespace: ${APP_NAMESPACE}"
 
-schema_job="$(kubectl get jobs --namespace "$APP_NAMESPACE" \
-  --selector app=postgres-schema-initializer,resource=trading-db --output json |
-  jq -r '.items | sort_by(.metadata.creationTimestamp) | last | .metadata.name // empty')"
+jobs="$(kubectl get jobs --namespace "$APP_NAMESPACE" \
+  --selector app=postgres-schema-initializer,resource=trading-db \
+  --ignore-not-found --output json)" || {
+  echo "Could not inspect initializer Jobs in ${APP_NAMESPACE}; check namespace access." >&2
+  exit 1
+}
+schema_job=""
+if [[ -n "$jobs" ]]; then
+  jq -e 'type == "object" and (.items | type == "array")' <<<"$jobs" >/dev/null || {
+    echo "Expected a Kubernetes Job list for ${APP_NAMESPACE}." >&2
+    exit 1
+  }
+  schema_job="$(jq -r '.items | sort_by(.metadata.creationTimestamp) |
+    last | .metadata.name // empty' <<<"$jobs")"
+fi
 [[ -n "$schema_job" ]] || {
   echo "No trading-db schema initializer Job found in ${APP_NAMESPACE}." >&2
+  other_jobs="$(kubectl get jobs --all-namespaces \
+    --selector app=postgres-schema-initializer,resource=trading-db --output json)" || {
+    echo "Could not list initializer Jobs across namespaces; check permissions and the Kubernetes context." >&2
+    exit 1
+  }
+  namespaces="$(jq -r '
+    if type == "object" and (.items | type == "array") and
+      all(.items[]; .metadata.namespace | type == "string" and length > 0)
+    then .items | map(.metadata.namespace) | unique[]
+    else error("Expected a Kubernetes Job list with namespace metadata")
+    end
+  ' <<<"$other_jobs")" || {
+    echo "Could not determine the namespaces containing initializer Jobs." >&2
+    exit 1
+  }
+  if [[ -z "$namespaces" ]]; then
+    echo "No matching Job exists in this Kubernetes context; initialization may not have been deployed." >&2
+  else
+    mapfile -t matching_namespaces <<<"$namespaces"
+    echo "Found matching initializer Jobs in:" >&2
+    printf '  %s\n' "${matching_namespaces[@]}" >&2
+    if ((${#matching_namespaces[@]} == 1)); then
+      echo "To verify that application, run:" >&2
+      printf '  export APP_NAMESPACE=%q\n' "${matching_namespaces[0]}" >&2
+      echo "  bash resources/verify-trading-db.sh" >&2
+    else
+      echo "Select the intended application namespace explicitly; verification will not choose one." >&2
+    fi
+  fi
   exit 1
 }
 echo "Using latest schema initializer: ${schema_job}"

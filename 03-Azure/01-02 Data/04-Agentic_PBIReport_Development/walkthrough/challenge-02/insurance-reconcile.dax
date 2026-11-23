@@ -1,0 +1,43 @@
+// Submit one EVALUATE block per ExecuteQueries REST request.
+EVALUATE
+ROW(
+    "PremiumRows", COUNTROWS('FactPremiumMonthly'),
+    "ClaimMovements", COUNTROWS('FactClaimTransactions'),
+    "WrittenCHF", [Written Premium],
+    "EarnedCHF", [Earned Premium],
+    "PaidCHF", [Paid Claims],
+    "RecoveryCHF", [Recoveries],
+    "ReserveMovementCHF", [Change in Claim Reserves],
+    "IncurredCHF", [Incurred Claims],
+    "LossRatio", [Loss Ratio],
+    "ClaimsWithActivity", [Claims with Activity],
+    "ActivePolicies", [Active Policies at Month-End]
+)
+
+EVALUATE
+SUMMARIZECOLUMNS(
+    'DimDate'[Year], 'DimDate'[MonthKey],
+    "EarnedCHF", [Earned Premium],
+    "IncurredCHF", [Incurred Claims],
+    "LossRatio", [Loss Ratio],
+    "ActivePolicies", [Active Policies at Month-End]
+)
+ORDER BY 'DimDate'[MonthKey]
+
+// Claims remain valid by claim type; premium and loss ratio must be blank.
+EVALUATE
+SUMMARIZECOLUMNS(
+    'DimClaimType'[ClaimTypeName],
+    "ClaimsValid", [Incurred Claims],
+    "PremiumMustBeBlank", [Earned Premium],
+    "LossRatioMustBeBlank", [Loss Ratio],
+    "Reason", [Scope Status]
+)
+
+// A leap-day-only selection is not a complete insurance month.
+EVALUATE
+CALCULATETABLE(
+    ROW("MustBeFalse", [Complete Months Valid], "MustBeBlank", [Loss Ratio],
+        "Reason", [Scope Status]),
+    'DimDate'[Date] = DATE(2024, 2, 29)
+)

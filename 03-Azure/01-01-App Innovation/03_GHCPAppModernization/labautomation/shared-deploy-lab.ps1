@@ -26,18 +26,32 @@ param(
 $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
 
 $requiredProviders = @(
-    "Microsoft.Apps",
+    "Microsoft.App",                  # Azure Container Apps
     "Microsoft.ContainerRegistry",
-    "Microsoft.DBforPostgreSQL"
+    "Microsoft.DBforPostgreSQL",
+    "Microsoft.OperationalInsights",  # Log Analytics - required by Container Apps environments
+    "Microsoft.ManagedIdentity"       # identities used by ACA/ACR deployments
 )
 foreach($provider in $requiredProviders) {
-    $state = (Get-AzResourceProvider -ProviderNamespace $provider -ErrorAction SilentlyContinue | Select-Object -First 1).RegistrationState
-    if($state -ne "Registered") {
+    $unregistered = Get-AzResourceProvider -ProviderNamespace $provider -ErrorAction SilentlyContinue |
+        Where-Object { $_.RegistrationState -ne "Registered" }
+    if($unregistered) {
         Write-Host "[$SubscriptionId] Registering resource provider: $provider"
-        Register-AzResourceProvider -ProviderNamespace $provider -ErrorAction Stop
+        Register-AzResourceProvider -ProviderNamespace $provider -ErrorAction Stop | Out-Null
     }
     else {
         Write-Host "[$SubscriptionId] Resource provider $provider is already registered."
+    }
+}
+
+# Register-AzResourceProvider is asynchronous - wait (bounded) until every provider reports Registered,
+# so the first lab deployment does not race the registration (MissingSubscriptionRegistration).
+$deadline = (Get-Date).AddMinutes(10)
+foreach($provider in $requiredProviders) {
+    while((Get-Date) -lt $deadline -and (Get-AzResourceProvider -ProviderNamespace $provider -ErrorAction SilentlyContinue |
+            Where-Object { $_.RegistrationState -ne "Registered" })) {
+        Write-Host "[$SubscriptionId] Waiting for $provider registration to complete..."
+        Start-Sleep -Seconds 15
     }
 }
 

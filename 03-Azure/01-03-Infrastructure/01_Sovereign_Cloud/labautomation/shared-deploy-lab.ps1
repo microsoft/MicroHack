@@ -53,26 +53,42 @@ if($participantCount -lt 1) {
 }
 
 $confidentialCandidates = @(Get-MhhConfidentialComputeCandidates -PreferredLocation $PreferredLocation)
+$nameSuffixes = @($AllowedEntraUserIds | Where-Object { $_ } | Select-Object -Unique | ForEach-Object {
+    (Get-MhhStableHash -Value @($_) -Length 24).Substring(0, 8)
+})
 $selectedCandidate = $null
 $quotaReadinessSummary = @()
 
-for($attempt = 1; $attempt -le 30; $attempt++) {
-    Update-MhhToken | Out-Null
-    $quotaProvider = Get-AzResourceProvider -ProviderNamespace Microsoft.Quota -ErrorAction Stop
-    if($quotaProvider.RegistrationState -eq 'Registered') {
-        break
+foreach ($providerNamespace in @('Microsoft.Compute', 'Microsoft.ContainerService', 'Microsoft.Network', 'Microsoft.Quota')) {
+    for($attempt = 1; $attempt -le 30; $attempt++) {
+        Update-MhhToken | Out-Null
+        $provider = Get-AzResourceProvider -ProviderNamespace $providerNamespace -ErrorAction Stop
+        if($provider.RegistrationState -eq 'Registered') {
+            break
+        }
+        Write-Host "Waiting for $providerNamespace registration ($attempt/30)..."
+        Start-Sleep -Seconds 10
     }
-    Write-Host "Waiting for Microsoft.Quota registration ($attempt/30)..."
-    Start-Sleep -Seconds 10
+    if($provider.RegistrationState -ne 'Registered') {
+        throw "$providerNamespace did not reach Registered state within 5 minutes."
+    }
 }
-if($quotaProvider.RegistrationState -ne 'Registered') {
-    throw 'Microsoft.Quota did not reach Registered state within 5 minutes.'
+
+$existingCompute = Get-MhhSovereignExistingCompute -SubscriptionId $SubscriptionId -NameSuffixes $nameSuffixes
+$resumeCandidate = Get-MhhSovereignResumeCandidate -SubscriptionId $SubscriptionId -ExistingCompute $existingCompute
+if ($resumeCandidate) {
+    $confidentialCandidates = @($resumeCandidate)
+    Write-Host "Preserving the saved compute selection: $($resumeCandidate.VmSize) in $($resumeCandidate.Location)."
 }
 
 foreach($candidate in $confidentialCandidates) {
     Update-MhhToken | Out-Null
     $candidateLocation = $candidate.Location
-    $requiredVmSizes = @($candidate.VmSize, 'Standard_D4s_v5')
+    $quotaRequirements = @(Get-MhhSovereignAdditionalCompute -Candidate $candidate -ExistingCompute $existingCompute -ParticipantCount $participantCount)
+    $requiredVmSizes = @(
+        if (($quotaRequirements | Where-Object Name -eq $candidate.QuotaName).Additional -gt 0) { $candidate.VmSize }
+        if (($quotaRequirements | Where-Object Name -eq 'StandardDSv5Family').Additional -gt 0) { 'Standard_D4s_v5' }
+    )
     $availableVmSizes = Get-AzComputeResourceSku -Location $candidateLocation -ErrorAction Stop |
         Where-Object {
             $_.ResourceType -ieq 'virtualMachines' -and
@@ -89,23 +105,23 @@ foreach($candidate in $confidentialCandidates) {
 
     $regionalUsage = Get-AzVMUsage -Location $candidateLocation -ErrorAction Stop
     $locationReady = $true
-    $quotaRequirements = @(Get-MhhSovereignComputeRequirements -ConfidentialQuotaName $candidate.QuotaName)
     foreach($requirement in $quotaRequirements) {
         $quotaName = $requirement.Name
-        $quotaRequired = $requirement.PerParticipant * $participantCount
+        $quotaRequired = $requirement.Additional
         $quota = $regionalUsage |
             Where-Object { $_.Name.Value -ieq $quotaName } |
             Select-Object -First 1
         $current = if($null -eq $quota) { 0 } else { $quota.CurrentValue }
         $limit = if($null -eq $quota) { 0 } else { $quota.Limit }
         $available = $limit - $current
+        Write-Host "$candidateLocation/${quotaName}: $current/$limit used; $($requirement.Existing)/$($requirement.Desired) lab vCPUs already allocated; $quotaRequired additional required."
 
-        if($available -ge $quotaRequired) {
+        if($quotaRequired -eq 0 -or $available -ge $quotaRequired) {
             continue
         }
 
         $newLimit = $current + $quotaRequired
-        Write-Host "Requesting exactly $newLimit $quotaName vCPUs in $candidateLocation for $participantCount participants..."
+        Write-Host "Requesting exactly $newLimit $quotaName vCPUs in $candidateLocation for the remaining participant compute..."
         $quotaResult = Request-MhhComputeQuota `
             -SubscriptionId $SubscriptionId `
             -Location $candidateLocation `

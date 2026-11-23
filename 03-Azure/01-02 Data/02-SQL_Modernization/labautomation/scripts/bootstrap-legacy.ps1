@@ -42,12 +42,12 @@ Write-Host "Configuring SQLMI..."
 
 Write-Host "Configuring SQL MI Link (certificates and endpoints)..."
 
-try {
-    & .\Configure-SQLMI-Link.ps1 -ManagedInstanceServer $ManagedInstanceServer -sqlusername $sqlMiAdminUsername -sqlpassword $sqlMiAdminPassword
-}
-catch {
-    Write-Warning "Configuring SQL MI Link failed: $($_.Exception.Message)"
-}
+# try {
+#     & .\Configure-SQLMI-Link.ps1 -ManagedInstanceServer $ManagedInstanceServer -sqlusername $sqlMiAdminUsername -sqlpassword $sqlMiAdminPassword
+# }
+# catch {
+#     Write-Warning "Configuring SQL MI Link failed: $($_.Exception.Message)"
+# }
 
 Write-Host "Bootstrap completed."
 

@@ -49,6 +49,24 @@ var k3sInstallScript = '''
 #!/usr/bin/env bash
 set -euo pipefail
 
+retry_install_step() {
+  local step="$1" limit="$2" attempt result
+  shift 2
+  for attempt in 1 2 3; do
+    echo "K3s $step: attempt $attempt/3." >&2
+    if timeout --kill-after=15s "$limit" "$@"; then
+      return 0
+    else
+      result=$?
+    fi
+    echo "ERROR: K3s $step failed (exit $result, attempt $attempt/3)." >&2
+    if [ "$attempt" -lt 3 ]; then
+      sleep "$((attempt * 20))"
+    fi
+  done
+  return "$result"
+}
+
 install -d -m 0755 /etc/rancher/k3s
 cat >/etc/rancher/k3s/config.yaml <<'EOF'
 tls-san:
@@ -59,16 +77,45 @@ disable:
   - traefik
 EOF
 
-if command -v k3s >/dev/null 2>&1; then
+if command -v k3s >/dev/null 2>&1 && systemctl cat k3s >/dev/null 2>&1; then
   systemctl enable --now k3s
   systemctl restart k3s
 else
-  curl --fail --location --silent --show-error https://get.k3s.io --output /tmp/install-k3s.sh
-  sh /tmp/install-k3s.sh
-  rm -f /tmp/install-k3s.sh
+  installer=$(mktemp /tmp/microhack-k3s-install.XXXXXX)
+  trap 'rm -f -- "$installer"' EXIT
+  release_url=$(retry_install_step 'release lookup' 75s curl --fail --location --silent --show-error \
+    --connect-timeout 15 --max-time 60 --output /dev/null --write-out '%{url_effective}' \
+    https://update.k3s.io/v1-release/channels/stable)
+  export INSTALL_K3S_VERSION="${release_url##*/}"
+  if [[ ! "$INSTALL_K3S_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+\+k3s[0-9]+$ ]]; then
+    echo 'ERROR: Stable channel did not resolve to a valid K3s release.' >&2
+    exit 1
+  fi
+  echo "K3s selected release: $INSTALL_K3S_VERSION"
+  retry_install_step 'installer download' 75s curl --fail --location --silent --show-error \
+    --connect-timeout 15 --max-time 60 --output "$installer" https://get.k3s.io
+  # Retry the installer too: it downloads and verifies the checksum and binary.
+  retry_install_step 'installation (including release downloads)' 600s sh "$installer"
 fi
 
-systemctl is-active --quiet k3s
+if ! systemctl is-active --quiet k3s; then
+  echo 'ERROR: K3s service is not active after installation/startup.' >&2
+  exit 1
+fi
+registered=false
+for attempt in {1..24}; do
+  if nodes=$(k3s kubectl get nodes -o name --request-timeout=5s) && [ -n "$nodes" ]; then
+    registered=true
+    break
+  fi
+  echo "Waiting for K3s node registration ($attempt/24)." >&2
+  sleep 5
+done
+if [ "$registered" != true ]; then
+  echo 'ERROR: No K3s node registered within the bounded readiness window.' >&2
+  exit 1
+fi
+timeout --kill-after=15s 150s k3s kubectl wait --for=condition=Ready nodes --all --timeout=120s --request-timeout=10s
 '''
 
 resource natPublicIp 'Microsoft.Network/publicIPAddresses@2024-05-01' = {

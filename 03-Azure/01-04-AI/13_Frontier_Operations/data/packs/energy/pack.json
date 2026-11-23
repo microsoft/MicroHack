@@ -1,0 +1,64 @@
+{
+  "id": "energy",
+  "industry": "Energy retail",
+  "company": "Lumora Energy",
+  "tagline": "Gas and electricity supplier across the fictional Zedshire region",
+  "process": "Network use-of-system charge reconciliation",
+  "partner_type": "network operator",
+  "partner_type_plural": "network operators",
+  "currency": "GBP",
+  "tolerance": 10.0,
+  "period": "2027-02",
+  "ref_prefix": "DUOS",
+  "actions": {
+    "mismatch": "Raise charge query",
+    "missing_on_statement": "Ask operator to confirm charge",
+    "missing_in_ledger": "Request settlement data",
+    "duplicate": "Raise duplicate-charge query",
+    "credit": "Confirm adjustment"
+  },
+  "portal": {
+    "name": "Network Settlements",
+    "tagline": "The industry portal where suppliers and network operators settle charge queries",
+    "case_noun": "query",
+    "case_types": [
+      "Charge query",
+      "Duplicate charge",
+      "Charge confirmation",
+      "Settlement data request",
+      "Adjustment confirmation"
+    ]
+  },
+  "people": {
+    "process_owner": "Sofia Brandt, Industry Settlements Lead",
+    "expert": "Martin Coyle, Senior Settlements Analyst",
+    "approver": "Helen Marsh, Finance Director"
+  },
+  "partners": [
+    {
+      "id": "wessex-grid",
+      "name": "Wessex Grid Distribution",
+      "contact": "charges@wessexgrid.example"
+    },
+    {
+      "id": "pennine",
+      "name": "Pennine Power Networks",
+      "contact": "duos@pennine.example"
+    },
+    {
+      "id": "estuary",
+      "name": "Estuary Electricity",
+      "contact": "billing@estuary.example"
+    },
+    {
+      "id": "highmoor",
+      "name": "Highmoor Gas Transport",
+      "contact": "ar@highmoor.example"
+    },
+    {
+      "id": "cotswold-meter",
+      "name": "Cotswold Metering",
+      "contact": "finance@cotswoldmeter.example"
+    }
+  ]
+}

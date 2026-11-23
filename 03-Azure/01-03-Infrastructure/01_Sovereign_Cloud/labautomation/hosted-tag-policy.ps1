@@ -14,6 +14,21 @@ function Initialize-MhhHostedTagPolicy {
         throw "The Azure context must target hosted subscription $SubscriptionId before assigning the tag initiative."
     }
 
+    $assignment = Invoke-AzRestMethod -Method GET `
+        -Path "/subscriptions/$SubscriptionId/providers/Microsoft.Authorization/policyAssignments/sov-hosted-control-tags?api-version=2026-06-01" `
+        -ErrorAction Stop
+    if ($assignment.StatusCode -eq 200) {
+        $existing = $assignment.Content | ConvertFrom-Json -ErrorAction Stop
+        if ([string]::IsNullOrWhiteSpace($existing.location)) {
+            throw 'Existing hosted control-tag assignment has no identity location. Inspect it before retrying; no location change was attempted.'
+        }
+        $Location = $existing.location
+        Write-Host "Preserving hosted control-tag policy identity location: $Location."
+    }
+    elseif ($assignment.StatusCode -ne 404) {
+        throw "Unable to read hosted control-tag assignment (HTTP $($assignment.StatusCode)); no policy deployment was attempted."
+    }
+
     Write-Host "Assigning hosted MCAPS control-tag initiative in subscription $SubscriptionId..."
     $deployment = New-AzSubscriptionDeployment `
         -Name "sov-hosted-tags-$Location" `

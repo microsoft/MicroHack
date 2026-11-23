@@ -1,4 +1,4 @@
-# Challenge 1 — Onboard a New LLM Backend
+# Challenge 1: Onboard a New LLM Backend
 
 **[Home](../README.md)** - [Next Challenge →](challenge-02.md)
 
@@ -36,12 +36,12 @@ end of the event.
    session is what authenticates their Azure calls:
 
    ```bash
-   az login --tenant emea.microhack.cloud
+   az login
    az account set --subscription <SubscriptionId from the dashboard>
    az account show --output table
    ```
 
-   If the browser handoff misbehaves, use `az login --use-device-code --tenant emea.microhack.cloud`.
+   If the browser handoff misbehaves, use `az login --use-device-code`.
 
 > [!WARNING]
 > If you are already signed in to another Azure account, `DefaultAzureCredential` may

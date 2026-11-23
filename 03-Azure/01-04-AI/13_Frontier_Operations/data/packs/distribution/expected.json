@@ -1,0 +1,272 @@
+[
+  {
+    "partner_id": "brightwell",
+    "reference": "INV-41007",
+    "kind": "mismatch",
+    "ledger_amount": 2342.37,
+    "statement_amount": 2354.87,
+    "difference": 12.5,
+    "action": "Raise price dispute"
+  },
+  {
+    "partner_id": "brightwell",
+    "reference": "INV-41009",
+    "kind": "within_tolerance",
+    "ledger_amount": 1878.38,
+    "statement_amount": 1879.38,
+    "difference": 1.0,
+    "action": "none"
+  },
+  {
+    "partner_id": "brightwell",
+    "reference": "INV-41006",
+    "kind": "missing_on_statement",
+    "ledger_amount": 4057.93,
+    "statement_amount": null,
+    "difference": null,
+    "action": "Ask supplier to confirm invoice"
+  },
+  {
+    "partner_id": "brightwell",
+    "reference": "INV-41013",
+    "kind": "missing_in_ledger",
+    "ledger_amount": null,
+    "statement_amount": 1044.8,
+    "difference": null,
+    "action": "Request copy invoice"
+  },
+  {
+    "partner_id": "brightwell",
+    "reference": "INV-41002",
+    "kind": "duplicate",
+    "ledger_amount": 3476.55,
+    "statement_amount": 3476.55,
+    "difference": null,
+    "action": "Raise duplicate-charge dispute"
+  },
+  {
+    "partner_id": "brightwell",
+    "reference": "CN-478",
+    "kind": "credit",
+    "ledger_amount": null,
+    "statement_amount": -273.01,
+    "difference": null,
+    "action": "Confirm credit note"
+  },
+  {
+    "partner_id": "northgate",
+    "reference": "INV-41022",
+    "kind": "mismatch",
+    "ledger_amount": 1931.94,
+    "statement_amount": 1942.94,
+    "difference": 11.0,
+    "action": "Raise price dispute"
+  },
+  {
+    "partner_id": "northgate",
+    "reference": "INV-41017",
+    "kind": "within_tolerance",
+    "ledger_amount": 2669.97,
+    "statement_amount": 2670.47,
+    "difference": 0.5,
+    "action": "none"
+  },
+  {
+    "partner_id": "northgate",
+    "reference": "INV-41024",
+    "kind": "missing_on_statement",
+    "ledger_amount": 3034.66,
+    "statement_amount": null,
+    "difference": null,
+    "action": "Ask supplier to confirm invoice"
+  },
+  {
+    "partner_id": "northgate",
+    "reference": "INV-41026",
+    "kind": "missing_in_ledger",
+    "ledger_amount": null,
+    "statement_amount": 3688.08,
+    "difference": null,
+    "action": "Request copy invoice"
+  },
+  {
+    "partner_id": "northgate",
+    "reference": "INV-41015",
+    "kind": "duplicate",
+    "ledger_amount": 475.65,
+    "statement_amount": 475.65,
+    "difference": null,
+    "action": "Raise duplicate-charge dispute"
+  },
+  {
+    "partner_id": "northgate",
+    "reference": "CN-949",
+    "kind": "credit",
+    "ledger_amount": null,
+    "statement_amount": -100.8,
+    "difference": null,
+    "action": "Confirm credit note"
+  },
+  {
+    "partner_id": "osric",
+    "reference": "INV-41029",
+    "kind": "mismatch",
+    "ledger_amount": 1609.88,
+    "statement_amount": 1626.38,
+    "difference": 16.5,
+    "action": "Raise price dispute"
+  },
+  {
+    "partner_id": "osric",
+    "reference": "INV-41033",
+    "kind": "within_tolerance",
+    "ledger_amount": 3883.21,
+    "statement_amount": 3883.71,
+    "difference": 0.5,
+    "action": "none"
+  },
+  {
+    "partner_id": "osric",
+    "reference": "INV-41037",
+    "kind": "missing_on_statement",
+    "ledger_amount": 1039.07,
+    "statement_amount": null,
+    "difference": null,
+    "action": "Ask supplier to confirm invoice"
+  },
+  {
+    "partner_id": "osric",
+    "reference": "INV-41039",
+    "kind": "missing_in_ledger",
+    "ledger_amount": null,
+    "statement_amount": 2626.77,
+    "difference": null,
+    "action": "Request copy invoice"
+  },
+  {
+    "partner_id": "osric",
+    "reference": "INV-41028",
+    "kind": "duplicate",
+    "ledger_amount": 1920.91,
+    "statement_amount": 1920.91,
+    "difference": null,
+    "action": "Raise duplicate-charge dispute"
+  },
+  {
+    "partner_id": "osric",
+    "reference": "CN-554",
+    "kind": "credit",
+    "ledger_amount": null,
+    "statement_amount": -177.97,
+    "difference": null,
+    "action": "Confirm credit note"
+  },
+  {
+    "partner_id": "kellerman",
+    "reference": "INV-41044",
+    "kind": "mismatch",
+    "ledger_amount": 2940.68,
+    "statement_amount": 2949.18,
+    "difference": 8.5,
+    "action": "Raise price dispute"
+  },
+  {
+    "partner_id": "kellerman",
+    "reference": "INV-41046",
+    "kind": "within_tolerance",
+    "ledger_amount": 1045.21,
+    "statement_amount": 1045.71,
+    "difference": 0.5,
+    "action": "none"
+  },
+  {
+    "partner_id": "kellerman",
+    "reference": "INV-41043",
+    "kind": "missing_on_statement",
+    "ledger_amount": 1470.43,
+    "statement_amount": null,
+    "difference": null,
+    "action": "Ask supplier to confirm invoice"
+  },
+  {
+    "partner_id": "kellerman",
+    "reference": "INV-41052",
+    "kind": "missing_in_ledger",
+    "ledger_amount": null,
+    "statement_amount": 3265.07,
+    "difference": null,
+    "action": "Request copy invoice"
+  },
+  {
+    "partner_id": "kellerman",
+    "reference": "INV-41041",
+    "kind": "duplicate",
+    "ledger_amount": 866.85,
+    "statement_amount": 866.85,
+    "difference": null,
+    "action": "Raise duplicate-charge dispute"
+  },
+  {
+    "partner_id": "kellerman",
+    "reference": "CN-721",
+    "kind": "credit",
+    "ledger_amount": null,
+    "statement_amount": -278.0,
+    "difference": null,
+    "action": "Confirm credit note"
+  },
+  {
+    "partner_id": "tamsin",
+    "reference": "INV-41060",
+    "kind": "mismatch",
+    "ledger_amount": 929.99,
+    "statement_amount": 939.24,
+    "difference": 9.25,
+    "action": "Raise price dispute"
+  },
+  {
+    "partner_id": "tamsin",
+    "reference": "INV-41057",
+    "kind": "within_tolerance",
+    "ledger_amount": 3914.23,
+    "statement_amount": 3915.23,
+    "difference": 1.0,
+    "action": "none"
+  },
+  {
+    "partner_id": "tamsin",
+    "reference": "INV-41064",
+    "kind": "missing_on_statement",
+    "ledger_amount": 668.42,
+    "statement_amount": null,
+    "difference": null,
+    "action": "Ask supplier to confirm invoice"
+  },
+  {
+    "partner_id": "tamsin",
+    "reference": "INV-41065",
+    "kind": "missing_in_ledger",
+    "ledger_amount": null,
+    "statement_amount": 1460.61,
+    "difference": null,
+    "action": "Request copy invoice"
+  },
+  {
+    "partner_id": "tamsin",
+    "reference": "INV-41054",
+    "kind": "duplicate",
+    "ledger_amount": 439.64,
+    "statement_amount": 439.64,
+    "difference": null,
+    "action": "Raise duplicate-charge dispute"
+  },
+  {
+    "partner_id": "tamsin",
+    "reference": "CN-990",
+    "kind": "credit",
+    "ledger_amount": null,
+    "statement_amount": -266.08,
+    "difference": null,
+    "action": "Confirm credit note"
+  }
+]

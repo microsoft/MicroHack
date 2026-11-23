@@ -1,0 +1,61 @@
+reference,partner_id,partner,date,description,amount,status
+CHG-52001,aldermoor,Aldermoor Telecom,2027-02-01,SMS termination,15131.96,posted
+CHG-52002,aldermoor,Aldermoor Telecom,2027-02-03,Emergency call routing,10466.24,posted
+CHG-52003,aldermoor,Aldermoor Telecom,2027-02-05,Signalling,8565.18,posted
+CHG-52004,aldermoor,Aldermoor Telecom,2027-02-07,SMS termination,4406.91,posted
+CHG-52005,aldermoor,Aldermoor Telecom,2027-02-10,Emergency call routing,10272.93,posted
+CHG-52006,aldermoor,Aldermoor Telecom,2027-02-12,SMS termination,12996.25,posted
+CHG-52007,aldermoor,Aldermoor Telecom,2027-02-14,Roaming voice,14306.45,posted
+CHG-52008,aldermoor,Aldermoor Telecom,2027-02-16,Backhaul capacity,13287.63,posted
+CHG-52009,aldermoor,Aldermoor Telecom,2027-02-19,Roaming data EU,1815.12,posted
+CHG-52010,aldermoor,Aldermoor Telecom,2027-02-21,Interconnect minutes,16939.69,posted
+CHG-52011,aldermoor,Aldermoor Telecom,2027-02-23,SMS termination,15728.08,posted
+CHG-52012,aldermoor,Aldermoor Telecom,2027-02-25,Roaming voice,16077.27,posted
+CHG-52014,farcastle,Farcastle Networks,2027-02-01,Emergency call routing,17556.21,posted
+CHG-52015,farcastle,Farcastle Networks,2027-02-03,Roaming voice,1968.17,posted
+CHG-52016,farcastle,Farcastle Networks,2027-02-05,Signalling,11393.22,posted
+CHG-52017,farcastle,Farcastle Networks,2027-02-07,Roaming voice,3652.85,posted
+CHG-52018,farcastle,Farcastle Networks,2027-02-10,Backhaul capacity,7839.31,posted
+CHG-52019,farcastle,Farcastle Networks,2027-02-12,Roaming data EU,6795.14,posted
+CHG-52020,farcastle,Farcastle Networks,2027-02-14,Leased line rental,8399.28,posted
+CHG-52021,farcastle,Farcastle Networks,2027-02-16,Backhaul capacity,14787.93,posted
+CHG-52022,farcastle,Farcastle Networks,2027-02-19,Interconnect minutes,9202.22,posted
+CHG-52023,farcastle,Farcastle Networks,2027-02-21,Roaming voice,15961.97,posted
+CHG-52024,farcastle,Farcastle Networks,2027-02-23,Signalling,15129.46,posted
+CHG-52025,farcastle,Farcastle Networks,2027-02-25,Colocation,5537.55,posted
+CHG-52027,lumen-isles,Lumen Isles Mobile,2027-02-01,Colocation,6661.96,posted
+CHG-52028,lumen-isles,Lumen Isles Mobile,2027-02-03,Leased line rental,527.18,posted
+CHG-52029,lumen-isles,Lumen Isles Mobile,2027-02-05,Roaming voice,2788.48,posted
+CHG-52030,lumen-isles,Lumen Isles Mobile,2027-02-07,Interconnect minutes,17026.37,posted
+CHG-52031,lumen-isles,Lumen Isles Mobile,2027-02-10,Roaming voice,8444.26,posted
+CHG-52032,lumen-isles,Lumen Isles Mobile,2027-02-12,Leased line rental,10243.72,posted
+CHG-52033,lumen-isles,Lumen Isles Mobile,2027-02-14,Emergency call routing,3455.60,posted
+CHG-52034,lumen-isles,Lumen Isles Mobile,2027-02-16,Backhaul capacity,8792.20,posted
+CHG-52035,lumen-isles,Lumen Isles Mobile,2027-02-19,Interconnect minutes,8143.98,posted
+CHG-52036,lumen-isles,Lumen Isles Mobile,2027-02-21,Roaming data EU,6734.00,posted
+CHG-52037,lumen-isles,Lumen Isles Mobile,2027-02-23,Interconnect minutes,4469.25,posted
+CHG-52038,lumen-isles,Lumen Isles Mobile,2027-02-25,Leased line rental,6557.78,posted
+CHG-52040,brackwater,Brackwater Fibre,2027-02-01,Roaming data EU,12506.75,posted
+CHG-52041,brackwater,Brackwater Fibre,2027-02-03,Leased line rental,17234.51,posted
+CHG-52042,brackwater,Brackwater Fibre,2027-02-05,Roaming data EU,8924.09,posted
+CHG-52043,brackwater,Brackwater Fibre,2027-02-07,Backhaul capacity,9714.00,posted
+CHG-52044,brackwater,Brackwater Fibre,2027-02-10,Signalling,10124.11,posted
+CHG-52045,brackwater,Brackwater Fibre,2027-02-12,Backhaul capacity,15613.23,posted
+CHG-52046,brackwater,Brackwater Fibre,2027-02-14,Leased line rental,7168.66,posted
+CHG-52047,brackwater,Brackwater Fibre,2027-02-16,SMS termination,5716.65,posted
+CHG-52048,brackwater,Brackwater Fibre,2027-02-19,Roaming data EU,1963.93,posted
+CHG-52049,brackwater,Brackwater Fibre,2027-02-21,Roaming voice,5661.08,posted
+CHG-52050,brackwater,Brackwater Fibre,2027-02-23,Interconnect minutes,1228.24,posted
+CHG-52051,brackwater,Brackwater Fibre,2027-02-25,Roaming data EU,13528.52,posted
+CHG-52053,sennen,Sennen Carrier Services,2027-02-01,Emergency call routing,4345.53,posted
+CHG-52054,sennen,Sennen Carrier Services,2027-02-03,Interconnect minutes,17694.27,posted
+CHG-52055,sennen,Sennen Carrier Services,2027-02-05,Emergency call routing,17140.56,posted
+CHG-52056,sennen,Sennen Carrier Services,2027-02-07,Emergency call routing,11425.37,posted
+CHG-52057,sennen,Sennen Carrier Services,2027-02-10,Emergency call routing,6159.00,posted
+CHG-52058,sennen,Sennen Carrier Services,2027-02-12,Leased line rental,3126.97,posted
+CHG-52059,sennen,Sennen Carrier Services,2027-02-14,SMS termination,1257.00,posted
+CHG-52060,sennen,Sennen Carrier Services,2027-02-16,Backhaul capacity,12690.94,posted
+CHG-52061,sennen,Sennen Carrier Services,2027-02-19,Leased line rental,3888.26,posted
+CHG-52062,sennen,Sennen Carrier Services,2027-02-21,SMS termination,8256.09,posted
+CHG-52063,sennen,Sennen Carrier Services,2027-02-23,Roaming voice,12464.56,posted
+CHG-52064,sennen,Sennen Carrier Services,2027-02-25,Interconnect minutes,1830.18,posted

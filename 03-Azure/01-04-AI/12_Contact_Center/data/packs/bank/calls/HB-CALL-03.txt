@@ -1,0 +1,11 @@
+# HB-CALL-03: Remortgage call booked
+
+Customer voice: male
+
+Agent: Thanks for calling Harbourline Bank. How can I help today?
+Customer: My fixed rate ends in June and I want to know my options.
+Agent: A mortgage adviser can go through that with you. Can I take your account number and postcode first?
+Customer: H B five zero zero three zero four. Z Z two, two J R.
+Agent: Thank you, Ethan. The first adviser call is Monday the fifteenth at ten am, for forty-five minutes. Shall I book it?
+Customer: Yes please.
+Agent: Booked. Please have your latest payslips and bank statements to hand.

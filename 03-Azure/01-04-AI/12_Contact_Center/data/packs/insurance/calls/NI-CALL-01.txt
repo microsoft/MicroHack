@@ -1,0 +1,12 @@
+# NI-CALL-01: Storm-damaged roof, assessor booked
+
+Customer voice: female
+
+Agent: Thanks for calling Northmere Insurance. How can I help today?
+Customer: The storm last night took tiles off my roof. Rain's getting into the loft.
+Agent: I'm sorry to hear that. Is everyone safe, and is the home safe to stay in?
+Customer: Yes, we're fine, it's just the loft.
+Agent: Good. Can I take your policy number and postcode?
+Customer: N I seven zero zero four zero one, Z Z three, eight D F.
+Agent: Thank you, Rebecca. You can arrange an emergency roof covering up to five hundred pounds without waiting for us. Keep the receipt. I've booked an assessor for Tuesday between ten and twelve.
+Customer: That's really helpful, thank you.

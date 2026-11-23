@@ -1,0 +1,14 @@
+# KC-CALL-01: First bill higher than expected
+
+Customer voice: female
+
+Agent: Thanks for calling Kestrel Connect. How can I help today?
+Customer: Hi, my first bill is much higher than I expected and I don't understand why.
+Agent: I can look into that. Can I take your account number and the postcode on the account?
+Customer: It's K C one zero zero two zero five, and the postcode is Z Z three, nine R W.
+Agent: Thank you, Sofia, that matches. Your first bill includes a part-month charge from the day you joined in February, as well as March in advance. That's why it's higher.
+Customer: Oh, so next month it goes back to twelve pounds?
+Agent: Yes. From April it will be your normal twelve pounds a month.
+Customer: That's a relief. Thanks for explaining it so clearly.
+Agent: You're welcome. Is there anything else I can help with?
+Customer: No, that's all. Bye.

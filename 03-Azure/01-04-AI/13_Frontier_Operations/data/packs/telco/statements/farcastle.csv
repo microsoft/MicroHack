@@ -1,0 +1,15 @@
+reference,date,description,amount_gbp
+CH-52014,2027-02-01,Emergency call routing,17556.21
+CH-52015,2027-02-03,Roaming voice,1968.17
+CH-52016,2027-02-05,Signalling,11393.22
+CH-52017,2027-02-07,Roaming voice,3652.85
+CH-52018,2027-02-10,Backhaul capacity,7839.31
+CH-52019,2027-02-12,Roaming data EU,6795.14
+CH-52021,2027-02-16,Backhaul capacity,14789.18
+CH-52022,2027-02-19,Interconnect minutes,9222.72
+CH-52023,2027-02-21,Roaming voice,15961.97
+CH-52024,2027-02-23,Signalling,15129.46
+CH-52025,2027-02-25,Colocation,5537.55
+CH-52015,2027-02-03,Roaming voice,1968.17
+CH-52026,2027-02-27,Roaming voice,16790.32
+CR-201,2027-02-28,Credit: SLA rebate,-244.61

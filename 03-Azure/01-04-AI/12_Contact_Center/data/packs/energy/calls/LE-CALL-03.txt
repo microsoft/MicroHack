@@ -1,0 +1,9 @@
+# LE-CALL-03: Oxygen equipment and a power cut
+
+Customer voice: female
+
+Agent: Thanks for calling Lumora Energy. How can I help today?
+Customer: The power's gone off and I use an oxygen machine. The battery won't last long. I don't know what to do.
+Agent: I'm going to help you right now. Please call the free number one oh five for the power cut, and I'm putting you through to a colleague immediately who can make sure you're safe.
+Customer: Thank you. I'm a bit frightened.
+Agent: You're doing the right thing. I've passed on that you use oxygen equipment, so you won't need to explain again.

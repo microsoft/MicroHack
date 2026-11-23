@@ -1,0 +1,15 @@
+reference,date,description,amount_gbp
+CHG-52001,2027-02-01,SMS termination,15131.96
+CHG-52002,2027-02-03,Emergency call routing,10466.24
+CHG-52003,2027-02-05,Signalling,8565.18
+CHG-52004,2027-02-07,SMS termination,4406.91
+CHG-52005,2027-02-10,Emergency call routing,10272.93
+CHG-52006,2027-02-12,SMS termination,13017.50
+CHG-52008,2027-02-16,Backhaul capacity,13287.63
+CHG-52009,2027-02-19,Roaming data EU,1815.12
+CHG-52010,2027-02-21,Interconnect minutes,16939.69
+CHG-52011,2027-02-23,SMS termination,15728.08
+CHG-52012,2027-02-25,Roaming voice,16078.52
+CHG-52002,2027-02-03,Emergency call routing,10466.24
+CHG-52013,2027-02-27,Colocation,1975.21
+CR-298,2027-02-28,Credit: SLA rebate,-128.78

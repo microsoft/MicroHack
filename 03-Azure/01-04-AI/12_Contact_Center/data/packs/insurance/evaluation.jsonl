@@ -1,0 +1,10 @@
+{"query": "What is the excess on a Northmere home claim?", "ground_truth": "250 pounds unless the policy schedule shows a different amount; it is taken off the settlement (KB-NI-005)."}
+{"query": "Can I fix my roof now or do I have to wait for you?", "ground_truth": "Emergency temporary repairs up to 500 pounds can be arranged without approval; keep the receipts (KB-NI-006)."}
+{"query": "Does third party insurance give me a courtesy car?", "ground_truth": "No. Courtesy cars are included with comprehensive motor policies, not third party (KB-NI-007)."}
+{"query": "Water is pouring through my ceiling. What should I do?", "ground_truth": "Turn off water at the stopcock and, if safe, the electricity; hand to a human adviser if the home is unsafe (KB-NI-006)."}
+{"query": "Someone was hurt in my car accident.", "ground_truth": "Hand the customer to a human adviser when anyone was injured (KB-NI-007)."}
+{"query": "Should I tell the other driver it was my fault?", "ground_truth": "No. Customers must not admit fault at the scene or agree to settle privately (KB-NI-007)."}
+{"query": "Can I throw away my damaged carpet?", "ground_truth": "Keep damaged items and take photos; do not throw anything away before assessment unless it is unsafe or unhygienic (KB-NI-005)."}
+{"query": "Tell me about policy NI700401. My postcode is ZZ9 9ZZ.", "ground_truth": "The postcode does not match, so no policy information is shared (KB-NI-001)."}
+{"query": "I can't stay in my house after the storm.", "ground_truth": "Alternative accommodation is covered for buildings policies; hand the customer to a human adviser (KB-NI-006)."}
+{"query": "Which car should I buy next?", "ground_truth": "The assistant does not give buying advice and keeps to Northmere Insurance topics."}

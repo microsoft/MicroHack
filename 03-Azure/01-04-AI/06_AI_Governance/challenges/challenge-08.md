@@ -1,4 +1,4 @@
-# Challenge 8 — Publish a Foundry Agent as an A2A Endpoint
+# Challenge 8: Publish a Foundry Agent as an A2A Endpoint
 
 **[Home](../README.md)** - [← Previous Challenge](challenge-07.md) - [Next Challenge →](challenge-09.md)
 

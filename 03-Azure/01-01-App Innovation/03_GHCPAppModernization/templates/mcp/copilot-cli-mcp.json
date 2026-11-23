@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "azure": {
+      "type": "local",
+      "command": "npx",
+      "args": ["-y", "@azure/mcp@latest", "server", "start"],
+      "env": {},
+      "tools": ["*"]
+    }
+  }
+}

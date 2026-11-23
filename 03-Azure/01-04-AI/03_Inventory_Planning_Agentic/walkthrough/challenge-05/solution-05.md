@@ -1,4 +1,4 @@
-# Solution 04 — Orchestrate the Loop (Stretch)
+# Solution 5 — Connect the Loop (Stretch)
 
 **[← Back to Challenge 5](../../challenges/challenge-05.md)** · [Home](../../README.md)
 

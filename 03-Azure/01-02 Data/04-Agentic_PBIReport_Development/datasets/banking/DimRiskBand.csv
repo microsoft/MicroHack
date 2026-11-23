@@ -1,0 +1,4 @@
+RiskBandKey,RiskBandCode,RiskBandName,RiskSort
+1,SYN-RISK-1,Low,1
+2,SYN-RISK-2,Elevated,2
+3,SYN-RISK-3,High,3

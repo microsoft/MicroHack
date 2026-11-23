@@ -1,0 +1,15 @@
+reference,date,description,amount_gbp
+CHG-052053,2027-02-01,Emergency call routing,4345.53
+CHG-052054,2027-02-03,Interconnect minutes,17694.27
+CHG-052055,2027-02-05,Emergency call routing,17140.56
+CHG-052056,2027-02-07,Emergency call routing,11425.37
+CHG-052057,2027-02-10,Emergency call routing,6159.00
+CHG-052058,2027-02-12,Leased line rental,3126.97
+CHG-052059,2027-02-14,SMS termination,1257.00
+CHG-052060,2027-02-16,Backhaul capacity,12711.44
+CHG-052062,2027-02-21,SMS termination,8257.34
+CHG-052063,2027-02-23,Roaming voice,12464.56
+CHG-052064,2027-02-25,Interconnect minutes,1830.18
+CHG-052054,2027-02-03,Interconnect minutes,17694.27
+CHG-052065,2027-02-27,Interconnect minutes,10594.65
+CR-810,2027-02-28,Credit: SLA rebate,-83.69

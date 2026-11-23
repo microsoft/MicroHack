@@ -664,23 +664,6 @@ $storageConnStr = Get-OutVal $deployOutputs 'STORAGE_ACCOUNT_CONNECTION_STRING'
 $apimName = Get-OutVal $deployOutputs 'APIM_NAME'
 $spokeConnStr = Get-OutVal $deployOutputs 'SPOKE_APP_INSIGHTS_CONNECTION_STRING'
 
-# Phase 4: per-scenario APIM subscription keys/IDs
-$salesAssistantKey = Get-OutVal $deployOutputs 'SALES_ASSISTANT_SUBSCRIPTION_KEY'
-$salesAssistantId = Get-OutVal $deployOutputs 'SALES_ASSISTANT_SUBSCRIPTION_ID'
-$hrChatAgentKey = Get-OutVal $deployOutputs 'HR_CHATAGENT_SUBSCRIPTION_KEY'
-$hrChatAgentId = Get-OutVal $deployOutputs 'HR_CHATAGENT_SUBSCRIPTION_ID'
-$supportBotKey = Get-OutVal $deployOutputs 'SUPPORT_BOT_SUBSCRIPTION_KEY'
-$supportBotId = Get-OutVal $deployOutputs 'SUPPORT_BOT_SUBSCRIPTION_ID'
-$universalLlmTestKey = Get-OutVal $deployOutputs 'UNIVERSAL_LLM_TEST_SUBSCRIPTION_KEY'
-$universalLlmTestId = Get-OutVal $deployOutputs 'UNIVERSAL_LLM_TEST_SUBSCRIPTION_ID'
-$unifiedAiTestKey = Get-OutVal $deployOutputs 'UNIFIED_AI_TEST_SUBSCRIPTION_KEY'
-$unifiedAiTestId = Get-OutVal $deployOutputs 'UNIFIED_AI_TEST_SUBSCRIPTION_ID'
-$piiMaskingKey = Get-OutVal $deployOutputs 'PII_MASKING_SUBSCRIPTION_KEY'
-$piiMaskingId = Get-OutVal $deployOutputs 'PII_MASKING_SUBSCRIPTION_ID'
-$piiBlockingKey = Get-OutVal $deployOutputs 'PII_BLOCKING_SUBSCRIPTION_KEY'
-$piiBlockingId = Get-OutVal $deployOutputs 'PII_BLOCKING_SUBSCRIPTION_ID'
-$piiAnalyticsKey = Get-OutVal $deployOutputs 'PII_ANALYTICS_SUBSCRIPTION_KEY'
-$piiAnalyticsId = Get-OutVal $deployOutputs 'PII_ANALYTICS_SUBSCRIPTION_ID'
 $llmBackendConfig = Get-OutVal $deployOutputs 'LLM_BACKEND_CONFIG'
 
 # Phase 4: spoke Foundry / Key Vault / ACR
@@ -760,62 +743,6 @@ if ($storageAccountName) {
 
 if ($apimName) {
     @{ HackboxCredential = @{ name = 'ApimName'; value = $apimName; note = 'API Management service name' } }
-}
-
-if ($salesAssistantKey) {
-    @{ HackboxCredential = @{ name = 'SalesAssistantSubscriptionKey'; value = $salesAssistantKey; note = 'APIM subscription key for the Sales Assistant scenario' } }
-}
-if ($salesAssistantId) {
-    @{ HackboxCredential = @{ name = 'SalesAssistantSubscriptionId'; value = $salesAssistantId; note = 'APIM subscription ID for the Sales Assistant scenario' } }
-}
-
-if ($hrChatAgentKey) {
-    @{ HackboxCredential = @{ name = 'HrChatAgentSubscriptionKey'; value = $hrChatAgentKey; note = 'APIM subscription key for the HR ChatAgent scenario' } }
-}
-if ($hrChatAgentId) {
-    @{ HackboxCredential = @{ name = 'HrChatAgentSubscriptionId'; value = $hrChatAgentId; note = 'APIM subscription ID for the HR ChatAgent scenario' } }
-}
-
-if ($supportBotKey) {
-    @{ HackboxCredential = @{ name = 'SupportBotSubscriptionKey'; value = $supportBotKey; note = 'APIM subscription key for the Support Bot scenario' } }
-}
-if ($supportBotId) {
-    @{ HackboxCredential = @{ name = 'SupportBotSubscriptionId'; value = $supportBotId; note = 'APIM subscription ID for the Support Bot scenario' } }
-}
-
-if ($universalLlmTestKey) {
-    @{ HackboxCredential = @{ name = 'UniversalLlmTestSubscriptionKey'; value = $universalLlmTestKey; note = 'APIM subscription key for the Universal LLM Test scenario' } }
-}
-if ($universalLlmTestId) {
-    @{ HackboxCredential = @{ name = 'UniversalLlmTestSubscriptionId'; value = $universalLlmTestId; note = 'APIM subscription ID for the Universal LLM Test scenario' } }
-}
-
-if ($unifiedAiTestKey) {
-    @{ HackboxCredential = @{ name = 'UnifiedAiTestSubscriptionKey'; value = $unifiedAiTestKey; note = 'APIM subscription key for the Unified AI Test scenario' } }
-}
-if ($unifiedAiTestId) {
-    @{ HackboxCredential = @{ name = 'UnifiedAiTestSubscriptionId'; value = $unifiedAiTestId; note = 'APIM subscription ID for the Unified AI Test scenario' } }
-}
-
-if ($piiMaskingKey) {
-    @{ HackboxCredential = @{ name = 'PiiMaskingSubscriptionKey'; value = $piiMaskingKey; note = 'APIM subscription key for the PII Masking scenario' } }
-}
-if ($piiMaskingId) {
-    @{ HackboxCredential = @{ name = 'PiiMaskingSubscriptionId'; value = $piiMaskingId; note = 'APIM subscription ID for the PII Masking scenario' } }
-}
-
-if ($piiBlockingKey) {
-    @{ HackboxCredential = @{ name = 'PiiBlockingSubscriptionKey'; value = $piiBlockingKey; note = 'APIM subscription key for the PII Blocking scenario' } }
-}
-if ($piiBlockingId) {
-    @{ HackboxCredential = @{ name = 'PiiBlockingSubscriptionId'; value = $piiBlockingId; note = 'APIM subscription ID for the PII Blocking scenario' } }
-}
-
-if ($piiAnalyticsKey) {
-    @{ HackboxCredential = @{ name = 'PiiAnalyticsSubscriptionKey'; value = $piiAnalyticsKey; note = 'APIM subscription key for the PII Analytics scenario' } }
-}
-if ($piiAnalyticsId) {
-    @{ HackboxCredential = @{ name = 'PiiAnalyticsSubscriptionId'; value = $piiAnalyticsId; note = 'APIM subscription ID for the PII Analytics scenario' } }
 }
 
 if ($llmBackendConfig) {

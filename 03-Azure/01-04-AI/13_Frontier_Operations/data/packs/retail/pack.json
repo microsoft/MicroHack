@@ -1,0 +1,64 @@
+{
+  "id": "retail",
+  "industry": "Retail and e-commerce",
+  "company": "Parcelpine",
+  "tagline": "Online retailer selling home and garden goods through its own site and marketplaces",
+  "process": "Marketplace settlement reconciliation",
+  "partner_type": "marketplace",
+  "partner_type_plural": "marketplaces",
+  "currency": "GBP",
+  "tolerance": 0.5,
+  "period": "2027-02",
+  "ref_prefix": "ORD",
+  "actions": {
+    "mismatch": "Raise payout claim",
+    "missing_on_statement": "Claim missing payout",
+    "missing_in_ledger": "Request order details",
+    "duplicate": "Raise duplicate-deduction claim",
+    "credit": "Confirm refund"
+  },
+  "portal": {
+    "name": "Seller Central",
+    "tagline": "The seller portal where marketplaces settle payouts with Parcelpine",
+    "case_noun": "claim",
+    "case_types": [
+      "Payout claim",
+      "Duplicate deduction",
+      "Missing payout",
+      "Order details request",
+      "Refund confirmation"
+    ]
+  },
+  "people": {
+    "process_owner": "Lewis Grant, E-commerce Finance Lead",
+    "expert": "Mei Tanaka, Marketplace Accountant",
+    "approver": "Joanna Price, Finance Director"
+  },
+  "partners": [
+    {
+      "id": "shopwell",
+      "name": "Shopwell Marketplace",
+      "contact": "sellers@shopwell.example"
+    },
+    {
+      "id": "brightbasket",
+      "name": "Brightbasket",
+      "contact": "settlements@brightbasket.example"
+    },
+    {
+      "id": "homeharbour",
+      "name": "Home Harbour",
+      "contact": "payouts@homeharbour.example"
+    },
+    {
+      "id": "gardenly",
+      "name": "Gardenly",
+      "contact": "finance@gardenly.example"
+    },
+    {
+      "id": "dealdock",
+      "name": "DealDock",
+      "contact": "partners@dealdock.example"
+    }
+  ]
+}

@@ -2,67 +2,134 @@
 
 **[Home](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/Readme.md)** - [Next Solution](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/walkthrough/challenge-02/solution-02.md)
 
-## Coach notes
+## Choose one environment
 
-**Hosted path:** complete Tasks 2-4 in the student challenge, then follow
-[Console setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md).
-Validate the supplied platforms in Challenge 02 instead of provisioning them,
-then continue with Challenges 03-06.
+Choose **exactly one** of these setup paths. GitHub Codespaces and a local Dev
+Container are the two recommended options; both supply the Adaptive Apps toolchain.
 
-Challenge 01 verifies prerequisites. Participants should arrive with most tools
-installed or be prepared to install them quickly. Coaches should unblock environment
-issues so teams can proceed to Challenge 02 to provision or explore AKS and K3s.
+| Setup path | Choose it when |
+| --- | --- |
+| [GitHub Codespaces (recommended)](#recommended-environment-github-codespaces) | You want VS Code in your browser without installing a local container runtime or tools. |
+| [Local Dev Container (recommended)](#recommended-devcontainer) | You want to work in local VS Code and can run containers on your workstation. |
+| [Manual setup](#manual-installation-instructions) | You need to install and maintain the tools yourself. |
 
-Share these instructions one or two weeks before the MicroHack when possible.
+Complete only your selected section, then go to
+[Required access and capacity](#required-access-and-capacity) and the
+[Verification checklist](#verification-checklist). **Codespaces and Dev Container
+users should skip manual installation and manual workstation verification.**
 
-## Required access and capacity
+## Recommended environment: GitHub Codespaces
 
-Confirm the workshop has:
+Use **GitHub Codespaces with the Azure / App Innovation / Adaptive Apps
+devcontainer** for the workshop command-line tasks. It provides VS Code in your
+browser with Azure CLI, PowerShell 7, Bicep, `kubectl`, Helm, Radius CLI, and the
+supporting lab tools, without requiring local installations. Continue to use the
+Azure portal for portal-based tasks. No Kubernetes cluster or Docker daemon runs
+inside this container; the lab platforms run in Azure.
 
-- An Azure subscription
-- Permission to create a resource group, AKS cluster, Linux VM, networking, and role
-  assignments
-- Permission to create Azure Bastion Standard and its managed public IP, a NAT gateway
-  and its public IP, invoke VM Run Command, and open Bastion native-client tunnels
-- Permission to create a Microsoft Entra application and service principal
-- Sufficient regional quota for:
-  - A two-node AKS cluster using `Standard_D4s_v5` by default
-  - One K3s VM using `Standard_D4s_v5` by default
-  - One Standard Azure Bastion host and its managed public IP
-  - One NAT gateway and one Standard public IP for K3s outbound access
+### Set up Codespaces (recommended)
 
-The default scripts assign the Radius identity `Owner` at the lab resource-group
-scope because later exercises can create role assignments. Use a dedicated lab
-subscription or resource group.
+1. Sign in with a **personal GitHub account**. Optionally set **Settings >
+   Codespaces > Default idle timeout** at
+   [github.com/settings/codespaces](https://github.com/settings/codespaces)
+   **before creating the Codespace**. The default is 30 minutes; you can choose
+   5-240 minutes, subject to organization policy. The setting applies to new
+   Codespaces.
+2. Open the **repository home page**, [microsoft/MicroHack](https://github.com/microsoft/MicroHack),
+   while signed in to GitHub. Above the file list, select the green **Code**
+   button, then the **Codespaces** tab. This is the repository's Code menu, not
+   a menu inside VS Code.
 
-## Required tools
+   <a href="https://docs.github.com/assets/images/help/codespaces/who-will-pay.png"><img src="https://docs.github.com/assets/images/help/codespaces/who-will-pay.png" alt="GitHub documentation example of the Code menu with the Codespaces tab selected" width="420"></a>
 
-- Azure CLI
-- Azure CLI `bastion` extension
-- Bicep CLI
-- `kubectl`
-- Helm
-- Radius CLI (`rad`)
-- Git
-- `jq`
-- `yq`
-- `curl`
-- OpenSSH client
-- `tar`
-- Visual Studio Code
-- Bash for the optional automation scripts
+   In the **top-right corner of the Codespaces tab**, select **...**, then **New
+   with options**. Do not use the quick-create button: this repository has
+   multiple devcontainers, and you must choose **walkthrough/challenge-01/solution-01.md**
 
-Windows participants should use WSL 2 for the Bash automation scripts. Manual
-instructions can also be followed from PowerShell 7 where equivalent commands are
-available.
+   <a href="https://docs.github.com/assets/images/help/codespaces/default-machine-type.png"><img src="https://docs.github.com/assets/images/help/codespaces/default-machine-type.png" alt="GitHub documentation example showing the Codespaces three-dot menu and New with options" width="420"></a>
+
+   These screenshots are examples from
+   [GitHub's Codespaces documentation](https://docs.github.com/en/codespaces/developing-in-a-codespace/creating-a-codespace-for-a-repository#creating-a-codespace-for-a-repository);
+   repository names and existing Codespaces may differ. If the **Codespaces**
+   tab is missing, check that you are signed in. Alternatively, open
+   [Create a codespace](https://github.com/codespaces/new), select
+   **microsoft/MicroHack**, and continue with the options below.
+3. Select branch **main**, devcontainer configuration
+   **Azure / App Innovation / Adaptive Apps**, and a **2-core** machine, then
+   **Create codespace**. The configuration file is
+   [`.devcontainer/03-azure-01-01-app-innovation-04-adaptive-apps/devcontainer.json`](../../../../../.devcontainer/03-azure-01-01-app-innovation-04-adaptive-apps/devcontainer.json).
+   Wait for the post-create setup to finish before using the terminal. If this
+   configuration is not offered, use the local Dev Container path instead of
+   the default Codespace.
+4. In **Terminal > New Terminal**, open **Bash**, sign in to Azure with your
+   workshop account, and select your assigned lab subscription:
+
+   ```bash
+   az login --use-device-code
+   az account set --subscription "<subscription-id>"
+   az account show --query "{Account:user.name,Subscription:name,Tenant:tenantId}" --output table
+   ```
+
+   Open the device-login URL printed by Azure CLI and enter its **device code**.
+   For hosted events, use the account and, if supplied, the Temporary Access
+   Pass (TAP) from the Console. The TAP and device code are different; never
+   save either in files or commands. Use a private browser window if necessary
+   to avoid signing in with your normal work account. For bring-your-own-
+   subscription labs, use your own Azure identity. Confirm that the displayed
+   account and subscription match your lab details.
+5. Use this same Codespace for subsequent challenges. The repository is already
+   cloned, and Explorer should open
+   `03-Azure/01-01-App Innovation/04-adaptive-apps`. Run the workshop commands
+   from that directory in **Bash**; run `pwsh` when PowerShell 7 is needed.
+   Check the installed tools with the commands in
+   [Verify and troubleshoot](#verify-and-troubleshoot), then skip the remaining
+   environment setup sections and continue at
+   [Required access and capacity](#required-access-and-capacity).
+
+### Terminals, breaks and saved work
+
+- **Multiple terminals:** use **Terminal > New Terminal** or the terminal panel's
+  **+** button. Leave Bastion tunnels and port-forwards running in their own
+  terminals. Terminals share files and networking, **not shell variables**;
+  initialize the required variables in each terminal as directed.
+- **After a restart:** saved files persist when a Codespace stops, but processes,
+  tunnels, and shell variables do not. Save only non-secret variable assignments
+  in a file such as `~/adaptive-apps-env.sh`, then reload it with
+  `source ~/adaptive-apps-env.sh` in each new Bash terminal. For PowerShell, use
+  a `.ps1` file and dot-source it. Recheck Azure sign-in and restart tunnels.
+  Do not save TAPs, tokens, passwords, private keys, or kubeconfig files in the
+  repository.
+- **Browser access:** use the Ports view's forwarded HTTPS URLs, not browser
+  `localhost`. Organizers must validate the Bastion connection and the frontend,
+  Keycloak, and identity redirect URLs before the event; see
+  [Console setup](../../docs/console-setup.md#optional-extensions-and-hosted-browsers).
+  Challenge 10's GitHub Copilot app / Radius Canvas work still requires a host
+  installation, not just a Codespace.
+- **Finish for the day:** use **Codespaces: Stop Codespace** in the Command
+  Palette, or stop it at [github.com/codespaces](https://github.com/codespaces).
+  Closing the browser tab alone does not stop it immediately. When the event
+  is over, download any work you want to keep and delete the Codespace. Stopped
+  Codespaces still consume storage and are subject to automatic deletion after
+  their retention period.
+
+**Included usage:** GitHub Free personal accounts include **120 core-hours per
+month**, equivalent to **60 hours (3,600 minutes) on a 2-core machine**, plus
+**15 GB-months of storage**. Larger machines consume compute allowance faster.
+Check your allowance and current billing terms before the event: container images
+and persisted state also consume storage, and a longer idle timeout uses more
+compute. Azure resource costs are separate; stopping the Codespace does not stop
+Azure resources.
+
+Sources: [Codespaces timeout](https://docs.github.com/en/codespaces/setting-your-user-preferences/setting-your-timeout-period-for-github-codespaces)
+and [Included usage and billing](https://docs.github.com/en/billing/concepts/product-billing/github-codespaces).
 
 ## Recommended devcontainer
 
 The MicroHack includes a repository-level devcontainer at
 `.devcontainer/03-azure-01-01-app-innovation-04-adaptive-apps/devcontainer.json`. It is
-recommended for participants who can run containers locally because it keeps
-Challenges 01-05 on one tested Linux toolchain. Manual installation remains available
-below.
+the recommended **local** option for participants who can run containers because
+it keeps Challenges 01-05 on one tested Linux toolchain. Follow this section only
+if you did not choose Codespaces; do not also perform the manual installation.
 
 ### Host prerequisites
 
@@ -93,8 +160,8 @@ print server details rather than a connection error. This single check removes m
 day-one delays.
 
 This configuration follows the MicroHack repository's multi-configuration convention.
-Local VS Code Dev Containers remain the validated path. Optional Codespaces
-selection and forwarded identity URLs need organizer validation as described in
+Local VS Code Dev Containers remain the validated path. Codespaces connections
+and forwarded identity URLs need organizer validation as described in
 [Console setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md#optional-extensions-and-hosted-browsers).
 
 ### Start the container
@@ -107,8 +174,9 @@ code .
 
 In VS Code:
 
-1. Confirm the Explorer root is the MicroHack repository.
-2. Run **Dev Containers: Reopen in Container**.
+1. Confirm the Explorer root is the MicroHack repository and make sure Docker or
+   WSL is running.
+2. Press **Ctrl+Shift+P** and select **Dev Containers: Reopen in Container**.
 3. Select `03-azure-01-01-app-innovation-04-adaptive-apps` from the available
    configurations.
 4. Wait for
@@ -174,7 +242,9 @@ The configuration deliberately does not:
 - Mount the host's `~/.azure`, `~/.kube`, `~/.rad`, or `~/.ssh`
 - Mount the host Docker socket
 
-### Windows Git worktrees
+<a id="windows-git-worktrees"></a>
+
+### Troubleshooting: Windows Git worktrees
 
 A Windows Git worktree stores a `.git` text pointer containing a Windows path such as
 `C:/.../.git/worktrees/...`. Linux cannot resolve that host path through the repository
@@ -220,6 +290,10 @@ used by the Radius control plane on AKS. Rebuilding the container preserves thos
 local workspace definitions.
 
 ### Kubeconfig, tunnel, and SSH-key behavior
+
+> **Challenge 02 only:** This step is only needed for Challenge 02. If you are using
+> the lab environment, skip this step and continue to
+> [Challenge 03](../challenge-03/solution-03.md).
 
 Challenge 02 writes:
 
@@ -303,7 +377,36 @@ If creation fails:
 9. If state is unexpectedly missing, verify that the four named volumes still exist.
 10. Delete a named volume only when intentionally resetting its credential state.
 
+After verification succeeds, skip manual installation and continue at
+[Required access and capacity](#required-access-and-capacity).
+
 ## Manual installation instructions
+
+Follow this section **only if you chose manual setup**. Codespaces and local Dev
+Container users already have these tools and should skip to
+[Required access and capacity](#required-access-and-capacity).
+
+### Required tools
+
+- Azure CLI
+- Azure CLI `bastion` extension
+- Bicep CLI
+- `kubectl`
+- Helm
+- Radius CLI (`rad`)
+- Git
+- `jq`
+- `yq`
+- `curl`
+- OpenSSH client
+- `tar`
+- Visual Studio Code
+- Bash for the optional automation scripts
+
+Windows participants should use WSL 2 for the Bash automation scripts. Manual
+instructions can also be followed from PowerShell 7 where equivalent commands are
+available. Follow the instructions for **one** operating system below, then
+complete [Manual workstation verification](#manual-workstation-verification).
 
 ### macOS
 
@@ -441,7 +544,7 @@ az bicep install
 > Keep a toolchain together. If automation runs in WSL, install Azure CLI, `kubectl`,
 > Helm, `rad`, Git, SSH, and `tar` inside WSL and keep kubeconfig files there.
 
-## Verify the workstation
+### Manual workstation verification
 
 Install or update the stable Bastion extension on a manual workstation:
 
@@ -497,6 +600,33 @@ az provider show \
   --output tsv
 ```
 
+## Required access and capacity
+
+This section and the verification checklist apply to **all three environments**.
+Confirm the workshop has:
+
+- An Azure subscription
+- Permission to create a resource group, AKS cluster, Linux VM, networking, and role
+  assignments
+- Permission to create Azure Bastion Standard and its managed public IP, a NAT gateway
+  and its public IP, invoke VM Run Command, and open Bastion native-client tunnels
+- Permission to create a Microsoft Entra application and service principal
+- Sufficient regional quota for:
+  - A two-node AKS cluster using `Standard_D4s_v5` by default
+  - One K3s VM using `Standard_D4s_v5` by default
+  - One Standard Azure Bastion host and its managed public IP
+  - One NAT gateway and one Standard public IP for K3s outbound access
+
+The default scripts assign the Radius identity `Owner` at the lab resource-group
+scope because later exercises can create role assignments. Use a dedicated lab
+subscription or resource group.
+
+**Hosted Console participants:** after preparing your chosen environment, follow
+[Console setup](../../docs/console-setup.md) to sign in and connect from Bash.
+Your platforms are supplied: validate them in Challenge 02 instead of provisioning
+them, then continue with Challenges 03-06. Organizers confirm the infrastructure
+permissions and capacity above for the supplied lab.
+
 ## Verification checklist
 
 ### Azure access
@@ -551,6 +681,9 @@ kubeconfig and later local files still require a consistent participant workstat
 
 ## Tips for coaches
 
+- Challenge 01 verifies prerequisites. Unblock environment issues so teams can
+  proceed to Challenge 02 to provision or explore AKS and K3s.
+- Share these instructions one or two weeks before the MicroHack when possible.
 - Send these instructions early and ask participants to return the verification output.
 - Validate AKS and VM quota before the event.
 - Agree on one Azure region and one lab resource-group naming convention.

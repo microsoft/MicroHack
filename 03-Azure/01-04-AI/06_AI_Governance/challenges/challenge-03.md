@@ -1,4 +1,4 @@
-# Challenge 3 — Access Contracts: Model RBAC & Capacity
+# Challenge 3: Access Contracts: Model RBAC & Capacity
 
 **[Home](../README.md)** - [← Previous Challenge](challenge-02.md) - [Next Challenge →](challenge-04.md)
 

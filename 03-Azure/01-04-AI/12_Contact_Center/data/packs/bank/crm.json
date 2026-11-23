@@ -1,0 +1,338 @@
+{
+  "customers": [
+    {
+      "customer_id": "HB-C01",
+      "account_number": "HB500301",
+      "name": "Natalie Brooks",
+      "postcode": "ZZ3 6LA",
+      "product": "Everyday current account",
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [
+        "possible_scam_victim"
+      ],
+      "notes": "Paid a 1.99 pound parcel fee via a text link on 3 March 2027."
+    },
+    {
+      "customer_id": "HB-C02",
+      "account_number": "HB500302",
+      "name": "Imran Siddiqui",
+      "postcode": "ZZ1 3TC",
+      "product": "Premier current account",
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [],
+      "notes": "Card lost on 2 March 2027."
+    },
+    {
+      "customer_id": "HB-C03",
+      "account_number": "HB500303",
+      "name": "Patricia Lowe",
+      "postcode": "ZZ5 8NE",
+      "product": "Instant saver",
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [
+        "age_80_plus",
+        "low_digital_confidence"
+      ],
+      "notes": "Does not use the app."
+    },
+    {
+      "customer_id": "HB-C04",
+      "account_number": "HB500304",
+      "name": "Ethan Wright",
+      "postcode": "ZZ2 2JR",
+      "product": "Fixed-rate mortgage",
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [],
+      "notes": "Fixed rate ends June 2027; interested in remortgaging."
+    },
+    {
+      "customer_id": "HB-C05",
+      "account_number": "HB500305",
+      "name": "Mei Lin",
+      "postcode": "ZZ4 4EP",
+      "product": "Everyday current account",
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [],
+      "notes": "Disputed a double payment to an online retailer."
+    },
+    {
+      "customer_id": "HB-C06",
+      "account_number": "HB500306",
+      "name": "Callum Reid",
+      "postcode": "ZZ3 1WQ",
+      "product": "Everyday current account",
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [
+        "possible_scam_victim"
+      ],
+      "notes": ""
+    },
+    {
+      "customer_id": "HB-C07",
+      "account_number": "HB500307",
+      "name": "Sarah Quinn",
+      "postcode": "ZZ1 7DS",
+      "product": "Premier current account",
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [
+        "recent_bereavement"
+      ],
+      "notes": "Managing a late parent's account."
+    },
+    {
+      "customer_id": "HB-C08",
+      "account_number": "HB500308",
+      "name": "Viktor Petrov",
+      "postcode": "ZZ5 3BX",
+      "product": "Instant saver",
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [],
+      "notes": ""
+    },
+    {
+      "customer_id": "HB-C09",
+      "account_number": "HB500309",
+      "name": "Lucy Fenwick",
+      "postcode": "ZZ2 5HM",
+      "product": "Everyday current account",
+      "balance_due": 0.0,
+      "status": "overdrawn",
+      "flags": [
+        "payment_difficulty"
+      ],
+      "notes": "Overdrawn by 320 pounds."
+    },
+    {
+      "customer_id": "HB-C10",
+      "account_number": "HB500310",
+      "name": "Daniel Price",
+      "postcode": "ZZ4 9RT",
+      "product": "Fixed-rate mortgage",
+      "balance_due": 0.0,
+      "status": "active",
+      "flags": [],
+      "notes": ""
+    }
+  ],
+  "slots": [
+    {
+      "slot_id": "HB-S001",
+      "type": "mortgage adviser call",
+      "start": "2027-03-15T08:00",
+      "area": "ZZ1"
+    },
+    {
+      "slot_id": "HB-S002",
+      "type": "mortgage adviser call",
+      "start": "2027-03-15T10:00",
+      "area": "ZZ2"
+    },
+    {
+      "slot_id": "HB-S003",
+      "type": "mortgage adviser call",
+      "start": "2027-03-15T13:00",
+      "area": "ZZ3"
+    },
+    {
+      "slot_id": "HB-S004",
+      "type": "mortgage adviser call",
+      "start": "2027-03-15T15:00",
+      "area": "ZZ4"
+    },
+    {
+      "slot_id": "HB-S005",
+      "type": "mortgage adviser call",
+      "start": "2027-03-16T08:00",
+      "area": "ZZ5"
+    },
+    {
+      "slot_id": "HB-S006",
+      "type": "mortgage adviser call",
+      "start": "2027-03-16T10:00",
+      "area": "ZZ1"
+    },
+    {
+      "slot_id": "HB-S007",
+      "type": "mortgage adviser call",
+      "start": "2027-03-16T13:00",
+      "area": "ZZ2"
+    },
+    {
+      "slot_id": "HB-S008",
+      "type": "mortgage adviser call",
+      "start": "2027-03-16T15:00",
+      "area": "ZZ3"
+    },
+    {
+      "slot_id": "HB-S009",
+      "type": "mortgage adviser call",
+      "start": "2027-03-17T08:00",
+      "area": "ZZ4"
+    },
+    {
+      "slot_id": "HB-S010",
+      "type": "mortgage adviser call",
+      "start": "2027-03-17T10:00",
+      "area": "ZZ5"
+    },
+    {
+      "slot_id": "HB-S011",
+      "type": "mortgage adviser call",
+      "start": "2027-03-17T13:00",
+      "area": "ZZ1"
+    },
+    {
+      "slot_id": "HB-S012",
+      "type": "mortgage adviser call",
+      "start": "2027-03-17T15:00",
+      "area": "ZZ2"
+    },
+    {
+      "slot_id": "HB-S013",
+      "type": "mortgage adviser call",
+      "start": "2027-03-18T08:00",
+      "area": "ZZ3"
+    },
+    {
+      "slot_id": "HB-S014",
+      "type": "mortgage adviser call",
+      "start": "2027-03-18T10:00",
+      "area": "ZZ4"
+    },
+    {
+      "slot_id": "HB-S015",
+      "type": "mortgage adviser call",
+      "start": "2027-03-18T13:00",
+      "area": "ZZ5"
+    },
+    {
+      "slot_id": "HB-S016",
+      "type": "mortgage adviser call",
+      "start": "2027-03-18T15:00",
+      "area": "ZZ1"
+    },
+    {
+      "slot_id": "HB-S017",
+      "type": "mortgage adviser call",
+      "start": "2027-03-19T08:00",
+      "area": "ZZ2"
+    },
+    {
+      "slot_id": "HB-S018",
+      "type": "mortgage adviser call",
+      "start": "2027-03-19T10:00",
+      "area": "ZZ3"
+    },
+    {
+      "slot_id": "HB-S019",
+      "type": "mortgage adviser call",
+      "start": "2027-03-19T13:00",
+      "area": "ZZ4"
+    },
+    {
+      "slot_id": "HB-S020",
+      "type": "mortgage adviser call",
+      "start": "2027-03-19T15:00",
+      "area": "ZZ5"
+    },
+    {
+      "slot_id": "HB-S021",
+      "type": "mortgage adviser call",
+      "start": "2027-03-22T08:00",
+      "area": "ZZ1"
+    },
+    {
+      "slot_id": "HB-S022",
+      "type": "mortgage adviser call",
+      "start": "2027-03-22T10:00",
+      "area": "ZZ2"
+    },
+    {
+      "slot_id": "HB-S023",
+      "type": "mortgage adviser call",
+      "start": "2027-03-22T13:00",
+      "area": "ZZ3"
+    },
+    {
+      "slot_id": "HB-S024",
+      "type": "mortgage adviser call",
+      "start": "2027-03-22T15:00",
+      "area": "ZZ4"
+    },
+    {
+      "slot_id": "HB-S025",
+      "type": "mortgage adviser call",
+      "start": "2027-03-23T08:00",
+      "area": "ZZ5"
+    },
+    {
+      "slot_id": "HB-S026",
+      "type": "mortgage adviser call",
+      "start": "2027-03-23T10:00",
+      "area": "ZZ1"
+    },
+    {
+      "slot_id": "HB-S027",
+      "type": "mortgage adviser call",
+      "start": "2027-03-23T13:00",
+      "area": "ZZ2"
+    },
+    {
+      "slot_id": "HB-S028",
+      "type": "mortgage adviser call",
+      "start": "2027-03-23T15:00",
+      "area": "ZZ3"
+    },
+    {
+      "slot_id": "HB-S029",
+      "type": "mortgage adviser call",
+      "start": "2027-03-24T08:00",
+      "area": "ZZ4"
+    },
+    {
+      "slot_id": "HB-S030",
+      "type": "mortgage adviser call",
+      "start": "2027-03-24T10:00",
+      "area": "ZZ5"
+    },
+    {
+      "slot_id": "HB-S031",
+      "type": "mortgage adviser call",
+      "start": "2027-03-24T13:00",
+      "area": "ZZ1"
+    },
+    {
+      "slot_id": "HB-S032",
+      "type": "mortgage adviser call",
+      "start": "2027-03-24T15:00",
+      "area": "ZZ2"
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "HB-CASE-1207",
+      "customer_id": "HB-C05",
+      "category": "card dispute",
+      "summary": "Payment of 64.99 pounds to an online retailer taken twice on 22 February 2027.",
+      "status": "open",
+      "priority": "normal",
+      "opened": "2027-02-27"
+    }
+  ],
+  "service_notices": [
+    {
+      "area": "all",
+      "since": "2027-03-02",
+      "estimated_fix": "2027-03-12",
+      "description": "Scam alert: texts claiming a parcel delivery fee is due link to a fake payment page"
+    }
+  ]
+}

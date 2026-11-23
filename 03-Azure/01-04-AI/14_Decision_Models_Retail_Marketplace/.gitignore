@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+
+# Environment / secrets
+.env
+*.local
+
+# Local evaluation cache and reviewer decisions (recorded reference runs live in src/data/recorded/)
+src/runs/
+src/state/
+
+# Resolved on first `uv sync` from PyPI; not committed so the lock never points at a private feed
+src/uv.lock
+
+# Editor
+.vscode/
+.idea/
+.DS_Store
+
+# Editable diagram source (kept local — architecture.png is what ships)
+images/architecture.excalidraw

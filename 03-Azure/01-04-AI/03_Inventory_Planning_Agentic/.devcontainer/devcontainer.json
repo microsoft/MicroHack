@@ -1,6 +1,10 @@
 {
-  "name": "Agentic Inventory hack",
-  "image": "mcr.microsoft.com/devcontainers/python:3.11-bookworm",
+  // Used when ONLY this hack folder is opened in VS Code ("Dev Containers: Reopen in Container").
+  // GitHub Codespaces and full-repo clones use the repo-root config instead:
+  //   .devcontainer/03-azure-01-04-ai-03-inventory-planning-agentic/devcontainer.json
+  // Keep both in sync.
+  "name": "Azure / AI / Inventory Planning Agentic (hack folder)",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12-bookworm",
   "features": {
     "ghcr.io/devcontainers/features/azure-cli:1": {},
     "ghcr.io/azure/azure-dev/azd:latest": {},
@@ -8,24 +12,45 @@
   },
   "forwardPorts": [8000],
   "portsAttributes": {
-    "8000": {
-      "label": "Planner Console",
-      "onAutoForward": "openPreview"
-    }
+    "8000": { "label": "Planner Console", "onAutoForward": "openBrowser" }
   },
   "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "remoteUser": "vscode",
+  // Python venv on a container volume — Docker Desktop bind mounts fail on venv-sized installs.
+  "mounts": [
+    "source=inv-agentic-venv-${devcontainerId},target=${containerWorkspaceFolder}/src/.venv,type=volume"
+  ],
   "customizations": {
     "vscode": {
       "extensions": [
         "ms-python.python",
         "ms-python.vscode-pylance",
+        "ms-python.debugpy",
         "ms-azuretools.azure-dev",
         "ms-azuretools.vscode-azureresourcegroups",
-        "teamsdevapp.vscode-ai-foundry"
+        "ms-windows-ai-studio.windows-ai-studio",
+        "GitHub.copilot",
+        "GitHub.copilot-chat"
       ],
       "settings": {
-        "python.defaultInterpreterPath": "/usr/local/bin/python",
-        "python.terminal.activateEnvironment": true
+        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/src/.venv/bin/python",
+        "python.terminal.activateEnvironment": true,
+        "python.analysis.include": ["src"],
+        "python.analysis.exclude": ["**/.venv", "**/node_modules", "**/__pycache__", "**/.*"],
+        "files.exclude": {
+          "**/.git": true,
+          "**/.svn": true,
+          "**/.hg": true,
+          "**/.DS_Store": true,
+          "**/Thumbs.db": true,
+          "labautomation": true,
+          ".github": true,
+          "docs": true,
+          ".devcontainer": true
+        },
+        "workbench.editorAssociations": {
+          "*.md": "vscode.markdown.preview.editor"
+        }
       }
     }
   },

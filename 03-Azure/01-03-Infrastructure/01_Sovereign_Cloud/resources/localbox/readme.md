@@ -1,6 +1,6 @@
 # LocalBox post-provisioning preparation
 
-Run [prepare-localbox.ps1](../prepare-localbox.ps1) **inside LocalBox-Client**, after Jumpstart has finished deploying the nested Azure Local cluster. This is common to hosted and manual delivery. It does not deploy a new LocalBox or replace the existing Azure AKS/K3s labs.
+Run [prepare-localbox.ps1](../prepare-localbox.ps1) **inside LocalBox-Client**, after Jumpstart has finished deploying the nested Azure Local cluster. Hosted Console events now [invoke it automatically](../hosted-events/readme.md#complete-localbox-preparation), with AKS and the reference VM enabled, then run infrastructure health checks. The instructions below are for manual/BYOS delivery and deliberate recovery; do not run preparation concurrently with the hosted job. The script does not deploy a new LocalBox or replace the existing Azure AKS/K3s labs.
 
 ## Preparation time
 
@@ -53,7 +53,9 @@ The script prompts for the Entra group object ID, or accepts `-AksAdminGroupObje
 
 The reference VM is **enabled by default**; pass `-IncludeReferenceVm:$false` to skip its preparation. Operation confirmation prompts are off under PowerShell's default confirmation preference, including storage changes and recovery of a matching Failed image. Use `-Confirm` to request confirmations, or `-Confirm:$false` if your session has a stricter preference. `-WhatIf` and all configuration/health safety checks remain active. Supply `-AksAdminGroupObjectId` to avoid the group-ID prompt; reference-VM credentials are generated without prompting.
 
-Preparation runs in this order: **storage -> logical networks -> AKS, proxy access and MetalLB -> VM image -> reference VM (unless disabled)**. A late Marketplace image failure therefore leaves the networks and AKS resources in place for the next run to reuse; it does not roll them back. The final manifest is written only after the requested preparation finishes.
+Preparation starts with **storage -> logical networks**. By default, a new AKS cluster is validated and submitted asynchronously so its provisioning overlaps the Windows VM image import. After image completion, preparation requires AKS readiness, proxy access and MetalLB before creating the reference VM (unless disabled). Matching accepted/running AKS deployments can also overlap image import on resume; completed or legacy existing clusters retain verification-before-image ordering.
+
+Use `-SequentialProvisioning` for manual preparation to restore **AKS, proxy access and MetalLB -> VM image -> reference VM** ordering if contention is suspected. An image failure does not roll back earlier resources, and an asynchronously submitted AKS deployment may continue in Azure. Inspect both states before retrying. The final manifest is written only after the requested preparation finishes.
 
 If the Console-owned group is not available yet, `-SkipAks` prepares storage, both networks, the VM image and the reference VM (unless disabled). It does not fabricate a group or grant anyone cluster access. The manifest records this as a partial run, and full health checks fail until preparation is rerun without `-SkipAks` using a valid admin-group ID.
 
@@ -92,10 +94,11 @@ There is **one import attempt per run**, not an endless retry loop. If the new a
 
 ## MetalLB preparation
 
-MetalLB is installed automatically **after AKS is ready**, by this organizer
-preparation script, not by participants. The Console global event hook deploys
-LocalBox only; it registers the Runtime provider and supplies the object-ID tag
-needed for this later step. No Client VM access is granted to attendees.
+MetalLB is installed automatically **after AKS is ready**, by this preparation
+script, not by participants. The Console global event hook registers the Runtime
+provider, supplies the object-ID tag, deploys/reuses LocalBox and invokes this
+script inside the Client before running infrastructure health checks. Manual
+organizers invoke the script themselves. No Client VM access is granted to attendees.
 
 The script uses ARM APIs for the extension and load-balancer pool, without
 adding CLI extensions or querying Microsoft Graph as the Client managed identity.
@@ -191,7 +194,9 @@ Before the workshop, verify:
 3. Defender for Cloud has assessment evidence for this VM. Review available recommendations or a completed assessment with no findings; an empty list alone is not sufficient.
 4. Azure Update Manager shows a **successful assessment and timestamp**. Periodic assessment is asynchronous; an organizer can run **Check for updates** on this VM if no result is available yet. Do not install patches just to prepare the demonstration.
 
-The script intentionally leaves Defender assessment and update-result readiness as `NotVerified`; these portal checks remain required even after automated health tests pass. See the [Defender readiness checklist](manual-preparation.md#defender-for-servers-readiness-organizer).
+Standalone `prepare-localbox.ps1` intentionally leaves Defender assessment and update-result readiness as `NotVerified`; its manifest is not a completed health report. For hosted events, the [automation wrapper](../hosted-events/readme.md#complete-localbox-preparation) additionally waits for the VM to be Running, Arc Connected and MDE Succeeded, then requests an Update Manager assessment and requires success with a timestamp before Full health checks. Use that run's status and health reports for the hosted result, not the preparation snapshot alone.
+
+Neither path proves actual Defender device reporting or Defender for Cloud assessment visibility. Those portal checks and real participant access remain required even after the hosted gate succeeds. See the [Defender readiness checklist](manual-preparation.md#defender-for-servers-readiness-organizer).
 
 The following examples show three separate readiness milestones on `sov-ref-vm`.
 
@@ -219,7 +224,7 @@ If existing workloads use the secondary volume, do not remove it. Use the [manua
 
 ## Verify readiness
 
-Follow [Pester health checks](../tests/readme.md). Provisioning success is not a health verdict. The nonsecret manifest intentionally records `FullHealthVerified = false`.
+For hosted events, inspect the [run-correlated automation results](../hosted-events/readme.md#complete-localbox-preparation); Console runs upstream and Full LocalBox health checks automatically. For manual delivery or deliberate diagnostics, follow [Pester health checks](../tests/readme.md). Provisioning success is not a health verdict. The preparation manifest intentionally records `FullHealthVerified = false`; a successful hosted health report is separate evidence and does not rewrite that snapshot.
 
 For AKS runtime access, follow [Jumpstart's AKS guide](https://jumpstart.azure.com/azure_jumpstart_localbox/AKS): use a separate CLI profile/session authenticated as a group member, and keep `az connectedk8s proxy` running with the kubeconfig used for health checks (default `$HOME/.kube/config`). Do not log out the provisioning identity or give its managed identity broader permissions to run tests.
 

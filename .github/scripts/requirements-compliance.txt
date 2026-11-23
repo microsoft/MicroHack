@@ -1,0 +1,4 @@
+brokelink==0.1.0
+beautifulsoup4==4.15.0
+colorama==0.4.6
+click==8.5.0

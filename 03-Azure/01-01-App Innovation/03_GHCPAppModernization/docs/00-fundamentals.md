@@ -31,7 +31,7 @@ flowchart LR
 
 ## 2. Custom Agents (`.agent.md`)
 
-A Custom Agent is a markdown file with YAML frontmatter, placed in `.github/agents/` (repo-scoped) or your user profile. It defines:
+A Custom Agent is a markdown file with YAML frontmatter, placed in `.github/agents/` in the target repo (picked up by GitHub Copilot CLI, VS Code, and the Copilot coding agent) or at user level in `~/.copilot/agents/` (Copilot CLI only). It defines:
 
 | Element | Purpose |
 |---------|---------|
@@ -50,7 +50,7 @@ A Custom Agent is a markdown file with YAML frontmatter, placed in `.github/agen
 ```markdown
 ---
 description: One-line routing description for this agent
-tools: ['codebase', 'search', 'runCommands', 'editFiles']
+tools: ['read', 'search', 'execute', 'edit']
 ---
 
 # Role
@@ -66,23 +66,29 @@ You are a <role> specialized in <scenario>.
 - Never … / Always …
 ```
 
+> Tool names are environment-specific, but the portable aliases `read`, `search`, `edit`, and `execute` work across Copilot CLI, VS Code, and the coding agent — unrecognized names are simply ignored. MCP tools are referenced as `<server>/<tool>` or `<server>/*`.
+
 ---
 
 ## 3. Skills (`SKILL.md`)
 
-A Skill is a folder containing a `SKILL.md` (plus optional supporting files: scripts, rule books, examples). The agent reads the skill **only when the task matches its description** — this keeps context lean (progressive disclosure).
+A Skill is a folder containing a `SKILL.md` (plus optional supporting files: scripts, rule books, examples). Repo-level skills live in `.github/skills/<skill-name>/SKILL.md`; personal skills in `~/.copilot/skills/` (Copilot CLI). The agent reads the skill **only when the task matches its description** — this keeps context lean (progressive disclosure).
 
 | Element | Purpose |
 |---------|---------|
-| `name` | Unique skill identifier |
+| `name` | Unique skill identifier — lowercase, hyphenated, no spaces |
 | `description` | **Critical**: trigger phrases — "WHEN: upgrade Spring Boot, fix CVE…" — that route tasks to this skill |
 | Body | The actual instructions: steps, rules, decision tables, command references |
 | Supporting files | Migration rulebooks, code-mapping tables, validation scripts |
 
+### Skills are the modernize CLI's customization mechanism
+
+The **modernize CLI** automatically scans `.github/skills/` when you run `modernize plan create "<prompt>"`: it compares your prompt with each skill's `description`, incorporates matching skills into the plan, and records them in the plan's `tasks.json` (`"skills": [{"name": …, "location": "project"}]`). This is how organization-specific migration patterns are applied consistently across repositories — and it is exactly what you verify at the end of Challenge 1. GitHub Copilot CLI picks up the same folder (`/skills list`).
+
 ### Modernization-specific skill examples
 
 - "Struts → Spring MVC transformation rules"
-- ".NET Framework → .NET 9 breaking-changes checklist"
+- ".NET Framework → .NET 10 breaking-changes checklist"
 - "Containerization plan generator for legacy apps"
 - "Integration test layers for migrated apps (TestContainers → smoke → Azure → behavioral)"
 
@@ -92,31 +98,40 @@ A Skill is a folder containing a `SKILL.md` (plus optional supporting files: scr
 
 ## 4. MCP — Model Context Protocol
 
-MCP is an open protocol that exposes **tools, resources, and prompts** from a server to any MCP-capable client (VS Code, CLI agents). Configuration lives in `.vscode/mcp.json` (workspace) or user settings.
+MCP is an open protocol that exposes **tools, resources, and prompts** from a server to any MCP-capable client. Each client reads its own configuration file — the formats are **not interchangeable**:
 
-```jsonc
+| Client | Configuration location | Format |
+|---|---|---|
+| **GitHub Copilot CLI** (used in this hack) | `.github/mcp.json` (committed, shared) or `.mcp.json` (local override) in the repo; `~/.copilot/mcp-config.json` (personal) | top-level `mcpServers`, `type: "local"` or `"http"` |
+| VS Code | `.vscode/mcp.json` (workspace) or user settings | top-level `servers`, `type: "stdio"` or `"http"` |
+
+Copilot CLI does not read `.vscode/mcp.json` — author each configuration in its own client's file and format. The **GitHub MCP server is built into Copilot CLI** — you only configure additional servers, such as Azure. Copilot CLI example (`.github/mcp.json`):
+
+```json
 {
-  "servers": {
-    "my-server": {
-      "type": "stdio",            // or "http" / "sse" for remote servers
+  "mcpServers": {
+    "azure": {
+      "type": "local",
       "command": "npx",
-      "args": ["-y", "@scope/my-mcp-server"],
-      "env": { "API_KEY": "${input:api-key}" }
+      "args": ["-y", "@azure/mcp@latest", "server", "start"],
+      "tools": ["*"]
     }
   }
 }
 ```
 
+In Copilot CLI, verify with `/mcp list`; project-level servers load only after you confirm folder trust. Manage personal servers with `/mcp add` or `copilot mcp add`.
+
 ### Modernization-specific MCP tooling
 
-The GitHub Copilot **app modernization** extensions register MCP tools the agent can call directly:
+The **modernize CLI** ships its assessment, planning, build, and CVE capabilities built in — you don't configure MCP for it. In **VS Code**, the GitHub Copilot **app modernization** extensions register equivalent `appmod-*` MCP tools the agent can call directly:
 
 | Tool family (examples) | Stage | What it does |
 |---|---|---|
 | `appmod-run-assessment-*`, `appmod-dotnet-run-assessment` (AppCAT) | Assess | Scans code for cloud-readiness & migration issues |
 | `appmod-get-plan`, `appmod-recommend-migration-tasks` | Plan | Generates plan.md / tasks.json |
 | `appmod-dotnet-build-project`, `appmod-install-maven`, `appmod-install-jdk` | Execute | Build & toolchain management |
-| `appmod-dotnet-cve-check`, `appmod-java-cve-assessment` | Validate | Dependency vulnerability scans |
+| `appmod-dotnet-cve-check`, `appmod-cve-assessment` | Validate | Dependency vulnerability scans |
 | `appmod-generate-k8s-manifest`, `appmod-plan-generate-dockerfile`, `appmod-scan-docker-image` | Deploy | Containerization & deployment artifacts |
 | Azure MCP server (`azure-mcp`) | Deploy | Resource queries, quotas, deployments, diagnostics |
 
@@ -133,7 +148,7 @@ sequenceDiagram
     participant Skill as Skills
     participant MCP as MCP Tools
 
-    User->>Agent: "Modernize this app to .NET 9 / Java 21"
+    User->>Agent: "Modernize this app to .NET 10 / Java 25"
     Agent->>MCP: run assessment (AppCAT / appmod)
     MCP-->>Agent: findings report
     Agent->>User: 🚦 GATE — approve plan?

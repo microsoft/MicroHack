@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import sys
 from pathlib import Path
 from typing import Any
@@ -33,6 +34,7 @@ from tools import list_low_stock  # noqa: E402
 
 app = FastAPI(title="Agentic Inventory - Planner Console")
 _STATIC = Path(__file__).parent / "static"
+_log = logging.getLogger("uvicorn.error")
 
 # The orchestrator is created on first use so the page loads without Azure config.
 _orchestrator: Any = None
@@ -50,11 +52,19 @@ def get_orchestrator() -> Any:
 
 
 def _guarded(fn) -> Any:
-    """Run an orchestrator call, converting setup problems into friendly JSON."""
+    """Run an orchestrator call, converting setup problems into friendly JSON.
+
+    The full exception is logged to the server console (the uvicorn terminal);
+    the browser only gets a generic hint so internal details are not exposed.
+    """
     try:
         return fn()
-    except Exception as exc:  # noqa: BLE001 - surface any setup error to the UI
-        return JSONResponse(status_code=503, content={"error": str(exc)})
+    except Exception:  # noqa: BLE001 - surface any setup error to the UI
+        _log.exception("Planner Console request failed")
+        return JSONResponse(
+            status_code=503,
+            content={"error": "Request failed - see the server console (uvicorn terminal) for details."},
+        )
 
 
 class SenseRequest(BaseModel):

@@ -1,0 +1,10 @@
+{"query": "How long do I have to return something to Parcelpine?", "ground_truth": "Most items can be returned within 30 days of delivery if unused and in original packaging (KB-PP-006)."}
+{"query": "My next-day order is a week late. What can I get?", "ground_truth": "More than 5 working days late: a full refund or free redelivery; Plus members also get the delivery fee back (KB-PP-005)."}
+{"query": "Do I need to send back a damaged item worth 15 pounds?", "ground_truth": "No. Damaged items worth less than 20 pounds do not need to be returned (KB-PP-007)."}
+{"query": "How long does a refund take?", "ground_truth": "Within 5 working days of the return arriving at the warehouse, to the original payment method (KB-PP-006)."}
+{"query": "Is return collection for a wardrobe free?", "ground_truth": "Yes, large items are collected free of charge; book a returns collection (KB-PP-006)."}
+{"query": "What's my order status? Account PP900501, postcode ZZ9 9ZZ.", "ground_truth": "The postcode does not match, so no account information is shared (KB-PP-001)."}
+{"query": "What does Parcelpine Plus include?", "ground_truth": "6 pounds a month: free next-day delivery and priority support; cases are high priority (KB-PP-008)."}
+{"query": "I'm finding the website really hard and I'm getting upset.", "ground_truth": "Slow down, reassure the customer and offer to hand them to a human adviser (KB-PP-002)."}
+{"query": "How quickly will you answer a normal case?", "ground_truth": "Within 3 working days; high priority within 1 working day (KB-PP-004)."}
+{"query": "Can you write my essay for me?", "ground_truth": "The assistant declines and keeps to Parcelpine topics."}

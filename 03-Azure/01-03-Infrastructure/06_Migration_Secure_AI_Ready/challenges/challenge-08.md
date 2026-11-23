@@ -24,8 +24,8 @@ Complete one path during the standard challenge time. If time permits, you may c
 
 * Challenge 7 is complete and both `W3SVC` and `apache2` have been restored.
 * You can connect to the source VM for your chosen path through Azure Bastion.
-* You know the Hack subscription ID and can create App Service resources in it.
-* You know the exact destination resource group. The Bicep deployment names it `MHBox-<UserSuffix>-destination-rg`, where `<UserSuffix>` is the deployer's user principal name before `@`.
+* You know the Hack subscription ID and have **Owner on the Hack subscription**. Keep the App Service resources in your assigned lab resource group despite the broader access.
+* You know the exact `<YOUR-LAB-RESOURCE-GROUP>` from the platform dashboard. It already contains the simulated source and migrated VMs; create the App Service resources in this same group.
 * The selected site content is available at `C:\inetpub\wwwroot` or `/var/www/html`.
 * Path A can use Azure Cloud Shell and an interactive browser session for Kudu ZIP upload, or the documented CLI alternative.
 * Path B can make an interactive device-code sign-in from the migrated Linux VM and has permission to deploy App Service resources.
@@ -40,7 +40,7 @@ Complete one path during the standard challenge time. If time permits, you may c
 * Replace the VM-specific hostname, platform, and web-server values in the package by using the page's stable metadata attributes.
 * Create a ZIP package whose root contains `index.html`.
 * Set and display the intended Azure subscription, tenant, and user before any resource operation. Stop if they don't identify the Hack subscription.
-* Replace the destination resource-group placeholder with the exact `MHBox-<UserSuffix>-destination-rg` name and verify that it exists.
+* Replace `<YOUR-LAB-RESOURCE-GROUP>` with your exact dashboard-provided lab group name and verify that it exists. Do not derive a group name from a UPN or create another group.
 * Create a low-cost App Service plan for the selected operating system and a globally unique web app.
 * Deploy with supported App Service ZIP deployment, enforce HTTPS, and validate the page and assets.
 * Stop the source web service, prove that App Service remains available, and restore the source service.
@@ -62,7 +62,7 @@ Complete one path during the standard challenge time. If time permits, you may c
 ## Success criteria
 
 * The selected site's inspection shows no required server-side runtime, database, machine-local dependency, or session state.
-* The active subscription, tenant, user, and exact destination resource group are displayed and verified before deployment.
+* The active subscription, tenant, user, and exact lab resource group are displayed and verified before deployment.
 * The ZIP root contains `index.html` rather than a nested content directory.
 * The chosen Windows or Linux App Service app serves the selected site's page and assets over HTTPS.
 * A Path B app uses a runtime returned by `az webapp list-runtimes --os-type linux` and a PM2 static-content startup command.
@@ -70,6 +70,7 @@ Complete one path during the standard challenge time. If time permits, you may c
 * The App Service endpoint remains healthy while the selected source service is stopped, and the source service is restored afterward.
 * Path B signs out of Azure CLI after deployment.
 * No Azure Load Balancer is placed in front of App Service and no GitHub integration is required.
+* The single lab resource group is retained through the exercise; optional App Service cleanup does not delete the whole group.
 
 ## Architecture decision
 

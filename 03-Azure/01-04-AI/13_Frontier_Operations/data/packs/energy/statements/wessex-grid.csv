@@ -1,0 +1,15 @@
+reference,date,description,amount_gbp
+DUOS-63001,2027-02-01,Meter operator fee,17404.90
+DUOS-63002,2027-02-03,Distribution use of system,35115.47
+DUOS-63003,2027-02-05,Capacity charge,5856.72
+DUOS-63004,2027-02-07,Distribution use of system,35462.69
+DUOS-63005,2027-02-10,Reactive power,40777.29
+DUOS-63006,2027-02-12,Excess capacity,43443.19
+DUOS-63007,2027-02-14,Excess capacity,16361.70
+DUOS-63008,2027-02-16,Meter operator fee,38590.94
+DUOS-63009,2027-02-19,Distribution use of system,37568.26
+DUOS-63011,2027-02-23,Excess capacity,31585.37
+DUOS-63012,2027-02-25,Distribution use of system,34636.56
+DUOS-63002,2027-02-03,Distribution use of system,35115.47
+DUOS-63013,2027-02-27,Data collection fee,8632.81
+ADJ-261,2027-02-28,Adjustment: reading correction,-140.01

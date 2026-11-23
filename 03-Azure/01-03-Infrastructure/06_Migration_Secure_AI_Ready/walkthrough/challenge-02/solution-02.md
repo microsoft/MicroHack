@@ -6,7 +6,10 @@ Duration: 60 minutes
 
 ### **Task 1: Create an Azure Migrate project**
 
-Open the [Azure Portal](https://portal.azure.com) and log in using a user account with at least Contributor permissions on an Azure subscription.
+Open the [Azure Portal](https://portal.azure.com) with your assigned learner account: **Owner on the Hack subscription**. Azure Migrate can register additional providers during project creation; RG Owner alone cannot register them at subscription scope.
+
+> [!NOTE]
+> Screenshots illustrate the portal workflow and may show older resource names. Use the lab resource group and Hyper-V host from your platform dashboard throughout; all learner-created resources belong in that group.
 
 In the search bar, enter *Azure Migrate* and select Azure Migrate from the list of services.
 
@@ -19,9 +22,7 @@ Select *All projects* from the navigation pane on the left and click *Create pro
 > [!IMPORTANT]
 > To create a business case, make sure to select **Europe** as the *Geography* for the Azure Migrate project.
 
-Select the *destination-rg* resource group, specify a name for the Azure Migrate project, and select a geography where the data will be stored.
-
-![image](./img/AzMig3.png)
+Select your existing `<YOUR-LAB-RESOURCE-GROUP>`, specify a name for the Azure Migrate project, and select a geography where the data will be stored. Do not create another resource group.
 
 Wait until the Azure Migrate project has been created. Select *All projects* from the navigation pane on the left.
 Your previously created Azure Migrate project should be listed. Click on it to open the project.
@@ -32,19 +33,19 @@ Your previously created Azure Migrate project should be listed. Click on it to o
 
 ### **Task 2: Install the Azure Migrate appliance for Hyper-V discovery**
 
-Hyper-V discovery uses an Azure Migrate appliance that connects to the Hyper-V host and continuously collects VM configuration, performance metadata, and workload inventory. For this Hack, install and register the appliance by running the PowerShell installation script on the existing **MHBOX-AzMigSrv** server, and then connect it to **MHBox-HV**.
+Hyper-V discovery uses an Azure Migrate appliance that connects to the Hyper-V host and continuously collects VM configuration, performance metadata, and workload inventory. For this Hack, install and register the appliance by running the PowerShell installation script on the existing **MHBox-AzMigSrv** nested server, and then connect it to the Hyper-V host named in your platform dashboard (for example, `mh-0013-hv` in a fresh `rg-labuser-0013` lab).
 
 > [!IMPORTANT]
 > Check the current [Hyper-V discovery prerequisites](https://learn.microsoft.com/en-us/azure/migrate/tutorial-discover-hyper-v?view=migrate#prerequisites) for the Azure Migrate appliance and Hyper-V host.
 
-In the Azure Portal select *Virtual machines* from the navigation pane on the left. Select the *MHBox-HV* system and log on via Azure Bastion with your credentials:
+In the Azure Portal select *Virtual machines* from the navigation pane on the left. Select the host named in your dashboard and log on via Azure Bastion with your host credentials:
 
 > [!NOTE]
 > You can also select *Password from Azure Key Vault* under *Authentication Type* to select the secret stored in the Key Vault.
 
 ![image](./img/AzMigApp1.png)
 
-Start the Hyper-V Manager and connect to the **MHBOX-AzMigSrv** server.
+Start the Hyper-V Manager and connect to the **MHBox-AzMigSrv** server.
 
 The following credentials are being used inside the nested VMs.
 
@@ -63,7 +64,7 @@ Password: JS123!!
 ```
 
 > [!IMPORTANT]
-> Run the following commands inside the **MHBOX-AzMigSrv** virtual machine that was created for the discovery appliance during the lab deployment.
+> Run the following commands inside the **MHBox-AzMigSrv** virtual machine that was created for the discovery appliance during the lab deployment.
 
 ![image](./img/AzMigApp2.png)
 
@@ -178,6 +179,4 @@ After discovery has been successfully initiated, go to the Azure portal to revie
 
 You successfully completed Challenge 2! 🚀🚀🚀
 
-The deployed architecture now looks like the following diagram.
-
-![image](./img/Challenge-2.jpg)
+The Azure Migrate project is in your single lab resource group and the discovery appliance runs inside the source Hyper-V host. Discovery does not create a separate destination resource group or migrate the guests; keep the source and destination networks and all lab resources for the following challenges.

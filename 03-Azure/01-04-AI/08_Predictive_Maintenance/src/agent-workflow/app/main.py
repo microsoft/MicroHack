@@ -126,9 +126,12 @@ async def analyze_machine(request: AnalyzeRequest):
 
         return {"results": serialized_outputs}
 
-    except Exception as e:
-        logger.error(f"Workflow failed: {e}")
-        return fastapi.responses.JSONResponse(content={"error": str(e)}, status_code=500)
+    except Exception:
+        logger.exception("Workflow failed")
+        return fastapi.responses.JSONResponse(
+            content={"error": "Workflow failed - see the application logs for details."},
+            status_code=500,
+        )
 
 
 @app.get("/health", response_class=fastapi.responses.PlainTextResponse)

@@ -6,9 +6,9 @@ Estimated time: 30-45 minutes per environment | Difficulty: intermediate
 
 ## Challenge objective
 
-**Hosted Console:** source `artifacts/console-env.sh` from your lab directory
-and use the supplied resource names. Complete the installation below using the
-**managed identity** option.
+**LAB** means facilitator-provided infrastructure; **BYOS** means bring your own
+subscription. For LAB, use the supplied resource names and the **managed identity**
+option for the installation below.
 
 Install and explore independent Radius control planes on both default platforms.
 Configure the matching local CLI workspaces, Radius environments, and groups:
@@ -30,16 +30,33 @@ control plane and can operate independently.
 - Configure Azure workload identity for the AKS Radius control plane.
 - Validate Radius through Kubernetes, the CLI, and the dashboard.
 
-Before the first K3s command, re-establish the private API tunnel if the devcontainer
-was reopened or rebuilt. Hosted participants rerun `bash resources/connect-console.sh`
-and source `artifacts/console-env.sh`, then select the dedicated K3s kubeconfig.
-The following subscription placeholder is for the bring-your-own-subscription path:
+## Connect to the lab resources
+
+Run once in **Bash from the Adaptive Apps lab directory**, after `az login`.
+Use your assigned values (not provisioning commands); LAB participants
+can source `artifacts/console-env.sh` instead of the two exports.
 
 ```bash
-export AZURE_SUBSCRIPTION="${AZURE_SUBSCRIPTION:-<subscription-id>}"
-bash resources/prepare-k3s-azure-vm.sh connect
-export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
+export AZURE_SUBSCRIPTION="<subscription-id>"
+export RESOURCE_GROUP="<lab-resource-group>"
+bash resources/connect-lab.sh && source artifacts/lab-env.sh
 ```
+
+The helper connects AKS, refreshes K3s credentials, opens the private Bastion API
+tunnel, and checks both clusters without provisioning or installing Radius.
+It requires AKS credential access, VM Run Command/start, and Bastion tunnel permissions.
+For nondefault names, export `AKS_CLUSTER`, `K3S_VM_NAME`, and `BASTION_NAME` first.
+If resources are missing or access is denied, stop and contact the facilitator.
+Do not disable TLS verification.
+
+Variables are now set for the remaining steps. In a new terminal, source
+`artifacts/lab-env.sh`; after a devcontainer restart, also rerun the helper.
+Switch platforms explicitly:
+
+| Target | Bash commands |
+| --- | --- |
+| AKS (selected initially) | `unset KUBECONFIG; kubectl config use-context "$AKS_CONTEXT"` |
+| K3s | `export KUBECONFIG="$K3S_KUBECONFIG"; kubectl config use-context "$K3S_CONTEXT"` |
 
 ## Tasks
 
@@ -60,9 +77,9 @@ governance trade-offs.
 
 Before installation:
 
-1. Select kube context `aks-adaptive-apps`.
-2. **Hosted:** create a user-assigned managed identity in the supplied lab resource
-   group. **Bring your own subscription:** use that same path, or create a Microsoft
+1. Select AKS using the connection table above.
+2. **LAB:** create a user-assigned managed identity in the supplied lab resource
+   group. **BYOS:** use that same path, or create a Microsoft
    Entra application and service principal if you have tenant permissions.
 3. Use the AKS OIDC issuer to create federated credentials for the Radius service
    accounts in namespace `radius-system`: `applications-rp`, `bicep-de`, `ucp`,
@@ -88,8 +105,8 @@ app registration or service-principal creation command is required.
 
 ### Task 3: Install Radius manually on K3s
 
-Select the dedicated K3s kubeconfig and context `k3s-azure-vm`, then install a second,
-independent Radius control plane.
+Switch to K3s using the connection table above, then install a second, independent
+Radius control plane.
 
 Create and select:
 
@@ -154,20 +171,30 @@ Prepare a short team explanation of:
 
 ## Optional automation and platforms
 
-Manual installation is the intended learning path. If a participant must skip or
-recover the exercise, these scripts perform the same setup:
+Manual installation is the intended learning path. These scripts automate
+**Radius installation and post-configuration on existing clusters**, not
+AKS/K3s infrastructure provisioning or reinstallation:
 
 - `resources/deploy-radius-aks.sh`
 - `resources/deploy-radius-k3s.sh`
 
-For hosted AKS recovery, first source `artifacts/console-env.sh`, unset `KUBECONFIG`,
-and select `aks-adaptive-apps`, then explicitly run
+For K3s in **LAB and BYOS**, switch to K3s using the connection table above, then run
+`RADIUS_REINSTALL=false bash resources/deploy-radius-k3s.sh` on **each participant's workstation**.
+It preserves an existing Radius installation, creates missing workspace/group/environment
+configuration, and validates the selected context, group, environment, and namespace.
+Conflicting existing environment settings fail explicitly rather than being overwritten.
+Use `RADIUS_REINSTALL=true` only for an intentional, team-coordinated reinstall.
+Dashboard exploration and the team discussion remain manual.
+
+For AKS in **LAB and BYOS**, source `artifacts/lab-env.sh`, unset `KUBECONFIG`,
+and select `"$AKS_CONTEXT"`, then run
 `RADIUS_IDENTITY_MODE=managedidentity RADIUS_REINSTALL=false bash resources/deploy-radius-aks.sh`.
-The sourced Console configuration also exports these values. Keep
-`RADIUS_REINSTALL=false` to preserve an existing installation and coordinate
-recovery with the team. Without these overrides the script defaults to the
-application identity path and reinstall behavior for BYOS; do not use those defaults
-with hosted RG-only permissions.
+Managed identity is required for LAB; BYOS can alternatively use an Entra application
+if tenant permissions allow it. Keep the explicit `RADIUS_REINSTALL=false` to install
+Radius if missing or retain its existing control plane, then run post-configuration
+in either case. `RADIUS_REINSTALL=true` reinstalls **Radius only**, never AKS or K3s.
+The [walkthrough](../walkthrough/challenge-03/solution-03.md#optional-automation)
+details both identity options and the scripts' different raw defaults.
 
 If Azure Local or an existing Arc-enabled cluster replaces K3s, use its active context,
 create a distinct Radius workspace and environment, and decide explicitly whether it

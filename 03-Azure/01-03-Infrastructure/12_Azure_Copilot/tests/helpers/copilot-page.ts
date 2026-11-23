@@ -123,7 +123,7 @@ export class CopilotPage {
 
     const url = this.page.url();
     if (
-      !url.includes('login.microsoftonline.com') &&
+      new URL(url).hostname !== 'login.microsoftonline.com' &&
       !url.includes('auth/login')
     ) {
       return; // Already authenticated

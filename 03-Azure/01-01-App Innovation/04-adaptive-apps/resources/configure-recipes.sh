@@ -28,8 +28,13 @@ K3S_ENVIRONMENT="${K3S_ENVIRONMENT:-env-local-prod}"
 RADIUS_GROUP="${RADIUS_GROUP:-rg-trading}"
 RECIPE_REGISTRY="${RECIPE_REGISTRY:-ghcr.io/microsoft/adaptive-apps/recipes}"
 WORKSHOP_RECIPE_VERSION="${WORKSHOP_RECIPE_VERSION:-1.0.8}"
+EVENT_GRID_RECIPE_VERSION="${EVENT_GRID_RECIPE_VERSION:-1.0.9}"
 [[ "$WORKSHOP_RECIPE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
   echo "WORKSHOP_RECIPE_VERSION must be an immutable semantic version such as 1.0.0." >&2
+  exit 1
+}
+[[ "$EVENT_GRID_RECIPE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+  echo "EVENT_GRID_RECIPE_VERSION must be an immutable semantic version such as 1.0.9." >&2
   exit 1
 }
 TEMP_DIR="$(mktemp -d)"
@@ -166,7 +171,8 @@ EOF
   publish_recipe() {
     local file="$1"
     local repository="$2"
-    local image="${repository}:${WORKSHOP_RECIPE_VERSION}"
+    local version="${3:-$WORKSHOP_RECIPE_VERSION}"
+    local image="${repository}:${version}"
 
     # Version tags are immutable workshop artifacts. Republishing changed source under an
     # existing tag would silently alter every environment already registered to that tag.
@@ -185,6 +191,10 @@ EOF
   publish_recipe iac/recipes/sql-server.bicep recipes/sql-server
   publish_recipe iac/recipes/postgres-azure-flex.bicep recipes/postgres-azure-flex
   publish_recipe iac/recipes/postgres-kubernetes.bicep recipes/postgres-kubernetes
+  if [[ "$TARGET_PLATFORM" == "aks" || "$TARGET_PLATFORM" == "all" ]]; then
+    publish_recipe iac/recipes/event-grid-mqtt-azure.bicep recipes/event-grid-mqtt-azure "$EVENT_GRID_RECIPE_VERSION"
+    publish_recipe iac/recipes/workload-identity-azure.bicep recipes/workload-identity-azure
+  fi
 }
 
 assert_recipes() {
@@ -206,6 +216,26 @@ configure_aks() {
   }
   local aks_egress_ips
   aks_egress_ips="$(get_aks_egress_ips)"
+  local oidc_issuer
+  oidc_issuer="$(az aks show \
+    --resource-group "$RESOURCE_GROUP" \
+    --name "$AKS_CLUSTER_NAME" \
+    --query oidcIssuerProfile.issuerUrl \
+    --output tsv | tr -d '\r')"
+  [[ "$oidc_issuer" == https://* ]] || {
+    echo "AKS OIDC issuer is missing. Enable OIDC and workload identity before registering recipes." >&2
+    exit 1
+  }
+  local workload_identity_enabled
+  workload_identity_enabled="$(az aks show \
+    --resource-group "$RESOURCE_GROUP" \
+    --name "$AKS_CLUSTER_NAME" \
+    --query securityProfile.workloadIdentity.enabled \
+    --output tsv | tr -d '\r')"
+  [[ "${workload_identity_enabled,,}" == "true" ]] || {
+    echo "AKS workload identity is disabled. Enable it before registering recipes." >&2
+    exit 1
+  }
 
   rad deploy iac/aks-env.bicep \
     --workspace "$AKS_WORKSPACE" \
@@ -218,6 +248,9 @@ configure_aks() {
     --parameters "istioRevision=${istio_revision}" \
     --parameters "recipeRegistry=${RECIPE_REGISTRY}" \
     --parameters "postgresRecipeTemplatePath=${ACR_NAME}.azurecr.io/recipes/postgres-azure-flex:${WORKSHOP_RECIPE_VERSION}" \
+    --parameters "mqttRecipeTemplatePath=${ACR_NAME}.azurecr.io/recipes/event-grid-mqtt-azure:${EVENT_GRID_RECIPE_VERSION}" \
+    --parameters "workloadIdentityRecipeTemplatePath=${ACR_NAME}.azurecr.io/recipes/workload-identity-azure:${WORKSHOP_RECIPE_VERSION}" \
+    --parameters "oidcIssuer=${oidc_issuer}" \
     --parameters "aksEgressIps=${aks_egress_ips}" \
     --parameters "sqlDatabasesRecipeTemplatePath=${ACR_NAME}.azurecr.io/recipes/sql-server:${WORKSHOP_RECIPE_VERSION}"
 

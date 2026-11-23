@@ -1,0 +1,9 @@
+# NI-CALL-03: Ceiling leak, customer lives alone
+
+Customer voice: female
+
+Agent: Thanks for calling Northmere Insurance. How can I help today?
+Customer: Water's coming through my bedroom ceiling and I live on my own. I can't reach the stopcock and I'm frightened the light will go.
+Agent: I'm sorry, let's keep you safe. Please don't touch any light switches near the water. I'm putting you through to a colleague now who can arrange emergency help.
+Customer: Thank you, I didn't know who else to call.
+Agent: You did the right thing. I've told them about the leak and that you're on your own, so you won't need to repeat it.

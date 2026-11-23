@@ -63,8 +63,8 @@ class MockFoundryLocalHandler(http.server.BaseHTTPRequestHandler):
         body = json.loads(self.rfile.read(length).decode("utf-8"))
         user_msg = body["messages"][-1]["content"]
 
-        match = re.search(r"\{.*\}", user_msg)
-        telemetry = json.loads(match.group(0)) if match else {}
+        start, end = user_msg.find("{"), user_msg.rfind("}")
+        telemetry = json.loads(user_msg[start:end + 1]) if 0 <= start < end else {}
 
         temp = telemetry.get("bearingTempC", 0.0)
         vib = telemetry.get("vibrationMmPerSec", 0.0)

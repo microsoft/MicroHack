@@ -31,5 +31,10 @@ This folder holds the screenshots embedded throughout the challenge guides and w
 | `challenge-02-trace.png` | 2 | The **Traces** tab's trace detail: an **Invoke Agent** span with its **Execute Tool** (Fabric) and **Chat** spans, and **Input + Output**. |
 | `challenge-03-approval-flow.png` | 3 | The `MODIFY 1 50` → `YES` approval exchange and the simulated submission confirmation. |
 | `challenge-03-trace.png` | 3 | The conversation trace for the approval run: three **Invoke Agent** spans, with the Fabric unit-cost lookup only in the first. |
-| `challenge-04-orchestrator.png` | 4 *(stretch)* | The `inventory-planning-workflow` canvas: Start → demand-sensing → inventory-optimisation → replenishment-action. |
+| `challenge-04-orchestrator.png` | 5 *(stretch)* | An earlier capture of the finished `inventory-planning-workflow` canvas. Not embedded now; kept for the archived workflow exercise in the post-1-December update. |
+| `challenge-05-workflow-template.png` | 5 *(stretch)* | The **Sequential** template canvas with its three yellow sample notes (to delete). |
+| `challenge-05-workflow-add-end.png` | 5 *(stretch)* | Adding an **End** node: **+** after `replenishment-action-agent` → **Basics → End**. |
+| `challenge-05-workflow-approval-gate.png` | 5 *(stretch)* | `replenishment-action-agent` **Node settings**: Input message `Local.LatestMessage`, multi-turn on, loop condition, **Done**. |
+| `challenge-05-workflow-saved.png` | 5 *(stretch)* | The saved `inventory-planning-workflow` (version 1): Start → three agents → End. |
+| `challenge-05-workflow-run-complete.png` | 5 *(stretch)* | A completed run: every node green, and `✅ Purchase order PO-… submitted to ERP.` after `YES`. |
 | `challenge-04-teams.png` | 4 *(stretch)* | The workflow's **Publish** menu open on **Teams & Microsoft 365 Copilot** — the "what's next" showcase entry point. |

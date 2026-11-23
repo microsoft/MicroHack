@@ -8,6 +8,15 @@
 - [**Contributors**](#contributors)
 # MicroHack introduction
 
+
+This page and all ``challenge*.md`` and ``solution*.md`` pages support:
+ - Secret rendering from the console: ``<secret group="groupname" name="secretname" show="true|false|alwayshidden|always" />``
+ - Github flavoured markdown
+ - Math rendering via KaTeX
+ - Mermaid diagrams
+ - Syntax highlighting of codeblocks
+
+
 This MicroHack scenario walks through the use of ... with a focus on the best practices and the design principles. Specifically, this builds up to include working with an existing infrastructure.
 
 ![image](Path to the high level architecture )

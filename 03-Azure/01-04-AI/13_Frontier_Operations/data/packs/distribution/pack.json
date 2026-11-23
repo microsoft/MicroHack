@@ -1,0 +1,64 @@
+{
+  "id": "distribution",
+  "industry": "Wholesale distribution",
+  "company": "Ashgrove Supply",
+  "tagline": "Wholesale distributor of packaging, cleaning and workplace supplies across the fictional Wessex region",
+  "process": "Supplier statement reconciliation (procure-to-pay, month-end close)",
+  "partner_type": "supplier",
+  "partner_type_plural": "suppliers",
+  "currency": "GBP",
+  "tolerance": 2.0,
+  "period": "2027-02",
+  "ref_prefix": "INV",
+  "actions": {
+    "mismatch": "Raise price dispute",
+    "missing_on_statement": "Ask supplier to confirm invoice",
+    "missing_in_ledger": "Request copy invoice",
+    "duplicate": "Raise duplicate-charge dispute",
+    "credit": "Confirm credit note"
+  },
+  "portal": {
+    "name": "Supplier Hub",
+    "tagline": "The shared portal where Ashgrove's suppliers and accounts payable team settle queries",
+    "case_noun": "query",
+    "case_types": [
+      "Price dispute",
+      "Duplicate charge",
+      "Invoice confirmation",
+      "Copy invoice request",
+      "Credit note confirmation"
+    ]
+  },
+  "people": {
+    "process_owner": "Priya Nair, Accounts Payable Lead",
+    "expert": "Graham Holt, Senior AP Clerk (30 years)",
+    "approver": "Dana Okoro, Financial Controller"
+  },
+  "partners": [
+    {
+      "id": "brightwell",
+      "name": "Brightwell Packaging",
+      "contact": "accounts@brightwell.example"
+    },
+    {
+      "id": "northgate",
+      "name": "Northgate Freight",
+      "contact": "ar@northgate.example"
+    },
+    {
+      "id": "osric",
+      "name": "Osric Office Supplies",
+      "contact": "credit@osric.example"
+    },
+    {
+      "id": "kellerman",
+      "name": "Kellerman Hygiene",
+      "contact": "finance@kellerman.example"
+    },
+    {
+      "id": "tamsin",
+      "name": "Tamsin Workwear",
+      "contact": "ledger@tamsin.example"
+    }
+  ]
+}

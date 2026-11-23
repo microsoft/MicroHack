@@ -1,0 +1,272 @@
+[
+  {
+    "partner_id": "aldermoor",
+    "reference": "CHG-52006",
+    "kind": "mismatch",
+    "ledger_amount": 12996.25,
+    "statement_amount": 13017.5,
+    "difference": 21.25,
+    "action": "Raise rate dispute"
+  },
+  {
+    "partner_id": "aldermoor",
+    "reference": "CHG-52012",
+    "kind": "within_tolerance",
+    "ledger_amount": 16077.27,
+    "statement_amount": 16078.52,
+    "difference": 1.25,
+    "action": "none"
+  },
+  {
+    "partner_id": "aldermoor",
+    "reference": "CHG-52007",
+    "kind": "missing_on_statement",
+    "ledger_amount": 14306.45,
+    "statement_amount": null,
+    "difference": null,
+    "action": "Ask carrier to confirm charge"
+  },
+  {
+    "partner_id": "aldermoor",
+    "reference": "CHG-52013",
+    "kind": "missing_in_ledger",
+    "ledger_amount": null,
+    "statement_amount": 1975.21,
+    "difference": null,
+    "action": "Request CDR evidence"
+  },
+  {
+    "partner_id": "aldermoor",
+    "reference": "CHG-52002",
+    "kind": "duplicate",
+    "ledger_amount": 10466.24,
+    "statement_amount": 10466.24,
+    "difference": null,
+    "action": "Raise double-billing dispute"
+  },
+  {
+    "partner_id": "aldermoor",
+    "reference": "CR-298",
+    "kind": "credit",
+    "ledger_amount": null,
+    "statement_amount": -128.78,
+    "difference": null,
+    "action": "Confirm SLA credit"
+  },
+  {
+    "partner_id": "farcastle",
+    "reference": "CHG-52022",
+    "kind": "mismatch",
+    "ledger_amount": 9202.22,
+    "statement_amount": 9222.72,
+    "difference": 20.5,
+    "action": "Raise rate dispute"
+  },
+  {
+    "partner_id": "farcastle",
+    "reference": "CHG-52021",
+    "kind": "within_tolerance",
+    "ledger_amount": 14787.93,
+    "statement_amount": 14789.18,
+    "difference": 1.25,
+    "action": "none"
+  },
+  {
+    "partner_id": "farcastle",
+    "reference": "CHG-52020",
+    "kind": "missing_on_statement",
+    "ledger_amount": 8399.28,
+    "statement_amount": null,
+    "difference": null,
+    "action": "Ask carrier to confirm charge"
+  },
+  {
+    "partner_id": "farcastle",
+    "reference": "CHG-52026",
+    "kind": "missing_in_ledger",
+    "ledger_amount": null,
+    "statement_amount": 16790.32,
+    "difference": null,
+    "action": "Request CDR evidence"
+  },
+  {
+    "partner_id": "farcastle",
+    "reference": "CHG-52015",
+    "kind": "duplicate",
+    "ledger_amount": 1968.17,
+    "statement_amount": 1968.17,
+    "difference": null,
+    "action": "Raise double-billing dispute"
+  },
+  {
+    "partner_id": "farcastle",
+    "reference": "CR-201",
+    "kind": "credit",
+    "ledger_amount": null,
+    "statement_amount": -244.61,
+    "difference": null,
+    "action": "Confirm SLA credit"
+  },
+  {
+    "partner_id": "lumen-isles",
+    "reference": "CHG-52033",
+    "kind": "mismatch",
+    "ledger_amount": 3455.6,
+    "statement_amount": 3478.6,
+    "difference": 23.0,
+    "action": "Raise rate dispute"
+  },
+  {
+    "partner_id": "lumen-isles",
+    "reference": "CHG-52032",
+    "kind": "within_tolerance",
+    "ledger_amount": 10243.72,
+    "statement_amount": 10244.97,
+    "difference": 1.25,
+    "action": "none"
+  },
+  {
+    "partner_id": "lumen-isles",
+    "reference": "CHG-52030",
+    "kind": "missing_on_statement",
+    "ledger_amount": 17026.37,
+    "statement_amount": null,
+    "difference": null,
+    "action": "Ask carrier to confirm charge"
+  },
+  {
+    "partner_id": "lumen-isles",
+    "reference": "CHG-52039",
+    "kind": "missing_in_ledger",
+    "ledger_amount": null,
+    "statement_amount": 6276.45,
+    "difference": null,
+    "action": "Request CDR evidence"
+  },
+  {
+    "partner_id": "lumen-isles",
+    "reference": "CHG-52028",
+    "kind": "duplicate",
+    "ledger_amount": 527.18,
+    "statement_amount": 527.18,
+    "difference": null,
+    "action": "Raise double-billing dispute"
+  },
+  {
+    "partner_id": "lumen-isles",
+    "reference": "CR-675",
+    "kind": "credit",
+    "ledger_amount": null,
+    "statement_amount": -262.62,
+    "difference": null,
+    "action": "Confirm SLA credit"
+  },
+  {
+    "partner_id": "brackwater",
+    "reference": "CHG-52044",
+    "kind": "mismatch",
+    "ledger_amount": 10124.11,
+    "statement_amount": 10144.61,
+    "difference": 20.5,
+    "action": "Raise rate dispute"
+  },
+  {
+    "partner_id": "brackwater",
+    "reference": "CHG-52042",
+    "kind": "within_tolerance",
+    "ledger_amount": 8924.09,
+    "statement_amount": 8925.34,
+    "difference": 1.25,
+    "action": "none"
+  },
+  {
+    "partner_id": "brackwater",
+    "reference": "CHG-52046",
+    "kind": "missing_on_statement",
+    "ledger_amount": 7168.66,
+    "statement_amount": null,
+    "difference": null,
+    "action": "Ask carrier to confirm charge"
+  },
+  {
+    "partner_id": "brackwater",
+    "reference": "CHG-52052",
+    "kind": "missing_in_ledger",
+    "ledger_amount": null,
+    "statement_amount": 9279.0,
+    "difference": null,
+    "action": "Request CDR evidence"
+  },
+  {
+    "partner_id": "brackwater",
+    "reference": "CHG-52041",
+    "kind": "duplicate",
+    "ledger_amount": 17234.51,
+    "statement_amount": 17234.51,
+    "difference": null,
+    "action": "Raise double-billing dispute"
+  },
+  {
+    "partner_id": "brackwater",
+    "reference": "CR-757",
+    "kind": "credit",
+    "ledger_amount": null,
+    "statement_amount": -214.01,
+    "difference": null,
+    "action": "Confirm SLA credit"
+  },
+  {
+    "partner_id": "sennen",
+    "reference": "CHG-52060",
+    "kind": "mismatch",
+    "ledger_amount": 12690.94,
+    "statement_amount": 12711.44,
+    "difference": 20.5,
+    "action": "Raise rate dispute"
+  },
+  {
+    "partner_id": "sennen",
+    "reference": "CHG-52062",
+    "kind": "within_tolerance",
+    "ledger_amount": 8256.09,
+    "statement_amount": 8257.34,
+    "difference": 1.25,
+    "action": "none"
+  },
+  {
+    "partner_id": "sennen",
+    "reference": "CHG-52061",
+    "kind": "missing_on_statement",
+    "ledger_amount": 3888.26,
+    "statement_amount": null,
+    "difference": null,
+    "action": "Ask carrier to confirm charge"
+  },
+  {
+    "partner_id": "sennen",
+    "reference": "CHG-52065",
+    "kind": "missing_in_ledger",
+    "ledger_amount": null,
+    "statement_amount": 10594.65,
+    "difference": null,
+    "action": "Request CDR evidence"
+  },
+  {
+    "partner_id": "sennen",
+    "reference": "CHG-52054",
+    "kind": "duplicate",
+    "ledger_amount": 17694.27,
+    "statement_amount": 17694.27,
+    "difference": null,
+    "action": "Raise double-billing dispute"
+  },
+  {
+    "partner_id": "sennen",
+    "reference": "CR-810",
+    "kind": "credit",
+    "ledger_amount": null,
+    "statement_amount": -83.69,
+    "difference": null,
+    "action": "Confirm SLA credit"
+  }
+]

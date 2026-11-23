@@ -1,8 +1,7 @@
 # Lab automation: App Modernization with Security
 
-The MicroHack platform provisions one resource group and its participant Owner
-assignment per lab. `deploy-lab.ps1` deploys the [Bicep template](main.bicep)
-there, using the platform's region-fallback helper. `shared-deploy-lab.ps1`
+`deploy-lab.ps1` deploys the [Bicep template](main.bicep) into each lab's
+resource group, using the platform's region-fallback helper. `shared-deploy-lab.ps1`
 registers the providers used by the base VMs and workshop challenges, plus the
 Network public-IP feature, once per subscription before the participant deployments run.
 No Terraform state, Entra user creation, or subscription-wide paid Defender

@@ -1,0 +1,61 @@
+reference,partner_id,partner,date,description,amount,status
+POL-74001,harbour-brokers,Harbour Brokers,2027-02-01,Home buildings premium,2648.72,posted
+POL-74002,harbour-brokers,Harbour Brokers,2027-02-03,Landlord cover,3069.86,posted
+POL-74003,harbour-brokers,Harbour Brokers,2027-02-05,Home buildings premium,4935.84,posted
+POL-74004,harbour-brokers,Harbour Brokers,2027-02-07,Breakdown add-on,2092.15,posted
+POL-74005,harbour-brokers,Harbour Brokers,2027-02-10,Travel add-on,6315.25,posted
+POL-74006,harbour-brokers,Harbour Brokers,2027-02-12,Landlord cover,4663.91,posted
+POL-74007,harbour-brokers,Harbour Brokers,2027-02-14,Motor comprehensive,6034.43,posted
+POL-74008,harbour-brokers,Harbour Brokers,2027-02-16,Home buildings premium,1372.09,posted
+POL-74009,harbour-brokers,Harbour Brokers,2027-02-19,Legal expenses add-on,4613.94,posted
+POL-74010,harbour-brokers,Harbour Brokers,2027-02-21,Home buildings premium,6043.03,posted
+POL-74011,harbour-brokers,Harbour Brokers,2027-02-23,Legal expenses add-on,371.30,posted
+POL-74012,harbour-brokers,Harbour Brokers,2027-02-25,Travel add-on,2840.12,posted
+POL-74014,linden,Linden & Gale,2027-02-01,Home buildings premium,3162.37,posted
+POL-74015,linden,Linden & Gale,2027-02-03,Legal expenses add-on,4265.47,posted
+POL-74016,linden,Linden & Gale,2027-02-05,Motor third party,4398.44,posted
+POL-74017,linden,Linden & Gale,2027-02-07,Motor comprehensive,5171.99,posted
+POL-74018,linden,Linden & Gale,2027-02-10,Travel add-on,2663.92,posted
+POL-74019,linden,Linden & Gale,2027-02-12,Motor third party,4797.31,posted
+POL-74020,linden,Linden & Gale,2027-02-14,Motor third party,3761.64,posted
+POL-74021,linden,Linden & Gale,2027-02-16,Legal expenses add-on,2105.63,posted
+POL-74022,linden,Linden & Gale,2027-02-19,Home contents premium,4605.28,posted
+POL-74023,linden,Linden & Gale,2027-02-21,Motor comprehensive,2864.46,posted
+POL-74024,linden,Linden & Gale,2027-02-23,Landlord cover,2766.62,posted
+POL-74025,linden,Linden & Gale,2027-02-25,Travel add-on,5614.04,posted
+POL-74027,brightside,Brightside Cover,2027-02-01,Legal expenses add-on,4050.07,posted
+POL-74028,brightside,Brightside Cover,2027-02-03,Home buildings premium,6364.87,posted
+POL-74029,brightside,Brightside Cover,2027-02-05,Breakdown add-on,5453.23,posted
+POL-74030,brightside,Brightside Cover,2027-02-07,Travel add-on,5927.22,posted
+POL-74031,brightside,Brightside Cover,2027-02-10,Home contents premium,541.18,posted
+POL-74032,brightside,Brightside Cover,2027-02-12,Motor comprehensive,1414.61,posted
+POL-74033,brightside,Brightside Cover,2027-02-14,Travel add-on,5380.96,posted
+POL-74034,brightside,Brightside Cover,2027-02-16,Landlord cover,1460.78,posted
+POL-74035,brightside,Brightside Cover,2027-02-19,Breakdown add-on,3215.84,posted
+POL-74036,brightside,Brightside Cover,2027-02-21,Travel add-on,5811.20,posted
+POL-74037,brightside,Brightside Cover,2027-02-23,Travel add-on,3994.04,posted
+POL-74038,brightside,Brightside Cover,2027-02-25,Breakdown add-on,2139.81,posted
+POL-74040,marlow,Marlow Insurance Services,2027-02-01,Home contents premium,4602.15,posted
+POL-74041,marlow,Marlow Insurance Services,2027-02-03,Legal expenses add-on,6113.10,posted
+POL-74042,marlow,Marlow Insurance Services,2027-02-05,Landlord cover,4951.01,posted
+POL-74043,marlow,Marlow Insurance Services,2027-02-07,Motor comprehensive,2597.64,posted
+POL-74044,marlow,Marlow Insurance Services,2027-02-10,Breakdown add-on,614.31,posted
+POL-74045,marlow,Marlow Insurance Services,2027-02-12,Motor third party,1018.06,posted
+POL-74046,marlow,Marlow Insurance Services,2027-02-14,Home contents premium,2337.69,posted
+POL-74047,marlow,Marlow Insurance Services,2027-02-16,Breakdown add-on,2576.52,posted
+POL-74048,marlow,Marlow Insurance Services,2027-02-19,Breakdown add-on,5434.56,posted
+POL-74049,marlow,Marlow Insurance Services,2027-02-21,Motor comprehensive,5641.40,posted
+POL-74050,marlow,Marlow Insurance Services,2027-02-23,Landlord cover,1590.75,posted
+POL-74051,marlow,Marlow Insurance Services,2027-02-25,Motor third party,5657.15,posted
+POL-74053,seaton,Seaton Partners,2027-02-01,Legal expenses add-on,3664.41,posted
+POL-74054,seaton,Seaton Partners,2027-02-03,Travel add-on,5850.66,posted
+POL-74055,seaton,Seaton Partners,2027-02-05,Breakdown add-on,4882.85,posted
+POL-74056,seaton,Seaton Partners,2027-02-07,Legal expenses add-on,5899.29,posted
+POL-74057,seaton,Seaton Partners,2027-02-10,Motor third party,2357.91,posted
+POL-74058,seaton,Seaton Partners,2027-02-12,Legal expenses add-on,5185.60,posted
+POL-74059,seaton,Seaton Partners,2027-02-14,Motor third party,5179.40,posted
+POL-74060,seaton,Seaton Partners,2027-02-16,Breakdown add-on,2347.49,posted
+POL-74061,seaton,Seaton Partners,2027-02-19,Breakdown add-on,3392.41,posted
+POL-74062,seaton,Seaton Partners,2027-02-21,Home buildings premium,1546.91,posted
+POL-74063,seaton,Seaton Partners,2027-02-23,Home buildings premium,2771.09,posted
+POL-74064,seaton,Seaton Partners,2027-02-25,Home buildings premium,4082.94,posted

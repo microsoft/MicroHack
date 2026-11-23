@@ -1,14 +1,54 @@
-$ErrorActionPreference = $env:ErrorActionPreference
+$ErrorActionPreference = 'Stop'
+
+trap {
+    $failure = $_
+    Write-Error -ErrorRecord $failure -ErrorAction Continue
+    Remove-Item -LiteralPath 'C:\MHBox\lab-ready.json' -Force -ErrorAction SilentlyContinue
+    try {
+        Connect-AzAccount -Identity -Tenant $env:tenantId -Subscription $env:subscriptionId -ErrorAction Stop | Out-Null
+        $groupId = "/subscriptions/$env:subscriptionId/resourceGroups/$env:resourceGroup"
+        foreach ($target in @($groupId, "$groupId/providers/Microsoft.Compute/virtualMachines/$env:hostVmName")) {
+            try {
+                Update-AzTag -ResourceId $target -Operation Merge -Tag @{ DeploymentProgress = 'Deployment Failed' } -ErrorAction Stop | Out-Null
+            }
+            catch { Write-Warning "Could not report failure on '$target': $($_.Exception.Message)" }
+        }
+    }
+    catch { Write-Warning "Could not authenticate to report guest provisioning failure: $($_.Exception.Message)" }
+    exit 1
+}
 
 $Env:MHBoxDir = 'C:\MHBox'
 $Env:MHBoxLogsDir = "$Env:MHBoxDir\Logs"
 $Env:MHBoxVMDir = 'F:\Virtual Machines'
 $Env:MHBoxDscDir = "$Env:MHBoxDir\DSC"
 
+# Archive the previous attempt and start logging before validating host configuration.
+$logFilePath = "$Env:MHBoxLogsDir\MHServersLogonScript.log"
+if (Test-Path $logFilePath) {
+    $archivefile = "$Env:MHBoxLogsDir\MHServersLogonScript-" + (Get-Date -Format 'yyyyMMddHHmmss')
+    Rename-Item -Path $logFilePath -NewName $archivefile -Force
+}
+Start-Transcript -Path $logFilePath -Force
+
 # Set variables to execute remote powershell scripts on guest VMs
 $tenantId = $env:tenantId
 $subscriptionId = $env:subscriptionId
 $namingPrefix = $env:namingPrefix
+if (Test-Path -LiteralPath "$Env:MHBoxDir\lab-ready.json") {
+    Remove-Item -LiteralPath "$Env:MHBoxDir\lab-ready.json" -Force
+}
+if ([string]::IsNullOrWhiteSpace($env:hostVmName)) { throw 'The hostVmName machine environment variable is required.' }
+if ($namingPrefix -ne 'MHBox') { throw 'The single-RG baseline requires the nested VM prefix MHBox.' }
+$expectedVmNames = @("$namingPrefix-SQL", "$namingPrefix-Win2K22", "$namingPrefix-Ubuntu-01", "$namingPrefix-AzMigSrv")
+
+function Set-LabDeploymentTags {
+    param([hashtable]$Tags)
+    $groupId = "/subscriptions/$env:subscriptionId/resourceGroups/$env:resourceGroup"
+    foreach ($target in @($groupId, "$groupId/providers/Microsoft.Compute/virtualMachines/$env:hostVmName")) {
+        Update-AzTag -ResourceId $target -Operation Merge -Tag $Tags | Out-Null
+    }
+}
 $templateBaseUrl = [Environment]::GetEnvironmentVariable(
     'templateBaseUrl',
     [EnvironmentVariableTarget]::Machine
@@ -603,26 +643,14 @@ function Wait-LinuxHostName {
 # Moved VHD storage account details here to keep only in place to prevent duplicates.
 $vhdSourceFolder = 'https://jumpstartprodsg.blob.core.windows.net/arcbox/prod/*'
 
-# Archive existing log file and create new one
-$logFilePath = "$Env:MHBoxLogsDir\MHServersLogonScript.log"
-if (Test-Path $logFilePath) {
-    $archivefile = "$Env:MHBoxLogsDir\MHServersLogonScript-" + (Get-Date -Format 'yyyyMMddHHmmss')
-    Rename-Item -Path $logFilePath -NewName $archivefile -Force
-}
-
-Start-Transcript -Path $logFilePath -Force -ErrorAction SilentlyContinue
-
 # Remove registry keys that are used to automatically logon the user (only used for first-time setup)
 $registryPath = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon'
 $keys = @('AutoAdminLogon', 'DefaultUserName', 'DefaultPassword')
 
 foreach ($key in $keys) {
-    try {
-        $property = Get-ItemProperty -Path $registryPath -Name $key -ErrorAction Stop
+    if ((Get-Item -Path $registryPath).Property -contains $key) {
         Remove-ItemProperty -Path $registryPath -Name $key
         Write-Host "Removed registry key that are used to automatically logon the user: $key"
-    } catch {
-        Write-Verbose "Key $key does not exist."
     }
 }
 
@@ -697,35 +725,37 @@ if ($Env:flavor -eq 'ITPro') {
 
     $cliDir = New-Item -Path "$Env:MHBoxDir\.cli\" -Name '.servers' -ItemType Directory -Force
     if (-not $($cliDir.Parent.Attributes.HasFlag([System.IO.FileAttributes]::Hidden))) {
-        $folder = Get-Item $cliDir.Parent.FullName -ErrorAction SilentlyContinue
+        $folder = Get-Item $cliDir.Parent.FullName
         $folder.Attributes += [System.IO.FileAttributes]::Hidden
     }
 
     # Required for CLI commands
     Write-Host "`n### Az CLI Login ###`n"
     az login --identity
+    if ($LASTEXITCODE -ne 0) { throw "Azure CLI identity login failed with exit code $LASTEXITCODE." }
     az account set -s $subscriptionId
+    if ($LASTEXITCODE -ne 0) { throw "Azure CLI subscription selection failed with exit code $LASTEXITCODE." }
 
     Write-Host "`n### Az PowerShell Login ###`n"
     Connect-AzAccount -Identity -Tenant $tenantId -Subscription $subscriptionId
 
     $DeploymentProgressString = 'Started MHServersLogonScript'
 
-    $tags = Get-AzResourceGroup -Name $env:resourceGroup | Select-Object -ExpandProperty Tags
+    Set-LabDeploymentTags @{ DeploymentProgress = $DeploymentProgressString }
 
-    if ($null -ne $tags) {
-        $tags['DeploymentProgress'] = $DeploymentProgressString
-    } else {
-        $tags = @{'DeploymentProgress' = $DeploymentProgressString }
+    $existingVMDisk = Get-AzDisk -ResourceGroupName $env:resourceGroup -DiskName "$env:hostVmName-VMsDisk"
+    $originalDiskIops = $existingVMDisk.DiskIOPSReadWrite
+    $originalDiskThroughput = $existingVMDisk.DiskMBpsReadWrite
+    if ($null -eq $originalDiskIops -or $originalDiskIops -le 0 -or
+        $null -eq $originalDiskThroughput -or $originalDiskThroughput -le 0) {
+        throw 'Cannot temporarily boost VMsDisk without valid original IOPS and throughput.'
     }
 
-    $null = Set-AzResourceGroup -ResourceGroupName $env:resourceGroup -Tag $tags
-    $null = Set-AzResource -ResourceName $env:computername -ResourceGroupName $env:resourceGroup -ResourceType 'microsoft.compute/virtualmachines' -Tag $tags -Force
-
-    $existingVMDisk = Get-AzDisk -ResourceGroupName $env:resourceGroup | Where-Object name -Like *VMsDisk
-
+    $diskProvisioningError = $null
+    try {
     # Update disk IOPS and throughput before downloading nested VMs
     az disk update --resource-group $env:resourceGroup --name $existingVMDisk.Name --disk-iops-read-write 80000 --disk-mbps-read-write 1200
+    if ($LASTEXITCODE -ne 0) { throw "Increasing VMsDisk performance failed with exit code $LASTEXITCODE." }
 
     ##############################
     ### SKIPP nested SQL VM
@@ -741,16 +771,7 @@ if ($Env:flavor -eq 'ITPro') {
 
     $DeploymentProgressString = 'Downloading and configuring nested SQL VM'
 
-    $tags = Get-AzResourceGroup -Name $env:resourceGroup | Select-Object -ExpandProperty Tags
-
-    if ($null -ne $tags) {
-        $tags['DeploymentProgress'] = $DeploymentProgressString
-    } else {
-        $tags = @{'DeploymentProgress' = $DeploymentProgressString }
-    }
-
-    $null = Set-AzResourceGroup -ResourceGroupName $env:resourceGroup -Tag $tags
-    $null = Set-AzResource -ResourceName $env:computername -ResourceGroupName $env:resourceGroup -ResourceType 'microsoft.compute/virtualmachines' -Tag $tags -Force
+    Set-LabDeploymentTags @{ DeploymentProgress = $DeploymentProgressString }
 
     Write-Host 'Fetching SQL VM'
     $SQLvmName = "$namingPrefix-SQL"
@@ -760,6 +781,7 @@ if ($Env:flavor -eq 'ITPro') {
     if (!(Test-Path $SQLvmvhdPath)) {
         Write-Output 'Downloading nested VMs VHDX file for SQL. This can take some time, hold tight...'
         azcopy cp $vhdSourceFolder $Env:MHBoxVMDir --include-pattern "$vhdImageToDownload" --recursive=true --check-length=false --log-level=ERROR
+        if ($LASTEXITCODE -ne 0) { throw "Downloading the SQL VHD failed with exit code $LASTEXITCODE." }
 
         # Rename VHD file
         Rename-Item -Path "$Env:MHBoxVMDir\$vhdImageToDownload" -NewName $SQLvmvhdPath -Force
@@ -772,6 +794,7 @@ if ($Env:flavor -eq 'ITPro') {
     $sqlDscConfigurationFile = "$Env:MHBoxDscDir\virtual_machines_sql.dsc.yml"
     (Get-Content -Path $sqlDscConfigurationFile) -replace 'namingPrefixStage', $namingPrefix | Set-Content -Path $sqlDscConfigurationFile
     winget configure --file C:\MHBox\DSC\virtual_machines_sql.dsc.yml --accept-configuration-agreements --disable-interactivity
+    if ($LASTEXITCODE -ne 0) { throw "SQL VM WinGet configuration failed with exit code $LASTEXITCODE." }
 
     # Restart the newly created VM from the host before guest configuration.
     Write-Host 'Restarting the nested SQL VM'
@@ -792,6 +815,7 @@ if ($Env:flavor -eq 'ITPro') {
             -Credential $winCreds `
             -ScriptBlock {
                 param($newName)
+                $ErrorActionPreference = 'Stop'
                 if ($env:COMPUTERNAME -cne $newName) {
                     Rename-Computer -NewName $newName
                 }
@@ -818,7 +842,6 @@ if ($Env:flavor -eq 'ITPro') {
         -Description 'SQL Server firewall configuration'
 
     # Onboard nested Windows and Linux VMs to Azure Arc
-    if ($Env:flavor -eq 'ITPro') {
         Write-Host "`n### Fetching Nested VMs ###`n"
 
         $Win2k22vmName = "$namingPrefix-Win2K22"
@@ -836,71 +859,61 @@ if ($Env:flavor -eq 'ITPro') {
 
         $DeploymentProgressString = 'Downloading and configuring nested VMs'
 
-        $tags = Get-AzResourceGroup -Name $env:resourceGroup | Select-Object -ExpandProperty Tags
-
-        if ($null -ne $tags) {
-            $tags['DeploymentProgress'] = $DeploymentProgressString
-        } else {
-            $tags = @{'DeploymentProgress' = $DeploymentProgressString }
-        }
-
-        $null = Set-AzResourceGroup -ResourceGroupName $env:resourceGroup -Tag $tags
-        $null = Set-AzResource -ResourceName $env:computername -ResourceGroupName $env:resourceGroup -ResourceType 'microsoft.compute/virtualmachines' -Tag $tags -Force
+        Set-LabDeploymentTags @{ DeploymentProgress = $DeploymentProgressString }
 
         # Verify if VHD files already downloaded especially when re-running this script
-        if (!((Test-Path $Win2k22vmvhdPath) -and (Test-Path $Ubuntu01vmvhdPath))) {            
-            <# Action when all if and elseif conditions are false #>
-            $Env:AZCOPY_BUFFER_GB = 4
-            Write-Output 'Downloading nested VMs VHDX files. This can take some time, hold tight...'
-            azcopy cp $vhdSourceFolder $Env:MHBoxVMDir --include-pattern $files --recursive=true --check-length=false --log-level=ERROR
+        $Env:AZCOPY_BUFFER_GB = 4
+        foreach ($file in ($files -split ';' | Where-Object { $_ -ne '' })) {
+            $destinationPath = Join-Path $Env:MHBoxVMDir ($file -replace 'ArcBox', $namingPrefix)
+            if (-not (Test-Path -LiteralPath $destinationPath)) {
+                Write-Output "Downloading missing nested VM disk '$file'..."
+                azcopy cp $vhdSourceFolder $Env:MHBoxVMDir --include-pattern $file --recursive=true --check-length=false --log-level=ERROR
+                if ($LASTEXITCODE -ne 0) { throw "Downloading '$file' failed with exit code $LASTEXITCODE." }
+                Rename-Item -LiteralPath (Join-Path $Env:MHBoxVMDir $file) -NewName $destinationPath
+            }
         }
 
-            if ($namingPrefix -ne 'ArcBox') {
-
-            # Split the string into an array
-            $fileList = $files -split ';' | Where-Object { $_ -ne '' }
-
-            # Set the path to search for files
-            $searchPath = $Env:MHBoxVMDir
-
-            # Loop through each file and rename if found
-            foreach ($file in $fileList) {
-                $filePath = Join-Path -Path $searchPath -ChildPath $file
-                if (Test-Path $filePath) {
-                    $newFileName = $file -replace 'ArcBox', $namingPrefix
-
-                    Rename-Item -Path $filePath -NewName $newFileName
-                    Write-Output "Renamed $file to $newFileName"
-                } else {
-                    Write-Output "$file not found in $searchPath"
-                }
-              }
-
-            }
-
-            if ((Test-Path $Win2k22vmvhdPath) ) {            
-            <# Local Copy of Win2K22 Disk for Azure Migrate Appliances #>            
+        if (-not (Test-Path -LiteralPath $AzMigSrvvmvhdPath) -and
+            -not (Get-VM -Name $AzMigSrvvmName -ErrorAction SilentlyContinue)) {
             Write-Output 'Local Copy of Win2K22 Disk for Azure Migrate Appliance. This can take some time, hold tight...'
+            Copy-Item -LiteralPath $Win2k22vmvhdPath -Destination $AzMigSrvvmvhdPath
+        }
 
-            Copy-Item -Path $Win2k22vmvhdPath -Destination $AzMigSrvvmvhdPath -Force
-            }         
+    }
+    catch {
+        $diskProvisioningError = $_
+        throw
+    }
+    finally {
+        try {
+            az disk update --resource-group $env:resourceGroup --name $existingVMDisk.Name --disk-iops-read-write $originalDiskIops --disk-mbps-read-write $originalDiskThroughput
+            if ($LASTEXITCODE -ne 0) { throw "Restoring VMsDisk performance failed with exit code $LASTEXITCODE." }
+        }
+        catch {
+            if ($null -ne $diskProvisioningError) {
+                Write-Warning "Restoring VMsDisk '$($existingVMDisk.Name)' to $originalDiskIops IOPS / $originalDiskThroughput MBps also failed: $($_.Exception.Message) Preserving provisioning error: $($diskProvisioningError.Exception.Message)" -WarningAction Continue
+            }
+            else {
+                throw
+            }
+        }
+    }
 
-        # Update disk IOPS and throughput after downloading nested VMs (note: a disk's performance tier can be downgraded only once every 12 hours)
-        az disk update --resource-group $env:resourceGroup --name $existingVMDisk.Name --disk-iops-read-write $existingVMDisk.DiskIOPSReadWrite --disk-mbps-read-write $existingVMDisk.DiskMBpsReadWrite
-
+    if ($Env:flavor -eq 'ITPro') {
         # Create the nested VMs if not already created
         Write-Host "`n### Create Hyper-V VMs ###`n"
         $serversDscConfigurationFile = "$Env:MHBoxDscDir\virtual_machines_itpro.dsc.yml"
         (Get-Content -Path $serversDscConfigurationFile) -replace 'namingPrefixStage', $namingPrefix | Set-Content -Path $serversDscConfigurationFile
         winget configure --file C:\MHBox\DSC\virtual_machines_itpro.dsc.yml --accept-configuration-agreements --disable-interactivity
+        if ($LASTEXITCODE -ne 0) { throw "Nested VM WinGet configuration failed with exit code $LASTEXITCODE." }
 
         # Configure automatic start & stop action for the nested VMs
-        Get-VM | Where-Object {$_.State -eq "Running"} |
-            ForEach-Object -Parallel {
-                Stop-VM -Force -Name $PSItem.Name
-                Set-VM -Name $PSItem.Name -AutomaticStopAction ShutDown -AutomaticStartAction Start
-                Start-VM -Name $PSItem.Name
-            }
+        foreach ($vmName in $expectedVmNames) {
+            $vm = Get-VM -Name $vmName
+            if ($vm.State -eq 'Running') { Stop-VM -Force -Name $vmName }
+            Set-VM -Name $vmName -AutomaticStopAction ShutDown -AutomaticStartAction Start
+            Start-VM -Name $vmName
+        }
 
         foreach ($vmName in @($SQLvmName, $Win2k22vmName, $AzMigSrvvmName)) {
             Wait-VMCommand -VMName $vmName -Credential $winCreds
@@ -920,6 +933,7 @@ if ($Env:flavor -eq 'ITPro') {
                     -Credential $winCreds `
                     -ScriptBlock {
                         param($newName)
+                        $ErrorActionPreference = 'Stop'
                         if ($env:COMPUTERNAME -ceq $newName) {
                             return $false
                         }
@@ -938,8 +952,11 @@ if ($Env:flavor -eq 'ITPro') {
         # Configuring SSH for accessing Linux VMs
         Write-Output 'Generating SSH key for accessing nested Linux VMs'
 
-        $null = New-Item -Path ~ -Name .ssh -ItemType Directory
-        ssh-keygen -t rsa -N '' -f $Env:USERPROFILE\.ssh\id_rsa
+        $null = New-Item -Path ~ -Name .ssh -ItemType Directory -Force
+        if (-not (Test-Path -LiteralPath "$Env:USERPROFILE\.ssh\id_rsa")) {
+            ssh-keygen -t rsa -N '' -f $Env:USERPROFILE\.ssh\id_rsa
+            if ($LASTEXITCODE -ne 0) { throw "SSH key generation failed with exit code $LASTEXITCODE." }
+        }
 
         Copy-Item -Path "$Env:USERPROFILE\.ssh\id_rsa.pub" -Destination "$Env:TEMP\authorized_keys"
 
@@ -948,7 +965,7 @@ if ($Env:flavor -eq 'ITPro') {
 
         $Ubuntu01VmIp = Get-VMIPv4AddressWithRetry -VMName $Ubuntu01vmName
         Wait-TcpPort -ComputerName $Ubuntu01VmIp -Port 22
-        Get-VM *Ubuntu* | Copy-VMFile -SourcePath "$Env:TEMP\authorized_keys" -DestinationPath "/home/$nestedLinuxUsername/.ssh/" -FileSource Host -Force -CreateFullPath
+        Get-VM -Name $Ubuntu01vmName | Copy-VMFile -SourcePath "$Env:TEMP\authorized_keys" -DestinationPath "/home/$nestedLinuxUsername/.ssh/" -FileSource Host -Force -CreateFullPath
 
         if ($namingPrefix -ne 'ArcBox') {
 
@@ -970,6 +987,7 @@ if ($Env:flavor -eq 'ITPro') {
                         [ValidateNotNullOrEmpty()]
                         [string]$NewHostName
                     )
+                    $ErrorActionPreference = 'Stop'
 
                     function Invoke-SudoCommand {
                         param(
@@ -1204,10 +1222,15 @@ if ($Env:flavor -eq 'ITPro') {
         Write-Output 'Activating operating system on Windows VMs...'
 
         $activationScript = {
+            $ErrorActionPreference = 'Stop'
             cscript C:\Windows\system32\slmgr.vbs -ipk VDYBN-27WPP-V4HQT-9VMD4-VMK7H
+            if ($LASTEXITCODE -ne 0) { throw "Windows product key installation failed with exit code $LASTEXITCODE." }
             cscript C:\Windows\system32\slmgr.vbs -skms kms.core.windows.net
+            if ($LASTEXITCODE -ne 0) { throw "Windows KMS configuration failed with exit code $LASTEXITCODE." }
             cscript C:\Windows\system32\slmgr.vbs -ato
+            if ($LASTEXITCODE -ne 0) { throw "Windows activation failed with exit code $LASTEXITCODE." }
             cscript C:\Windows\system32\slmgr.vbs -dlv
+            if ($LASTEXITCODE -ne 0) { throw "Windows activation query failed with exit code $LASTEXITCODE." }
         }
 
         foreach ($vmName in @($Win2k22vmName, $AzMigSrvvmName, $SQLvmName)) {
@@ -1228,6 +1251,7 @@ if ($Env:flavor -eq 'ITPro') {
         # Install IIS and deploy the demo page on Windows VM
         Invoke-Command -VMName $Win2k22vmName -ScriptBlock {
             param($sourceRoot)
+            $ErrorActionPreference = 'Stop'
 
             Add-WindowsFeature Web-Server -IncludeManagementTools
             & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass `
@@ -1251,6 +1275,7 @@ if ($Env:flavor -eq 'ITPro') {
             )
             Invoke-Command -Session $UbuntuSessions -ScriptBlock {
                 param($deploymentScript, $encodedSourceRoot)
+                $ErrorActionPreference = 'Stop'
 
                 try {
                     $sourceRoot = [Text.Encoding]::UTF8.GetString(
@@ -1280,11 +1305,6 @@ if ($Env:flavor -eq 'ITPro') {
 
     }
 
-    # Removing the LogonScript Scheduled Task so it won't run on next reboot
-    Write-Host "`n### Removing Logon Task ###`n"
-    if ($null -ne (Get-ScheduledTask -TaskName 'MHServersLogonScript' -ErrorAction SilentlyContinue)) {
-        Unregister-ScheduledTask -TaskName 'MHServersLogonScript' -Confirm:$false
-    }
 }
 
 
@@ -1293,15 +1313,17 @@ if ($Env:flavor -eq 'ITPro') {
 
         Write-Host "`n### Enabling Azure VM Auto-shutdown ###`n"
 
-        $ScheduleResource = Get-AzResource -ResourceGroup $env:resourceGroup -ResourceType Microsoft.DevTestLab/schedules
-        $Uri = "https://management.azure.com$($ScheduleResource.ResourceId)?api-version=2018-09-15"
+        $scheduleId = "/subscriptions/$subscriptionId/resourceGroups/$env:resourceGroup/providers/Microsoft.DevTestLab/schedules/shutdown-computevm-$env:hostVmName"
+        $Uri = "https://management.azure.com${scheduleId}?api-version=2018-09-15"
 
         $Schedule = Invoke-AzRestMethod -Uri $Uri
+        if ($Schedule.StatusCode -ne 200) { throw "Reading shutdown schedule failed: HTTP $($Schedule.StatusCode). $($Schedule.Content)" }
 
         $ScheduleSettings = $Schedule.Content | ConvertFrom-Json
         $ScheduleSettings.properties.status = "Enabled"
 
-        Invoke-AzRestMethod -Uri $Uri -Method PUT -Payload ($ScheduleSettings | ConvertTo-Json)
+        $result = Invoke-AzRestMethod -Uri $Uri -Method PUT -Payload ($ScheduleSettings | ConvertTo-Json -Depth 10)
+        if ($result.StatusCode -notin @(200, 201, 202)) { throw "Enabling shutdown schedule failed: HTTP $($result.StatusCode). $($result.Content)" }
 
     } else {
 
@@ -1310,15 +1332,57 @@ if ($Env:flavor -eq 'ITPro') {
     }
 
 
-    $DeploymentProgressString = 'Deployment Completed'
+if ($Env:flavor -ne 'ITPro') { throw 'The single-RG baseline requires the ITPro flavor.' }
 
-    $tags = Get-AzResourceGroup -Name $env:resourceGroup | Select-Object -ExpandProperty Tags
-
-    if ($null -ne $tags) {
-        $tags['DeploymentProgress'] = $DeploymentProgressString
-    } else {
-        $tags = @{'DeploymentProgress' = $DeploymentProgressString }
+# Validate HTTP and substituted metadata again at the completion boundary.
+$validateWebPage = {
+    param([string]$ExpectedHostName, [string]$ExpectedPlatform, [string]$ExpectedWebServer)
+    $ErrorActionPreference = 'Stop'
+    $response = Invoke-WebRequest -Uri 'http://127.0.0.1/' -UseBasicParsing -TimeoutSec 15
+    if ($response.StatusCode -ne 200) { throw "Web validation returned HTTP $($response.StatusCode)." }
+    if ($response.Content -match '<(?:HOSTNAME|PLATFORM|WEB_SERVER)>') { throw 'Unsubstituted web metadata tokens remain.' }
+    $expectedFields = @{
+        hostname = $ExpectedHostName
+        platform = $ExpectedPlatform
+        'web-server' = $ExpectedWebServer
     }
+    foreach ($field in $expectedFields.Keys) {
+        $pattern = '<dd\b[^>]*\bdata-workload-value="' + [regex]::Escape($field) + '"[^>]*>\s*' +
+            [regex]::Escape($expectedFields[$field]) + '\s*</dd>'
+        if ($response.Content -notmatch $pattern) { throw "The web page does not contain the expected '$field' metadata." }
+    }
+    return [int]$response.StatusCode
+}
+$windowsHttpStatus = Invoke-Command -VMName $Win2k22vmName -Credential $winCreds `
+    -ScriptBlock $validateWebPage -ArgumentList @($Win2k22vmName, 'Windows Server 2022', 'IIS') -ErrorAction Stop
+$linuxHttpStatus = Invoke-Command -HostName $Ubuntu01VmIp -KeyFilePath "$Env:USERPROFILE\.ssh\id_rsa" `
+    -UserName $nestedLinuxUsername -ScriptBlock $validateWebPage `
+    -ArgumentList @($Ubuntu01HostName, 'Ubuntu Linux', 'Apache') -ErrorAction Stop
+if ($windowsHttpStatus -ne 200 -or $linuxHttpStatus -ne 200) { throw 'Both guest web validations must return HTTP 200.' }
 
-    $null = Set-AzResourceGroup -ResourceGroupName $env:resourceGroup -Tag $tags
-    $null = Set-AzResource -ResourceName $env:computername -ResourceGroupName $env:resourceGroup -ResourceType 'microsoft.compute/virtualmachines' -Tag $tags -Force
+foreach ($vmName in $expectedVmNames) {
+    if ((Get-VM -Name $vmName -ErrorAction Stop).State -ne 'Running') {
+        throw "Cannot complete the baseline: nested VM '$vmName' is not running."
+    }
+}
+
+$readyMarkerPath = "$Env:MHBoxDir\lab-ready.json"
+$pendingMarkerPath = "$readyMarkerPath.pending"
+try {
+    [ordered]@{
+        schemaVersion = 1
+        hostName = $env:COMPUTERNAME
+        nestedVmNames = $expectedVmNames
+        windowsHttpStatus = [int]$windowsHttpStatus
+        linuxHttpStatus = [int]$linuxHttpStatus
+    } | ConvertTo-Json | Set-Content -LiteralPath $pendingMarkerPath -Encoding UTF8
+    Move-Item -LiteralPath $pendingMarkerPath -Destination $readyMarkerPath -Force
+}
+finally {
+    Remove-Item -LiteralPath $pendingMarkerPath -Force -ErrorAction SilentlyContinue
+}
+
+# Only remove the task after the baseline has passed all readiness checks.
+Unregister-ScheduledTask -TaskName 'MHServersLogonScript' -Confirm:$false
+Set-LabDeploymentTags @{ DeploymentProgress = 'Deployment Completed'; LabReady = 'single-rg-v1' }
+Stop-Transcript

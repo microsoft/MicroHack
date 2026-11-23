@@ -3,8 +3,8 @@
 .SYNOPSIS
 Deploys the Azure Arc Jumpstart LocalBox environment used by the Sovereign Cloud lab.
 .DESCRIPTION
-Downloads a coherent set of upstream LocalBox Bicep templates, validates them, and
-deploys the LocalBox host, networking, storage, and optional Azure Bastion resources.
+Downloads upstream LocalBox Bicep templates and substitutes the lab's Developer
+Bastion network module, then validates and deploys the environment.
 .PARAMETER SubscriptionId
 The Azure subscription that receives the LocalBox resources.
 .PARAMETER ResourceGroupName
@@ -21,6 +21,9 @@ It is not published as a participant credential. Coach/event-lead-only retrieval
 requires a supported mechanism from the Console owner.
 .PARAMETER GithubRef
 The azure_arc branch, tag, or commit used for both Bicep and runtime artifacts.
+.PARAMETER DeployBastion
+Deploy Bastion Developer for one browser-based coach connection at a time.
+The host remains private and retains NAT Gateway outbound access when enabled.
 .PARAMETER AzureLocalResourceProviderObjectId
 Optional tenant-specific object ID of the Microsoft.AzureStackHCI enterprise
 application. The script resolves it through Microsoft Graph when omitted.
@@ -104,6 +107,34 @@ function New-LocalBoxPassword {
     $characters += 1..20 | ForEach-Object { $all[(Get-Random -Maximum $all.Length)] }
     return -join ($characters | Sort-Object { Get-Random })
 }
+
+function Assert-LocalBoxNetworkCompatibility {
+    param([string]$SubscriptionId, [string]$ResourceGroupName)
+
+    $bastions = @(Invoke-AzJson -Arguments @(
+        'network', 'bastion', 'list', '--subscription', $SubscriptionId, '--resource-group', $ResourceGroupName
+    ))
+    foreach ($bastion in @($bastions | Where-Object name -eq 'LocalBox-Bastion')) {
+        if ($bastion.sku.name -ne 'Developer') {
+            throw "Existing LocalBox-Bastion SKU '$($bastion.sku.name)' cannot be changed to Developer in place. Use a fresh resource group or arrange an explicitly approved delete/recreate migration. No existing Bastion was changed."
+        }
+    }
+    $networks = @(Invoke-AzJson -Arguments @(
+        'network', 'vnet', 'list', '--subscription', $SubscriptionId, '--resource-group', $ResourceGroupName
+    ))
+    $legacySubnets = @($networks | Where-Object name -eq 'LocalBox-VNet' |
+        ForEach-Object { $_.subnets } | Where-Object name -eq 'AzureBastionSubnet')
+    if ($legacySubnets.Count) {
+        throw 'LocalBox-VNet contains a legacy AzureBastionSubnet. Use a fresh resource group or arrange an explicitly approved migration; this deployment will not automatically remove an existing Bastion subnet.'
+    }
+}
+
+$networkTemplateFile = Join-Path $PSScriptRoot 'localbox-network.bicep'
+if (-not (Test-Path -LiteralPath $networkTemplateFile -PathType Leaf)) {
+    throw 'Missing localbox-network.bicep. Import the complete labautomation directory before deploying LocalBox.'
+}
+$startupSource = Join-Path $PSScriptRoot 'localbox-startup.ps1'
+. $startupSource
 
 if (-not (Get-Command az -ErrorAction SilentlyContinue)) {
     throw 'Azure CLI is required to deploy LocalBox.'
@@ -194,26 +225,26 @@ Invoke-AzJson -Arguments @(
     '--namespace', 'Microsoft.Network', '--wait'
 ) | Out-Null
 
-$availableVmSize = & az vm list-sizes `
-    --subscription $SubscriptionId `
-    --location $Location `
-    --query "[?name=='$VmSize'].name | [0]" `
-    --output tsv `
-    --only-show-errors
-if ($LASTEXITCODE -ne 0) {
-    throw "Unable to query VM size availability in $Location."
-}
-if ($availableVmSize -ne $VmSize) {
-    throw "VM size $VmSize is unavailable in $Location."
+$availableVmSizes = @(Invoke-AzJson -Arguments @(
+    'vm', 'list-skus', '--subscription', $SubscriptionId, '--location', $Location,
+    '--resource-type', 'virtualMachines', '--size', $VmSize, '--all'
+) | Where-Object { $_.name -eq $VmSize })
+if ($availableVmSizes.Count -ne 1 -or
+    @($availableVmSizes[0].restrictions | Where-Object { $_.type -ne 'Zone' }).Count -gt 0) {
+    throw "VM size $VmSize is unavailable in $Location for this subscription (missing SKU or regional restriction). No deployment was submitted."
 }
 
-$familyName = if ($VmSize -eq 'Standard_E32s_v6') { 'Standard Esv6 Family vCPUs' } else { 'Standard Esv5 Family vCPUs' }
+$familyName = if ($VmSize -eq 'Standard_E32s_v6') { 'standardEsv6Family' } else { 'standardESv5Family' }
 $usageEntries = Invoke-AzJson -Arguments @(
     'vm', 'list-usage', '--subscription', $SubscriptionId, '--location', $Location
 )
-$usage = @($usageEntries | Where-Object { $_.name.localizedValue -eq $familyName }) | Select-Object -First 1
+$usage = @($usageEntries | Where-Object { $_.name.value -eq $familyName }) | Select-Object -First 1
 if (-not $usage -or ($usage.limit - $usage.currentValue) -lt 32) {
     throw "At least 32 unused $familyName vCPUs are required in $Location."
+}
+$regionalUsage = @($usageEntries | Where-Object { $_.name.value -eq 'cores' }) | Select-Object -First 1
+if (-not $regionalUsage -or ($regionalUsage.limit - $regionalUsage.currentValue) -lt 32) {
+    throw "At least 32 unused regional vCPUs are required in $Location."
 }
 
 if ([string]::IsNullOrWhiteSpace($AzureLocalResourceProviderObjectId)) {
@@ -254,6 +285,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 if ($resourceGroupExists -eq 'true') {
+    Assert-LocalBoxNetworkCompatibility -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName
     $resourceGroup = Invoke-AzJson -Arguments @(
         'group', 'show', '--subscription', $SubscriptionId, '--name', $ResourceGroupName
     )
@@ -279,7 +311,6 @@ $bicepFiles = @(
     'mgmt/mgmtArtifacts.bicep',
     'mgmt/storageAccount.bicep',
     'mgmt/customerUsageAttribution.bicep',
-    'network/network.bicep',
     'host/host.bicep'
 )
 $deploymentName = "localbox-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
@@ -292,11 +323,45 @@ try {
         Write-Host "Downloading LocalBox template: $file"
         Invoke-WebRequest -Uri "$baseUri/$file" -OutFile (Join-Path $tempDirectory $file) -UseBasicParsing
     }
+    Copy-Item -LiteralPath $networkTemplateFile -Destination (Join-Path $tempDirectory 'network/network.bicep') -ErrorAction Stop
+    if ($DeployBastion) {
+        Write-Host 'Using Bastion Developer: one browser connection at a time; no native-client tunnels. Regional support is checked by ARM validation.' -ForegroundColor Cyan
+    }
 
     $resourceTags = @{
         Project = 'jumpstart_LocalBox'
         SecurityControl = 'Ignore'
         CostControl = 'Ignore'
+    }
+    $clients = @(Invoke-AzJson -Arguments @('resource', 'list', '--subscription', $SubscriptionId,
+        '--resource-group', $ResourceGroupName, '--resource-type', 'Microsoft.Compute/virtualMachines') |
+        Where-Object name -eq 'LocalBox-Client')
+    if ($clients.Count -gt 1) { throw 'Cannot uniquely identify the existing LocalBox Client.' }
+    $newClient = $clients.Count -eq 0
+    $startupId = [guid]::Empty
+    if ($newClient) { $startupId = [guid]::NewGuid() }
+    elseif ($clients[0].tags.'microhack-startup-version' -or $clients[0].tags.'microhack-startup-id') {
+        if ($clients[0].tags.'microhack-startup-version' -ne '1' -or
+            -not [guid]::TryParse([string]$clients[0].tags.'microhack-startup-id', [ref]$startupId) -or $startupId -eq [guid]::Empty) {
+            throw 'Existing LocalBox startup-protection metadata is unrecognized. No bootstrap migration was attempted.'
+        }
+    }
+    if ($startupId -ne [guid]::Empty) {
+        $resourceTags['microhack-startup-version'] = '1'
+        $resourceTags['microhack-startup-id'] = $startupId.ToString()
+        Set-LocalBoxStartupTemplate -HostTemplate (Join-Path $tempDirectory 'host/host.bicep') `
+            -StartupSource $startupSource -Id $startupId -NewVm:$newClient
+        Write-Host 'Using correlated startup protection with bounded base-image downloads. Existing VM custom data is never replaced.'
+    }
+    else {
+        $existingMonitors = @(Invoke-AzJson -Arguments @(
+            'vm', 'run-command', 'list', '--subscription', $SubscriptionId,
+            '--resource-group', $ResourceGroupName, '--vm-name', 'LocalBox-Client'
+        ) | Where-Object name -eq 'sovereign-localbox-startup-watch')
+        if ($existingMonitors.Count) {
+            throw 'The existing Client has a startup monitor but no startup identity tags. Organizer review is required; no bootstrap migration was attempted.'
+        }
+        Write-Warning 'This existing Client predates startup protection. Its bootstrap is left unchanged; use a new VM to enable guarded startup.'
     }
 
     @{
@@ -331,6 +396,14 @@ try {
         '--resource-group', $ResourceGroupName, '--name', $deploymentName,
         '--template-file', $templateFile, '--parameters', "@$parametersFile"
     ) | Out-Null
+
+    if ($startupId -ne [guid]::Empty) {
+        # Upstream progress updates replace VM tags with the resource group's tags.
+        Invoke-AzJson -Arguments @(
+            'group', 'update', '--subscription', $SubscriptionId, '--name', $ResourceGroupName,
+            '--set', 'tags.microhack-startup-version=1', "tags.microhack-startup-id=$startupId"
+        ) | Out-Null
+    }
 
     Write-Host "Starting LocalBox deployment '$deploymentName'..." -ForegroundColor Cyan
     $deploymentArguments = @(

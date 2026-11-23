@@ -1,0 +1,5 @@
+ChannelKey,ChannelCode,ChannelName
+1,SYN-ICH-1,Direct
+2,SYN-ICH-2,Broker
+3,SYN-ICH-3,Partner
+4,SYN-ICH-4,Online

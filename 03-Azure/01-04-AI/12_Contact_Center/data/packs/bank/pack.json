@@ -1,0 +1,50 @@
+{
+  "id": "bank",
+  "industry": "Retail banking",
+  "company": "Harbourline Bank",
+  "prefix": "HB",
+  "tagline": "Current accounts, cards, savings and mortgages for customers across the fictional Zedshire region",
+  "greeting": "Thanks for calling Harbourline Bank. I'm the virtual assistant, and you can ask for a person at any time. How can I help today?",
+  "products": [
+    "Everyday current account",
+    "Premier current account",
+    "Instant saver",
+    "Fixed-rate mortgage"
+  ],
+  "appointment_type": "mortgage adviser call",
+  "voice_hint": "Professional, calm and reassuring",
+  "articles": [
+    {
+      "id": "KB-HB-001",
+      "title": "Checking who you are speaking to"
+    },
+    {
+      "id": "KB-HB-002",
+      "title": "Supporting customers who may be vulnerable"
+    },
+    {
+      "id": "KB-HB-003",
+      "title": "Complaints and escalation"
+    },
+    {
+      "id": "KB-HB-004",
+      "title": "Service levels and opening hours"
+    },
+    {
+      "id": "KB-HB-005",
+      "title": "Lost or stolen cards"
+    },
+    {
+      "id": "KB-HB-006",
+      "title": "Disputing a card payment"
+    },
+    {
+      "id": "KB-HB-007",
+      "title": "Suspected fraud and scams"
+    },
+    {
+      "id": "KB-HB-008",
+      "title": "Mortgage adviser calls"
+    }
+  ]
+}

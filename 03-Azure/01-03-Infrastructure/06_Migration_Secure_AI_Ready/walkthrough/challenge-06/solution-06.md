@@ -4,17 +4,21 @@
 
 Duration: 40 minutes
 
-## **Task 1: Enable Defender for Cloud for Servers**
+## **Task 1: Verify existing Defender plans**
 
-In [Challenge 5](../challenge-05/solution-05.md) we migrated two servers to Azure. The servers are already protected by the basic services of Defender for Cloud. In this challenge, we'll significantly improve the protection level by activating advanced services such as "Cloud Security Posture Management (CSPM)" and "Cloud Workload Protection (CWP)" (Defender for Servers).
+In [Challenge 5](../challenge-05/solution-05.md) we migrated two servers to Azure in `<YOUR-LAB-RESOURCE-GROUP>`. This challenge uses advanced services such as "Cloud Security Posture Management (CSPM)" and "Cloud Workload Protection (CWP)" (Defender for Servers), beyond the basic Defender for Cloud services.
 
-To enable the advanced Defender for Cloud components, open the portal and select *Defender for Cloud*. Under *Management*, select *Environment settings* to define the Defender for Cloud settings for the subscription.
+> [!IMPORTANT]
+> Learners have **Owner on the Hack subscription**, not just read-only access. Defender plan changes affect subscription-wide settings and costs for all learners. Do not change shared plan settings without instructor approval. If a required plan is unavailable, ask the instructor or skip this optional challenge.
+
+> [!NOTE]
+> In the hosted environment, Defender plans are likely already enabled on the shared subscription through Azure Policy enforcement. Verify both required plans and their settings rather than assuming every feature is enabled. Do not disable or downgrade policy-managed plans.
+
+Open *Defender for Cloud* > *Management* > *Environment settings* and select the assigned Hack subscription. Check the existing plan status before making any changes.
 
 ![image](./img/Def-environment-settings.jpg)
 
-In the settings, enable the *Defender CSPM* and *Defender for Servers* plans to better protect the migrated servers from threats. After enabling the plans, use the *Settings* link for both plans and verify that all features are enabled. Finally, click *Save*.
-
-![image](./img/Def-environment-settings.jpg)
+Check whether *Defender CSPM* and *Defender for Servers* are already enabled, and review their features through *Settings*. If both plans are enabled, leave the configuration unchanged and continue with the protection checks for your migrated VMs. If a required plan is missing, ask the instructor to confirm whether Azure Policy should enable it or whether manual activation is approved. Only the instructor enables missing plans after reviewing the shared subscription's requirements and costs. Screenshots illustrate the workflow; use the actual subscription and lab resource names from your dashboard.
 
 Verify the *Defender CSPM* settings and monitoring details.
 
@@ -68,7 +72,7 @@ Try to save the file. Defender for Endpoint will detect and quarantine it, and t
 
 ![image](./img/vmthreat.png)
 
-Next, verify that the alert was forwarded to Azure. Open the portal, select *Defender for Cloud*, and then select *Security Alerts*. EICAR detections are reported with the severity *Informational*. Add *Informational* to the severity filter to display these alerts.
+Next, verify that the alert was forwarded to Azure. Open the portal, select *Defender for Cloud*, and then select *Security Alerts*. Filter to your lab resources. EICAR detections are reported with the severity *Informational*. Add *Informational* to the severity filter to display these alerts.
 
 ![image](./img/DefSecAlert.png)
 
@@ -98,4 +102,4 @@ In this Hack, we deployed virtual machines that use public IP addresses and are 
 
 You successfully completed Challenge 6.
 
-Continue to Challenge 7 and configure intelligent observability for both migrated web workloads. Do not remove `destination-rg`.
+Continue to Challenge 7 and configure intelligent observability for both migrated web workloads. Keep `<YOUR-LAB-RESOURCE-GROUP>` throughout Challenges 2–8; deleting it removes both the simulated source and migrated resources.

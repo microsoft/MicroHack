@@ -39,41 +39,31 @@ try {
         throw "SSMS installation failed with exit code $($ssmsProcess.ExitCode)."
     }
 
-    Write-Host 'Resolving latest Azure Storage Explorer release.'
+    # Storage Explorer is optional: a failure must not fail the whole script.
+    try {
+        $storageExplorerInstaller = Join-Path $installDirectory 'StorageExplorer-windows-x64.exe'
 
-    # $release = Invoke-RestMethod `
-    #     -Uri 'https://api.github.com/repos/microsoft/AzureStorageExplorer/releases/latest' `
-    #     -UseBasicParsing
+        Write-Host 'Downloading Azure Storage Explorer.'
 
-    # $asset = $release.assets |
-    #     Where-Object {
-    #         $_.name -eq 'StorageExplorer-windows-x64.exe'
-    #     } |
-    #     Select-Object -First 1
+        Invoke-WebRequest `
+            -Uri 'https://go.microsoft.com/fwlink/?LinkId=708343&clcid=0x409' `
+            -OutFile $storageExplorerInstaller `
+            -UseBasicParsing
 
-    # if (-not $asset) {
-    #     throw 'The Azure Storage Explorer x64 installer could not be found.'
-    # }
+        Write-Host 'Installing Azure Storage Explorer.'
 
-    $storageExplorerInstaller = Join-Path $installDirectory 'StorageExplorer-windows-x64.exe'
+        $storageExplorerProcess = Start-Process `
+            -FilePath $storageExplorerInstaller `
+            -ArgumentList '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /ALLUSERS' `
+            -Wait `
+            -PassThru
 
-    Write-Host 'Downloading Azure Storage Explorer.'
-
-    Invoke-WebRequest `
-        -Uri 'https://go.microsoft.com/fwlink/?LinkId=708343&clcid=0x409' `
-        -OutFile $storageExplorerInstaller `
-        -UseBasicParsing
-
-    Write-Host 'Installing Azure Storage Explorer.'
-
-    $storageExplorerProcess = Start-Process `
-        -FilePath $storageExplorerInstaller `
-        -ArgumentList '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /ALLUSERS' `
-        -Wait `
-        -PassThru
-
-    if ($storageExplorerProcess.ExitCode -notin 0, 3010) {
-        throw "Storage Explorer installation failed with exit code $($storageExplorerProcess.ExitCode)."
+        if ($storageExplorerProcess.ExitCode -notin 0, 3010) {
+            throw "Storage Explorer installation failed with exit code $($storageExplorerProcess.ExitCode)."
+        }
+    }
+    catch {
+        Write-Warning "Azure Storage Explorer could not be installed and is skipped: $($_.Exception.Message)"
     }
 
     New-Item `

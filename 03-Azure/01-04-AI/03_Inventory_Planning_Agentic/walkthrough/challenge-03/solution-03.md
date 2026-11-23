@@ -1,4 +1,4 @@
-# Solution 02 — Inventory Optimisation + Tracing
+# Solution 3 — Inventory Optimisation and Tracing
 
 **[← Back to Challenge 3](../../challenges/challenge-03.md)** · [Home](../../README.md)
 

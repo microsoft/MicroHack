@@ -5,12 +5,12 @@ BeforeAll {
     foreach ($name in @('global-event-deploy.ps1', 'shared-deploy-lab.ps1', 'lab-defaults.json')) {
         Copy-Item "$root/labautomation/$name" $fixture
     }
-    foreach ($name in @('quota-helpers.ps1', 'localbox-credentials.ps1', 'hosted-tag-policy.ps1', 'hosted-defender.ps1')) {
+    foreach ($name in @('quota-helpers.ps1', 'localbox-credentials.ps1', 'localbox-automation.ps1', 'hosted-tag-policy.ps1', 'hosted-defender.ps1')) {
         Set-Content "$fixture/$name" ''
     }
     Set-Content "$fixture/resource-providers.ps1" 'Register-TestProviders'
     @'
-param($SubscriptionId, $ResourceGroupName, $Location, $AzureLocalResourceProviderObjectId, $AzureLocalInstanceLocation, [switch]$UseConsoleCredentials, [switch]$NoWait)
+param($SubscriptionId, $ResourceGroupName, $Location, $VmSize, $AzureLocalResourceProviderObjectId, $AzureLocalInstanceLocation, [switch]$UseConsoleCredentials, [switch]$NoWait)
 Submit-TestLocalBox @PSBoundParameters
 '@ | Set-Content "$fixture/deploy-localbox.ps1"
     function Update-MhhToken {}
@@ -27,13 +27,18 @@ Submit-TestLocalBox @PSBoundParameters
     function Get-AzRoleAssignment { param($ObjectId, $RoleDefinitionName, $RoleDefinitionId, $Scope) }
     function New-AzRoleAssignment { param($ObjectId, $RoleDefinitionName, $Scope) }
     function Wait-LocalBoxDeployment { param($ResourceGroupName, $DeploymentName) }
+    function Invoke-LocalBoxHostedAutomation { param($SubscriptionId, $ResourceGroupName, $AksAdminGroupObjectId, $Package) }
+    function New-LocalBoxAutomationPackage {}
     function Submit-TestLocalBox {
-        param($SubscriptionId, $ResourceGroupName, $Location, $AzureLocalResourceProviderObjectId, $AzureLocalInstanceLocation, [switch]$UseConsoleCredentials, [switch]$NoWait)
+        param($SubscriptionId, $ResourceGroupName, $Location, $VmSize, $AzureLocalResourceProviderObjectId, $AzureLocalInstanceLocation, [switch]$UseConsoleCredentials, [switch]$NoWait)
     }
     function az {}
     . "$root/labautomation/quota-helpers.ps1"
     function Get-AzComputeResourceSku { param($Location) }
     function Get-AzVMUsage { param($Location) }
+    function Get-MhhStableHash { param($Value, $Length) '123456781234567812345678' }
+    . "$root/labautomation/localbox-credentials.ps1"
+    . "$root/labautomation/localbox-automation.ps1"
 }
 
 Describe 'Global LocalBox Console contract' {
@@ -74,17 +79,19 @@ Describe 'Event-wide LocalBox orchestration' {
         Mock Update-MhhToken {}
         Mock Get-AzContext { @{ Subscription = @{ Id = $state.Subscription } } }
         Mock Get-LocalBoxConsoleGroupCredential { @{ HackboxCredential = @{ name = 'Lab Group ObjectId'; value = '30000000-0000-0000-0000-000000000001' } } }
+        Mock New-LocalBoxAutomationPackage { $state.Events.Add('package'); @{ Hash = 'validated'; Archive = 'package' } }
         Mock Register-TestProviders { $state.Events.Add('providers') }
         Mock Initialize-MhhHostedTagPolicy { $state.Events.Add("tags:$SubscriptionId") }
         Mock Initialize-MhhHostedDefender { $state.Events.Add("defender:$SubscriptionId") }
         Mock Get-AzResourceGroup {}
         Mock Get-AzResourceGroupDeployment { @{ DeploymentName = 'localbox-existing'; ProvisioningState = 'Succeeded'; Timestamp = Get-Date } }
-        Mock Get-AzResource { @{ Name = 'LocalBox-Client'; ResourceId = "$scope/providers/Microsoft.Compute/virtualMachines/LocalBox-Client" } }
+        Mock Get-AzResource {}
         Mock Update-AzTag {}
         Mock Get-AzResourceProvider { @{ RegistrationState = 'Registered' } }
         Mock Get-AzRoleAssignment {}
         Mock New-AzRoleAssignment { $state.Assignments.Add(@{ User = $ObjectId; Role = $RoleDefinitionName; Scope = $Scope }) }
         Mock Wait-LocalBoxDeployment { $state.Events.Add('wait') }
+        Mock Invoke-LocalBoxHostedAutomation { $state.Events.Add('automation'); @{ ResultsUri = 'https://private/results' } }
         Mock Submit-TestLocalBox {
             $state.Events.Add("deploy:$SubscriptionId")
             @{ DeploymentName = 'localbox-new'; ProvisioningState = 'Submitted' }
@@ -98,6 +105,8 @@ Describe 'Event-wide LocalBox orchestration' {
             }
         }
         Mock Set-MhhConfidentialComputeSelection {}
+        Mock Get-MhhSovereignExistingCompute { [pscustomobject]@{ Resources = @(); Allocations = @(); ConfidentialVmSizes = @() } }
+        Mock Get-MhhSovereignResumeCandidate { $null }
         Mock Request-MhhComputeQuota { throw 'Unexpected quota request' }
     }
     It 'deploys once for an event and gives users from every subscription the same discovery scope' {
@@ -106,7 +115,11 @@ Describe 'Event-wide LocalBox orchestration' {
             $SubscriptionId -eq $state.Subscription -and $ResourceGroupName -eq 'rg-localbox-shared' -and
             $AzureLocalInstanceLocation -eq 'australiaeast' -and $UseConsoleCredentials -and $NoWait
         }
-        $state.Events -join ',' | Should -Be "providers,tags:$($state.Subscription),defender:$($state.Subscription),deploy:$($state.Subscription),wait"
+        $state.Events -join ',' | Should -Be "package,providers,tags:$($state.Subscription),defender:$($state.Subscription),deploy:$($state.Subscription),wait,automation"
+        Should -Invoke Invoke-LocalBoxHostedAutomation -Times 1 -Exactly -ParameterFilter {
+            $SubscriptionId -eq $state.Subscription -and $ResourceGroupName -eq 'rg-localbox-shared' -and
+            $AksAdminGroupObjectId -eq '30000000-0000-0000-0000-000000000001' -and $Package.Hash -eq 'validated'
+        }
         $state.Assignments.Count | Should -Be 6
         foreach ($user in $users) {
             @($state.Assignments | Where-Object { $_.User -eq $user -and $_.Scope -eq $scope -and $_.Role -in @('Reader', 'Azure Stack HCI VM Contributor') }).Count | Should -Be 2
@@ -130,7 +143,7 @@ Describe 'Event-wide LocalBox orchestration' {
         @{ ProvisioningState = 'Running' }; @{ ProvisioningState = 'Succeeded' }
     ) {
         param($ProvisioningState)
-        Mock Get-AzResourceGroup { @{ ResourceId = $scope } }
+        Mock Get-AzResourceGroup { @{ ResourceId = $scope; ResourceGroupName = 'rg-localbox-shared' } }
         Mock Get-AzResourceGroupDeployment { @{ DeploymentName = 'localbox-existing'; ProvisioningState = $ProvisioningState } }
         Mock Get-AzRoleAssignment { @{ RoleAssignmentId = 'existing' } }
         & "$fixture/global-event-deploy.ps1" -SubscriptionId $state.Subscription -PreferredLocation spaincentral -AllowedEntraUserIds $users | Out-Null
@@ -141,18 +154,80 @@ Describe 'Event-wide LocalBox orchestration' {
     It 'tries the next host region without changing the global subscription' {
         Mock Submit-TestLocalBox { throw 'SkuNotAvailable' } -ParameterFilter { $Location -eq 'spaincentral' }
         & "$fixture/global-event-deploy.ps1" -SubscriptionId $state.Subscription -PreferredLocation @('spaincentral, swedencentral') -AllowedEntraUserIds $users | Out-Null
-        Should -Invoke Submit-TestLocalBox -Times 2 -Exactly
+        Should -Invoke Submit-TestLocalBox -Times 3 -Exactly
         Should -Invoke Submit-TestLocalBox -Times 1 -ParameterFilter { $Location -eq 'swedencentral' -and $SubscriptionId -eq $state.Subscription }
     }
+    It 'falls back to v5 after asynchronous capacity failure and only then runs guest automation' {
+        Mock Submit-TestLocalBox {
+            $state.Events.Add("submit:$VmSize")
+            @{ DeploymentName = "localbox-$VmSize"; ProvisioningState = 'Submitted' }
+        }
+        Mock Wait-LocalBoxDeployment {
+            $state.Events.Add("wait:$DeploymentName")
+            if ($DeploymentName -eq 'localbox-Standard_E32s_v6') { throw 'SkuNotAvailable' }
+        }
+        & "$fixture/global-event-deploy.ps1" -SubscriptionId $state.Subscription -PreferredLocation spaincentral -AllowedEntraUserIds $users | Out-Null
+        Should -Invoke Submit-TestLocalBox -Times 2 -Exactly
+        Should -Invoke Submit-TestLocalBox -Times 1 -Exactly -ParameterFilter { $VmSize -eq 'Standard_E32s_v5' -and $Location -eq 'spaincentral' }
+        $state.Events[-1] | Should -Be 'automation'
+        Should -Invoke Invoke-LocalBoxHostedAutomation -Times 1 -Exactly
+    }
+    It 'does not move partial regional infrastructure even when preferences are reordered' {
+        Mock Get-AzResourceGroup { @{ ResourceId = $scope; ResourceGroupName = 'rg-localbox-shared' } }
+        Mock Get-AzResourceGroupDeployment { @{ DeploymentName = 'localbox-failed'; ProvisioningState = 'Failed' } }
+        Mock Get-AzResource { @{ Name = 'LocalBox-VNet'; ResourceType = 'Microsoft.Network/virtualNetworks'; Location = 'spaincentral' } }
+        & "$fixture/global-event-deploy.ps1" -SubscriptionId $state.Subscription -PreferredLocation @('swedencentral', 'spaincentral') -AllowedEntraUserIds $users | Out-Null
+        Should -Invoke Submit-TestLocalBox -Times 0 -Exactly -ParameterFilter { $Location -eq 'swedencentral' }
+        Should -Invoke Submit-TestLocalBox -Times 1 -Exactly -ParameterFilter { $Location -eq 'spaincentral' }
+    }
+    It 'fails explicitly when both sizes fail and another region contains incompatible resources' {
+        Mock Get-AzResourceGroup { @{ ResourceId = $scope; ResourceGroupName = 'rg-localbox-shared' } }
+        Mock Get-AzResourceGroupDeployment { @{ DeploymentName = 'localbox-failed'; ProvisioningState = 'Failed' } }
+        Mock Get-AzResource { @{ ResourceType = 'Microsoft.Network/virtualNetworks'; Location = 'spaincentral' } }
+        Mock Submit-TestLocalBox { throw 'SkuNotAvailable' }
+        { & "$fixture/global-event-deploy.ps1" -SubscriptionId $state.Subscription -PreferredLocation @('spaincentral', 'swedencentral') -AllowedEntraUserIds $users } |
+            Should -Throw '*capacity candidates exhausted*No resources were deleted*'
+        Should -Invoke Submit-TestLocalBox -Times 2 -Exactly
+        Should -Invoke Invoke-LocalBoxHostedAutomation -Times 0
+    }
+    It 'rechecks inventory after failure and never changes size when a VM appeared' {
+        Mock Get-AzResourceGroup { @{ ResourceId = $scope; ResourceGroupName = 'rg-localbox-shared' } }
+        Mock Get-AzResourceGroupDeployment { @{ DeploymentName = 'localbox-failed'; ProvisioningState = 'Failed' } }
+        Mock Get-AzResource {
+            if ($state.Created) { @{ ResourceType = 'Microsoft.Compute/virtualMachines'; Location = 'spaincentral' } }
+        }
+        Mock Submit-TestLocalBox { $state.Created = $true; @{ DeploymentName = 'localbox-new'; ProvisioningState = 'Submitted' } }
+        Mock Wait-LocalBoxDeployment { throw 'SkuNotAvailable' }
+        { & "$fixture/global-event-deploy.ps1" -SubscriptionId $state.Subscription -PreferredLocation spaincentral -AllowedEntraUserIds $users } |
+            Should -Throw '*VM already exists*'
+        Should -Invoke Submit-TestLocalBox -Times 1 -Exactly
+        Should -Invoke Invoke-LocalBoxHostedAutomation -Times 0
+    }
+    It 'handles capacity failure while resuming an active deployment without skipping the wait' {
+        Mock Get-AzResourceGroup { @{ ResourceId = $scope; ResourceGroupName = 'rg-localbox-shared' } }
+        Mock Get-AzResourceGroupDeployment { @{ DeploymentName = 'localbox-existing'; ProvisioningState = 'Running' } }
+        Mock Wait-LocalBoxDeployment { if ($DeploymentName -eq 'localbox-existing') { throw 'SkuNotAvailable' } }
+        & "$fixture/global-event-deploy.ps1" -SubscriptionId $state.Subscription -PreferredLocation spaincentral -AllowedEntraUserIds $users | Out-Null
+        Should -Invoke Wait-LocalBoxDeployment -Times 2 -Exactly
+        Should -Invoke Submit-TestLocalBox -Times 1 -Exactly
+    }
+    It 'does not convert scope discovery errors into an empty resource group' {
+        Mock Get-AzResourceGroup { throw 'AuthorizationFailed' }
+        { & "$fixture/global-event-deploy.ps1" -SubscriptionId $state.Subscription -PreferredLocation spaincentral -AllowedEntraUserIds $users } |
+            Should -Throw '*AuthorizationFailed*'
+        Should -Invoke Submit-TestLocalBox -Times 0
+    }
     It 'stops without publishing discovery credentials when <Stage> fails' -TestCases @(
-        @{ Stage = 'tags' }; @{ Stage = 'defender' }; @{ Stage = 'roles' }; @{ Stage = 'wait' }; @{ Stage = 'deploy' }; @{ Stage = 'graph' }
+        @{ Stage = 'tags' }; @{ Stage = 'defender' }; @{ Stage = 'roles' }; @{ Stage = 'wait' }; @{ Stage = 'deploy' }; @{ Stage = 'graph' }; @{ Stage = 'automation' }; @{ Stage = 'package' }
     ) {
         param($Stage)
         switch ($Stage) {
+            'package' { Mock New-LocalBoxAutomationPackage { throw 'Test failure' } }
             'tags' { Mock Initialize-MhhHostedTagPolicy { throw 'Test failure' } }
             'defender' { Mock Initialize-MhhHostedDefender { throw 'Test failure' } }
             'roles' { Mock Get-AzRoleAssignment { throw 'Test failure' } }
             'wait' { Mock Wait-LocalBoxDeployment { throw 'Test failure' } }
+            'automation' { Mock Invoke-LocalBoxHostedAutomation { throw 'Test failure' } }
             'deploy' { Mock Submit-TestLocalBox { throw 'Test failure' } }
             'graph' { Mock az { $global:LASTEXITCODE = 1 } }
         }
@@ -160,7 +235,12 @@ Describe 'Event-wide LocalBox orchestration' {
         { & "$fixture/global-event-deploy.ps1" -SubscriptionId $state.Subscription -PreferredLocation spaincentral -AllowedEntraUserIds $users |
             ForEach-Object { $captured.Add($_) } } | Should -Throw
         $captured.Count | Should -Be 0
-        if ($Stage -in @('tags', 'defender', 'graph')) { Should -Invoke Submit-TestLocalBox -Times 0 }
+        if ($Stage -in @('tags', 'defender', 'graph', 'package')) { Should -Invoke Submit-TestLocalBox -Times 0 }
+        if ($Stage -eq 'package') {
+            Should -Invoke Register-TestProviders -Times 0
+            Should -Invoke Initialize-MhhHostedTagPolicy -Times 0
+            Should -Invoke Initialize-MhhHostedDefender -Times 0
+        }
     }
     It 'rejects the wrong subscription context before mutating resources' -TestCases @(
         @{ Hook = 'global-event-deploy.ps1' }; @{ Hook = 'shared-deploy-lab.ps1' }

@@ -14,6 +14,62 @@ function Get-LocalBoxConsoleGroupCredential {
     @{ HackboxCredential = @{ name = 'Lab Group DisplayName'; value = $group.DisplayName; note = '' } }
 }
 
+function Get-LocalBoxDeploymentFailure {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][string]$ResourceGroupName,
+        [Parameter(Mandatory)][string]$DeploymentName,
+        [ValidateRange(0, 5)][int]$Depth = 0
+    )
+
+    Update-MhhToken | Out-Null
+    $operations = @(Get-AzResourceGroupDeploymentOperation -ResourceGroupName $ResourceGroupName -DeploymentName $DeploymentName -ErrorAction Stop |
+        Where-Object { $_.Properties.ProvisioningState -eq 'Failed' })
+    if (-not $operations.Count) {
+        return [pscustomobject]@{ Code = 'UnknownDeploymentFailure'; Message = 'No failed operation details were returned; inspect the deployment in Azure.' }
+    }
+    foreach ($operation in $operations) {
+        $status = $operation.Properties.StatusMessage
+        if ($status -is [string]) {
+            $status = $status | ConvertFrom-Json -ErrorAction Stop
+        }
+        $pending = [Collections.Generic.Queue[object]]::new()
+        if ($status.error) { $pending.Enqueue($status.error) }
+        $details = @(
+            while ($pending.Count) {
+                $errorDetail = $pending.Dequeue()
+                if ($errorDetail.details.Count) {
+                    foreach ($child in $errorDetail.details) { $pending.Enqueue($child) }
+                }
+                else {
+                    [pscustomobject]@{ Code = [string]$errorDetail.code; Message = [string]$errorDetail.message }
+                }
+            }
+        )
+        $target = $operation.Properties.TargetResource
+        if ($Depth -lt 5 -and $target.ResourceType -eq 'Microsoft.Resources/deployments' -and
+            $target.Id -match "^/subscriptions/$([regex]::Escape((Get-AzContext -ErrorAction Stop).Subscription.Id))/resourceGroups/$([regex]::Escape($ResourceGroupName))/providers/Microsoft.Resources/deployments/[^/]+$" -and
+            ($details.Count -eq 0 -or @($details | Where-Object { $_.Code -notin @('DeploymentFailed', 'InvalidTemplateDeployment') }).Count -eq 0)) {
+            Get-LocalBoxDeploymentFailure -ResourceGroupName $ResourceGroupName -DeploymentName $target.ResourceName -Depth ($Depth + 1)
+        }
+        elseif ($details.Count) { $details }
+        else {
+            [pscustomobject]@{ Code = 'UnknownDeploymentFailure'; Message = 'Failed operation has no usable error details; inspect the deployment in Azure.' }
+        }
+    }
+}
+
+function Test-LocalBoxCapacityFailure {
+    param([Parameter(Mandatory)][System.Management.Automation.ErrorRecord]$Failure)
+
+    if ($Failure.Exception.Data.Contains('LocalBoxCapacityFailure')) {
+        return $Failure.Exception.Data['LocalBoxCapacityFailure'] -eq $true
+    }
+    $message = "$($Failure.Exception.Message) $($Failure.ErrorDetails.Message)"
+    if ($message -match 'AuthorizationFailed|Forbidden|RequestDisallowedByPolicy|InvalidAuthenticationToken') { return $false }
+    return $message -match '\b(SkuNotAvailable|AllocationFailed|ZonalAllocationFailed|QuotaExceeded)\b|VM size .+ unavailable|At least 32 unused'
+}
+
 function Wait-LocalBoxDeployment {
     [CmdletBinding()]
     param(
@@ -30,7 +86,22 @@ function Wait-LocalBoxDeployment {
             break
         }
         if ($deployment.ProvisioningState -in @('Failed', 'Canceled')) {
-            throw "LocalBox deployment '$DeploymentName' ended as $($deployment.ProvisioningState)."
+            $failure = [InvalidOperationException]::new("LocalBox deployment '$DeploymentName' ended as $($deployment.ProvisioningState).")
+            $failure.Data['LocalBoxCapacityFailure'] = $false
+            if ($deployment.ProvisioningState -eq 'Failed') {
+                try {
+                    $details = @(Get-LocalBoxDeploymentFailure -ResourceGroupName $ResourceGroupName -DeploymentName $DeploymentName)
+                    $summary = ($details | ForEach-Object { "[$($_.Code)] $($_.Message)" }) -join '; '
+                    $failure = [InvalidOperationException]::new("$($failure.Message) $(ConvertTo-LocalBoxDiagnosticText $summary 2000)")
+                    $failure.Data['LocalBoxCapacityFailure'] = $details.Count -gt 0 -and
+                        @($details | Where-Object { $_.Code -notin @('SkuNotAvailable', 'AllocationFailed', 'ZonalAllocationFailed', 'QuotaExceeded') }).Count -eq 0
+                }
+                catch {
+                    $failure = [InvalidOperationException]::new("$($failure.Message) Could not retrieve deployment failure details: $(ConvertTo-LocalBoxDiagnosticText $_.Exception.Message 400). Inspect Azure deployment operations before retrying.")
+                    $failure.Data['LocalBoxCapacityFailure'] = $false
+                }
+            }
+            throw $failure
         }
         if ((Get-Date -AsUTC) -ge $deadline) {
             throw "Timed out waiting for LocalBox deployment '$DeploymentName'. Rerun the global event hook after investigating the deployment."

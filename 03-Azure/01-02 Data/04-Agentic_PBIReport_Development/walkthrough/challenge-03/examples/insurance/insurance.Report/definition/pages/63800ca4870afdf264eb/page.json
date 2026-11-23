@@ -1,0 +1,117 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.1.0/schema.json",
+  "name": "63800ca4870afdf264eb",
+  "displayName": "Product and claims detail",
+  "displayOption": "FitToPage",
+  "height": 720,
+  "width": 1280,
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "Filterb76fc69db4ef413b4c900000",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "DimDate"
+              }
+            },
+            "Property": "Year"
+          }
+        },
+        "type": "Categorical",
+        "filter": {
+          "Version": 2,
+          "From": [
+            {
+              "Name": "d",
+              "Entity": "DimDate",
+              "Type": 0
+            }
+          ],
+          "Where": [
+            {
+              "Condition": {
+                "In": {
+                  "Expressions": [
+                    {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Source": "d"
+                          }
+                        },
+                        "Property": "Year"
+                      }
+                    }
+                  ],
+                  "Values": [
+                    [
+                      {
+                        "Literal": {
+                          "Value": "2025L"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "visualInteractions": [
+    {
+      "source": "5b5933468118b13a3077",
+      "target": "25f7c1b83f164b82040f",
+      "type": "NoFilter"
+    },
+    {
+      "source": "5b5933468118b13a3077",
+      "target": "eee01de04c2ce0657fb2",
+      "type": "NoFilter"
+    },
+    {
+      "source": "5b5933468118b13a3077",
+      "target": "1b665f235cb4b12148dd",
+      "type": "NoFilter"
+    },
+    {
+      "source": "5b5933468118b13a3077",
+      "target": "e3b914492d507c3241d9",
+      "type": "NoFilter"
+    },
+    {
+      "source": "5b5933468118b13a3077",
+      "target": "e430f8d28eac5274611a",
+      "type": "NoFilter"
+    },
+    {
+      "source": "5b5933468118b13a3077",
+      "target": "a64991c0fea2b308bf33",
+      "type": "NoFilter"
+    },
+    {
+      "source": "5b5933468118b13a3077",
+      "target": "9dcd0297351a43d64bbf",
+      "type": "NoFilter"
+    },
+    {
+      "source": "5b5933468118b13a3077",
+      "target": "6124b6c97378427d445e",
+      "type": "NoFilter"
+    },
+    {
+      "source": "5b5933468118b13a3077",
+      "target": "b21cab88c67a4f8fde1d",
+      "type": "NoFilter"
+    },
+    {
+      "source": "5b5933468118b13a3077",
+      "target": "f6f6bf6089e01472d08b",
+      "type": "NoFilter"
+    }
+  ]
+}

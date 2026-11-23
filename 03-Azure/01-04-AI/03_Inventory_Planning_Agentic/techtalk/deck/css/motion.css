@@ -1,0 +1,90 @@
+/* Motion vocabulary and controls for the beat engine (assets/beat-engine.js).
+   Theme the variables; keep the mechanics. From the wow-reveal-presentations skill by Digvijay Chauhan. */
+
+:root {
+  --out: cubic-bezier(0.16, 1, 0.3, 1);     /* arrivals: fast start, soft landing */
+  --inout: cubic-bezier(0.65, 0, 0.35, 1);  /* journeys: draws, travel, scans */
+  --cue: #C8F53C;                           /* the "click to continue" colour: the lime baton */
+}
+
+/* Slides are fixed 1280x720 compositions; position elements absolutely inside them. */
+.reveal .slides section { position: absolute; inset: 0; width: 1280px; height: 720px; padding: 0 !important; overflow: hidden; isolation: isolate; text-align: left; box-sizing: border-box; }
+
+/* ---------- the k-* kinds: hidden until .on, animated only on a live arrival (.enter) ---------- */
+.scene :is([class^="k-"], [class*=" k-"]):not(.on) { opacity: 0; visibility: hidden; }
+.scene .enter { animation-delay: var(--d, 0ms) !important; }
+
+.k-rise.enter  { animation: rise 650ms var(--out) both; }     /* text and panels */
+.k-land.enter  { animation: land 900ms var(--out) both; }     /* a conclusion: blur to sharp */
+.k-pop.enter   { animation: pop 700ms var(--out) both; }      /* nodes, chips, dots: small overshoot */
+.k-bloom.enter { animation: bloom 1100ms var(--out) both; }   /* a light source or hero object */
+.k-wipe.enter  { animation: wipe 900ms var(--out) both; }     /* titles: blurred left-to-right reveal */
+.k-fade.enter  { animation: fade 700ms ease both; }
+.k-draw.enter  { animation: draw 1200ms var(--inout) both; }  /* SVG paths with pathLength="1" */
+.k-growx.enter { animation: growx 900ms var(--out) both; transform-origin: left center; }  /* bars */
+.k-tok.enter   { animation: tok 380ms var(--out) both; }      /* streamed words */
+.k-drop.enter  { animation: drop 650ms cubic-bezier(0.3, 1.6, 0.5, 1) both; }  /* a stamp or verdict */
+
+.k-draw { stroke-dasharray: 1 1; stroke-dashoffset: 0; }
+svg :is(.k-pop, .k-bloom, .k-land, .k-rise) { transform-box: fill-box; transform-origin: center; }
+
+@keyframes rise  { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes land  { from { opacity: 0; transform: scale(0.82); filter: blur(8px); } 60% { opacity: 1; filter: blur(0); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes pop   { 0% { opacity: 0; transform: scale(0.3); } 60% { opacity: 1; transform: scale(1.06); } 100% { opacity: 1; transform: none; } }
+@keyframes bloom { from { opacity: 0; transform: scale(0.15); } 40% { opacity: 1; } to { opacity: 1; transform: none; } }
+/* Negative insets so glows and descenders are not clipped at the end of the wipe. */
+@keyframes wipe  { from { opacity: 0; clip-path: inset(-60% 100% -60% -10%); filter: blur(6px); } to { opacity: 1; clip-path: inset(-60% -10% -60% -10%); filter: none; } }
+@keyframes fade  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes draw  { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes growx { from { opacity: 0; transform: scaleX(0); } to { opacity: 1; transform: none; } }
+@keyframes tok   { from { opacity: 0; filter: blur(3px); transform: translateY(3px); } to { opacity: 1; filter: none; transform: none; } }
+@keyframes drop  { from { opacity: 0; transform: translateY(-26px) rotate(-6deg) scale(1.3); } to { opacity: 1; transform: rotate(-4deg); } }
+
+/* ---------- one-shot accents (Beat.pulse) ---------- */
+.ring, .burst { fill: none; stroke: currentColor; stroke-width: 1.5; opacity: 0; transform-box: fill-box; transform-origin: center; vector-effect: non-scaling-stroke; }
+.ring.enter  { animation: ripple 1100ms var(--out) both; }   /* something arrived */
+.burst.enter { animation: burst 1300ms var(--out) both; }    /* the payoff landed */
+@keyframes ripple { from { opacity: 0.9; transform: scale(1); } to { opacity: 0; transform: scale(2.6); } }
+@keyframes burst  { from { opacity: 0.95; transform: scale(1); } to { opacity: 0; transform: scale(5); } }
+/* Relabel in place: Beat.go(el, live, 'flipping') */
+.flipping { animation: flip 700ms var(--out) var(--d, 0ms) both; }
+@keyframes flip { 0% { transform: perspective(300px) rotateY(0); } 50% { transform: perspective(300px) rotateY(90deg); } 100% { transform: none; } }
+
+/* ---------- travel along a path: <div class="travel" style="offset-path:path('M..')"> at left:0; top:0
+   of the 1280x720 section. No margins or translate: the element's centre follows the path. ---------- */
+.travel { position: absolute; left: 0; top: 0; width: 12px; height: 12px; border-radius: 50%; background: #fff; box-shadow: 0 0 14px 4px rgba(255, 255, 255, 0.55); offset-rotate: 0deg; opacity: 0; z-index: 3; }
+.travel.go { animation: travel var(--dur, 1600ms) var(--inout) var(--d, 0ms) both; }
+@keyframes travel { 0% { offset-distance: 0%; opacity: 0; } 8% { opacity: 1; } 92% { opacity: 1; } 100% { offset-distance: 100%; opacity: 0; } }
+
+/* ---------- a scan of light that changes what it passes (time each change to its x position) ---------- */
+@keyframes scanx { from { transform: translateX(0); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } to { transform: translateX(var(--travel)); opacity: 0; } }
+
+/* ---------- living states after a build: only on the present slide ---------- */
+@keyframes breathe  { from { opacity: 0.45; } to { opacity: 0.95; } }
+@keyframes comet    { from { stroke-dashoffset: 0.06; } to { stroke-dashoffset: -1; } }   /* dasharray 0.06 1 on pathLength=1 */
+@keyframes flowdash { to { stroke-dashoffset: -64; } }                                     /* data along a cable */
+/* e.g. section.present:not(.static).alive .flow { animation: comet 2.8s var(--inout) infinite; } */
+
+/* ---------- pausing, static states, reduced motion ---------- */
+section.motion-paused *, section.motion-paused *::before, section.motion-paused *::after { animation-play-state: paused !important; }
+section.static *, section.static *::before, section.static *::after,
+.reveal.overview section *, .reveal.overview section *::before, .reveal.overview section *::after { animation: none !important; transition: none !important; }
+@media (prefers-reduced-motion: reduce) { .reveal section *, .reveal section *::before, .reveal section *::after { animation: none !important; transition: none !important; } }
+
+/* ---------- controls and the waiting cue ---------- */
+.ctl { position: absolute; top: 38px; right: 64px; z-index: 20; display: flex; gap: 6px; align-items: center; }
+.ctl button { padding: 6px 10px; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 9px; font: 500 11px system-ui, sans-serif; background: rgba(0, 0, 0, 0.5); color: #9AA4B2; cursor: pointer; }
+.ctl button:hover:not(:disabled), .ctl button:focus-visible { border-color: var(--cue); color: #fff; outline: 2px solid var(--cue); outline-offset: 2px; }
+.ctl button:disabled { opacity: 0.35; cursor: default; }
+.ctl .cue { display: none; align-items: center; gap: 7px; margin-right: 6px; font: 500 11px ui-monospace, Consolas, monospace; letter-spacing: 0.12em; text-transform: uppercase; color: var(--cue); }
+.ctl .cue::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--cue); animation: cue 1.8s ease-out infinite; }
+section.waiting .ctl .cue { display: inline-flex; }
+@keyframes cue { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--cue) 70%, transparent); } 80%, 100% { box-shadow: 0 0 0 12px transparent; } }
+.beat { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+/* ---------- print: final states, no controls ---------- */
+html.print-pdf .ctl { display: none !important; }
+@media print {
+  .ctl { display: none !important; }
+  .scene :is([class^="k-"], [class*=" k-"]) { opacity: 1 !important; visibility: visible !important; }
+}

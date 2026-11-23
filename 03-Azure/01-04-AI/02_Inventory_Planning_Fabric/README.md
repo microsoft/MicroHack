@@ -102,6 +102,8 @@ Complete the following before the hack session:
 
 ### Agenda
 
+The opening tech talk is in [`techtalk/`](techtalk/README.md): *Ask the shelf*, about 22 minutes, opens offline in a browser.
+
 ```
 09:00 – 10:00   Tech Talk: the agentic dev model, the three agents, the tools (60 min)
 10:00 – 11:45   Challenges 1 and 2 (with a short break)

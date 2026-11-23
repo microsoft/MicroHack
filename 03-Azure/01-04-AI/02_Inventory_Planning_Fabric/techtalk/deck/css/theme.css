@@ -1,0 +1,326 @@
+/* =======================================================================
+   THE STOCK REPORT: theme for "Ask the shelf", the Agentic Inventory Planning tech talk.
+   Concept: a quality business publication printed on warm paper. Ink for words, teal for every
+   number the Lakehouse counted, green for stock that is ordered or approved, one warm vermilion
+   that only ever means "stock out" or "wrong". One object recurs: a shelf of boxes that drains
+   and refills.
+   ======================================================================= */
+
+:root {
+  --paper: #F5F1E8;
+  --card: #FFFDF8;
+  --ink: #1C1E1F;
+  --ink-2: #3A3C3D;
+  --muted: #625F57;
+  --faint: #77736A;
+  --rule: #D6CEBD;
+  --teal: #0F6E68;
+  --teal-2: #138A80;
+  --teal-soft: #D7EBE6;
+  --green: #2F8A4C;
+  --green-soft: #DDEFDB;
+  --signal: #C9431C;
+  --signal-soft: #F7DDD2;
+
+  --head: Georgia, "Times New Roman", serif;
+  --body: "Segoe UI", system-ui, -apple-system, sans-serif;
+  --mono: Consolas, "Cascadia Mono", "SF Mono", monospace;
+
+  --cue: var(--teal);
+}
+
+.reveal-viewport { background: var(--paper); }
+.reveal { font-family: var(--body); color: var(--ink); -webkit-font-smoothing: antialiased; }
+.reveal .progress { color: var(--teal); height: 3px; }
+.reveal .controls { color: var(--teal); }
+.reveal p, .reveal h1, .reveal h2, .reveal h3 { margin: 0; }
+.reveal h1, .reveal h2 { font-family: var(--head); color: var(--ink); text-transform: none; letter-spacing: -0.01em; font-weight: 400; }
+.reveal pre { margin: 0; width: auto; box-shadow: none; font-family: var(--mono); }
+
+/* ---------- shared type ---------- */
+.kicker { position: absolute; left: 72px; top: 40px; font: 13px var(--mono); letter-spacing: 0.22em; text-transform: uppercase; color: var(--teal); }
+.reveal h2.title { position: absolute; left: 70px; top: 60px; font-size: 48px; line-height: 1.1; white-space: nowrap; }
+.subtitle { position: absolute; left: 72px; top: 126px; font-size: 19px; color: var(--muted); white-space: nowrap; }
+.moral { position: absolute; left: 72px; font: italic 28px/1.25 var(--head); color: var(--ink); white-space: nowrap; }
+.foot { position: absolute; left: 72px; right: 190px; bottom: 22px; font: 11px/1.35 var(--mono); color: var(--faint); }
+.d { font-family: var(--mono); font-style: normal; font-weight: 400; }
+.teal { color: var(--teal); } .green { color: var(--green); } .signal { color: var(--signal); } .ink { color: var(--ink); }
+
+/* ---------- controls on paper ---------- */
+.ctl button { background: var(--card); border: 1px solid var(--rule); color: var(--muted); font: 500 11px var(--body); }
+.ctl button:hover:not(:disabled), .ctl button:focus-visible { border-color: var(--teal); color: var(--ink); outline: 2px solid var(--teal); outline-offset: 2px; }
+.ctl .cue { color: var(--teal); }
+
+/* ---------- extra motion kinds for this deck ---------- */
+.k-growy.enter { animation: growy 900ms var(--out) both; transform-origin: center bottom; }
+@keyframes growy { from { opacity: 0; transform: scaleY(0); } to { opacity: 1; transform: none; } }
+
+/* =======================================================================
+   THE SIGNATURE OBJECT: boxes on a shelf
+   .bx is one unit of stock (teal: counted on hand), .ord is ordered (green),
+   .slot is an empty place on the shelf, .out is a place with nothing to sell.
+   ======================================================================= */
+.bx { position: absolute; box-sizing: border-box; background: var(--teal-2); border: 1px solid var(--teal); border-radius: 2px; transition: opacity 500ms var(--out), transform 500ms var(--out); }
+.bx::after { content: ''; position: absolute; left: 50%; top: 0; width: 18%; height: 42%; transform: translateX(-50%); background: rgba(255, 255, 255, 0.38); }
+.bx.ord { background: var(--green); border-color: #256F3D; }
+.bx.ord::after { background: rgba(255, 255, 255, 0.32); }
+.bx.gone { opacity: 0 !important; transform: translateY(-16px); }
+.slot { position: absolute; box-sizing: border-box; border: 1.5px dashed #B9B1A0; border-radius: 2px; }
+.slot.want { border-color: var(--green); }
+.board, .cp-edge { position: absolute; height: 8px; background: var(--ink); border-radius: 1px; }
+.board { left: 0; right: 0; }
+.po-bay .board { height: 6px; }
+.cv-slots .slot { border-color: #C9C1AF; }
+.upright { position: absolute; top: 0; bottom: 0; width: 8px; background: var(--ink); }
+.bay { position: absolute; }
+
+/* A shelf-edge label: the deck's caption object */
+.tag { position: absolute; display: flex; flex-direction: column; gap: 3px; padding: 10px 16px 11px; background: var(--card); border: 1.5px solid var(--ink); border-left: 6px solid var(--teal); box-shadow: 0 6px 14px -10px rgba(28, 30, 31, 0.5); }
+.tag .t-sku { font: 12px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.tag .t-n { font: 20px var(--head); color: var(--ink); }
+.tag .t-n b { font-weight: 700; transition: color 400ms; }
+.tag.low { border-left-color: var(--signal); }
+.tag.low .t-n b { color: var(--signal); }
+
+/* =======================================================================
+   COVER: a masthead, the headline, and the Seattle shelf draining from 30 to 6
+   ======================================================================= */
+.cover .mast { position: absolute; left: 72px; right: 72px; top: 34px; display: flex; justify-content: space-between; padding-bottom: 10px; border-bottom: 3px double var(--ink); font: 12px var(--mono); letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-2); }
+.reveal .cover .cv-title { position: absolute; left: 64px; top: 140px; font-size: 128px; line-height: 1.0; letter-spacing: -0.025em; }
+.cover .cv-title em { color: var(--teal); }
+.cover .cv-sub { position: absolute; left: 72px; top: 438px; width: 560px; font: 22px/1.4 var(--body); color: var(--ink-2); }
+.cover .byline { position: absolute; left: 72px; top: 600px; padding-top: 14px; border-top: 1px solid var(--rule); width: 560px; font: 600 17px var(--body); color: var(--ink); }
+.cover .cv-bay { left: 772px; top: 110px; width: 420px; height: 400px; }
+.cover .cv-tag { left: 772px; top: 540px; }
+
+/* =======================================================================
+   CHAPTERS: a headline, a shelf edge across the page, and a hanging label.
+   The shelf fills a little more in each chapter.
+   ======================================================================= */
+.reveal .chapter .cp-title { position: absolute; left: 64px; top: 150px; font-size: 128px; line-height: 1; font-style: italic; }
+.chapter .cp-sub { position: absolute; left: 72px; top: 318px; font: 22px var(--body); color: var(--muted); }
+.cp-edge { left: 72px; width: 1136px; top: 470px; }
+.chapter .cp-tag { left: 72px; top: 494px; }
+
+/* =======================================================================
+   2 THE PLAN: an editorial bar chart and the signals beside it
+   ======================================================================= */
+.plan .chart { position: absolute; left: 72px; top: 184px; width: 680px; height: 400px; }
+.plan .ch-head { position: absolute; left: 0; top: 0; font: 13px var(--mono); letter-spacing: 0.04em; color: var(--ink-2); }
+.plan .gl { position: absolute; left: 40px; width: 620px; height: 1px; background: var(--rule); }
+.plan .gl.base { background: var(--ink); height: 1.5px; }
+.plan .gl span { position: absolute; left: -36px; top: -8px; width: 26px; text-align: right; font: 12px var(--mono); color: var(--faint); }
+.plan .bar { position: absolute; width: 64px; background: #B9B1A0; }
+.plan .bar.hot { background: var(--teal-2); }
+.plan .bar .v { position: absolute; left: 0; right: 0; top: 6px; text-align: center; font: 700 14px var(--mono); color: #fff; }
+.plan .wk { position: absolute; width: 64px; text-align: center; font: 12px var(--mono); color: var(--muted); }
+.plan .avg { position: absolute; left: 40px; width: 620px; top: 136px; height: 0; border-top: 2px dashed var(--ink-2); }
+.plan .avg span { position: absolute; left: 0; top: -26px; padding: 0 8px 0 0; background: var(--paper); font: 13px var(--mono); color: var(--ink-2); white-space: nowrap; }
+.plan .spike { position: absolute; left: 460px; width: 164px; top: 62px; height: 10px; border: 1.5px solid var(--teal); border-bottom: 0; }
+.plan .spike span { position: absolute; left: 50%; top: -28px; transform: translateX(-50%); white-space: nowrap; font: 700 15px var(--mono); color: var(--teal); }
+.plan .signals { position: absolute; left: 812px; top: 184px; width: 396px; }
+.plan .sg-head { font: 13px var(--mono); letter-spacing: 0.04em; color: var(--ink-2); padding-bottom: 8px; border-bottom: 1.5px solid var(--ink); }
+.plan .sg { position: absolute; left: 0; width: 396px; }
+.plan .sg .sg-m { display: flex; justify-content: space-between; font: 12px var(--mono); color: var(--muted); }
+.plan .sg .sg-t { margin-top: 4px; font: 18px/1.3 var(--head); color: var(--ink); }
+.plan .sg.mine .sg-m b { color: var(--signal); font-weight: 700; }
+.plan .moral { top: 612px; }
+
+/* =======================================================================
+   3 RUNWAY: one slot a day; boxes are sold as the day cursor passes
+   ======================================================================= */
+.runway .axis { position: absolute; left: 0; top: 0; width: 1280px; height: 720px; pointer-events: none; }
+.runway .ax-l { position: absolute; left: 72px; top: 232px; font: 12px var(--mono); color: var(--muted); }
+.runway .tick { position: absolute; top: 232px; font: 12px var(--mono); color: var(--muted); transform: translateX(-50%); white-space: nowrap; }
+.runway .lane-l { position: absolute; left: 72px; }
+.runway .lane-l b { display: block; font: 26px var(--head); font-weight: 400; }
+.runway .lane-l span { font: 13px var(--mono); color: var(--muted); }
+.runway .slot.out { background: var(--signal-soft); border: 1.5px solid var(--signal); }
+.runway .slot.arrive { border: 0; }
+.runway .outl { position: absolute; font: 600 14px var(--body); color: var(--signal); white-space: nowrap; }
+.runway .arr-l { position: absolute; font: 12px var(--mono); color: var(--green); white-space: nowrap; transform: translateX(-50%); }
+.runway .cursor { position: absolute; top: 258px; height: 196px; width: 0; border-left: 2px solid var(--ink); transition: left 320ms var(--inout); opacity: 0; }
+.runway .cursor.on { opacity: 1; }
+.runway .cur-l { position: absolute; top: 200px; left: 0; transform: translateX(-50%); font: 13px var(--mono); color: var(--ink); white-space: nowrap; }
+.runway .moral { top: 560px; }
+
+/* =======================================================================
+   5 QUERY: phrases become columns, then the answer as bullet charts
+   ======================================================================= */
+.query .q { position: absolute; left: 72px; top: 174px; width: 1136px; font: italic 27px/1.5 var(--head); color: var(--ink); }
+.query .ph { background: linear-gradient(var(--teal-soft), var(--teal-soft)) no-repeat 0 100% / 0% 100%; transition: background-size 700ms var(--out), color 400ms; padding: 0 2px; }
+.query .ph.hit { background-size: 100% 100%; color: var(--teal); }
+.query .ph.hit::after { content: attr(data-n); font: 700 13px var(--mono); vertical-align: super; margin-left: 3px; color: var(--teal); }
+.query .col { position: absolute; top: 290px; width: 266px; height: 84px; box-sizing: border-box; padding: 12px 14px 0 50px; background: var(--card); border: 1px solid var(--rule); border-top: 3px solid var(--teal); }
+.query .col .no { position: absolute; left: 14px; top: 13px; width: 24px; height: 24px; border-radius: 50%; background: var(--teal); color: #fff; font: 700 13px/24px var(--mono); text-align: center; }
+.query .col b { display: block; font: 700 15px var(--mono); color: var(--teal); }
+.query .col span:not(.no) { display: block; margin-top: 6px; font: 15px var(--body); color: var(--ink-2); }
+.query .sql { position: absolute; left: 820px; top: 410px; width: 388px; box-sizing: border-box; padding: 12px 16px 14px; background: var(--card); border: 1px solid var(--rule); }
+.query .sql-h { font: 11px var(--mono); color: var(--faint); margin-bottom: 8px; }
+.query .sql pre { font: 13px/1.55 var(--mono); color: var(--ink-2); white-space: pre; }
+.query .ans-h { position: absolute; left: 72px; top: 410px; font: 13px var(--mono); letter-spacing: 0.04em; color: var(--ink-2); }
+.query .brow { position: absolute; left: 72px; width: 720px; height: 60px; }
+.query .brow .st { position: absolute; left: 0; top: 0; font: 22px var(--head); }
+.query .brow .trk { position: absolute; left: 130px; top: 6px; width: 440px; height: 18px; background: #E8E1D2; }
+.query .brow .fill { position: absolute; left: 130px; top: 6px; height: 18px; background: var(--signal); }
+.query .brow .tk { position: absolute; top: 0; width: 2px; height: 30px; background: var(--ink); }
+.query .brow .tl { position: absolute; top: 34px; font: 11px var(--mono); color: var(--muted); white-space: nowrap; transform: translateX(-50%); }
+.query .brow .tl.end { transform: translateX(-100%); }
+.query .brow .val { position: absolute; left: 590px; top: -2px; font: 700 24px var(--head); color: var(--signal); }
+.query .crit { position: absolute; left: 630px; top: 2px; padding: 3px 8px; border: 1.5px solid var(--signal); color: var(--signal); font: 700 12px var(--mono); letter-spacing: 0.1em; }
+
+/* =======================================================================
+   6 CORRECTIONS: a newspaper corrections column; the quotes are struck through
+   ======================================================================= */
+.corr .box { position: absolute; left: 72px; top: 178px; width: 1136px; height: 400px; border-top: 4px solid var(--ink); }
+.corr .box-h { position: absolute; left: 0; top: 10px; font: 700 13px var(--mono); letter-spacing: 0.28em; text-transform: uppercase; }
+.corr .it { position: absolute; top: 46px; width: 344px; }
+.corr .it + .it::before { content: ''; position: absolute; left: -24px; top: 0; height: 340px; width: 1px; background: var(--rule); }
+.corr .it-tag { font: 12px var(--mono); color: var(--teal); letter-spacing: 0.06em; }
+.corr .said { margin-top: 10px; font: 12px var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+.corr .qt { margin-top: 6px; min-height: 92px; font: italic 22px/1.38 var(--head); color: var(--ink); }
+.corr .qt span { background: linear-gradient(var(--signal), var(--signal)) no-repeat 0 58% / 0% 2px; transition: background-size 900ms var(--inout), color 600ms; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.corr .qt.struck span { background-size: 100% 2px; color: var(--faint); }
+.corr .fx { margin-top: 14px; font: 15px/1.42 var(--body); color: var(--ink-2); }
+.corr .fx b { display: block; font: 700 11px var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+.corr .fx.fix b { color: var(--teal); }
+.corr .moral { top: 612px; }
+
+/* =======================================================================
+   8 THE LOOP: three agent cards over one governed Lakehouse
+   ======================================================================= */
+.loop .ag { position: absolute; top: 180px; width: 340px; height: 256px; box-sizing: border-box; background: var(--card); border: 1px solid var(--rule); border-top: 3px solid var(--ink); }
+.loop .ag .n { position: absolute; left: 20px; top: 12px; font: 44px var(--head); color: var(--teal); }
+.loop .ag .nm { position: absolute; left: 66px; top: 26px; font: 14px var(--mono); color: var(--ink-2); }
+.loop .ag .vb { position: absolute; left: 20px; top: 72px; font: 24px var(--head); }
+.loop .ag .ds { position: absolute; left: 20px; top: 108px; width: 300px; font: 15px/1.4 var(--body); color: var(--muted); }
+.loop .ag .out { position: absolute; left: 20px; top: 164px; font: italic 18px var(--head); color: var(--ink); white-space: nowrap; }
+.loop .ag .out small { font: normal 11px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-right: 8px; }
+.loop .chips { position: absolute; left: 20px; top: 208px; display: flex; gap: 8px; }
+.loop .chip { padding: 4px 10px; font: 12px var(--mono); border: 1px solid var(--ink-2); color: var(--ink-2); white-space: nowrap; transition: opacity 600ms, color 600ms; }
+.loop .chip.fab { width: 100px; box-sizing: border-box; text-align: center; background: var(--teal); border-color: var(--teal); color: #fff; }
+.loop .chip.web s { text-decoration: none; background: linear-gradient(var(--signal), var(--signal)) no-repeat 0 55% / 0% 1.5px; transition: background-size 700ms var(--inout); }
+.loop .chip.web.removed { opacity: 0.55; }
+.loop .chip.web.removed s { background-size: 100% 1.5px; }
+.loop .arrow { position: absolute; top: 300px; width: 46px; height: 2px; background: var(--ink); }
+.loop .arrow::after { content: ''; position: absolute; right: -1px; top: -5px; border: 6px solid transparent; border-left: 9px solid var(--ink); border-right: 0; }
+.loop .threads { position: absolute; inset: 0; width: 1280px; height: 720px; pointer-events: none; }
+.loop .thr { fill: none; stroke: var(--teal); stroke-width: 2; }
+.loop .lake { position: absolute; left: 72px; top: 520px; width: 1136px; height: 66px; box-sizing: border-box; padding: 11px 20px; background: var(--teal-soft); border: 1.5px solid var(--teal); }
+.loop .lk-name { font: 700 15px var(--mono); color: var(--teal); }
+.loop .lk-name span { font-weight: 400; color: var(--muted); }
+.loop .lk-tables { margin-top: 4px; font: 13px var(--body); color: var(--ink-2); }
+.travel { background: var(--teal); box-shadow: 0 0 0 4px rgba(19, 138, 128, 0.18); }
+.loop .moral { top: 610px; }
+
+/* =======================================================================
+   9 REFILL: the rule fills the gap on each shelf with ordered boxes
+   ======================================================================= */
+.refill .formula { position: absolute; left: 72px; top: 172px; font: 32px var(--head); color: var(--muted); }
+.refill .formula-2 { position: absolute; left: 72px; top: 224px; font: 13px var(--mono); color: var(--muted); }
+.refill .rl { position: absolute; left: 72px; }
+.refill .rl span { display: block; font: 12px var(--mono); color: var(--muted); }
+.refill .rl b { display: block; font: 24px var(--head); font-weight: 400; }
+.refill .rn { position: absolute; left: 330px; font: 11px var(--mono); color: var(--muted); white-space: nowrap; }
+.refill .ro { position: absolute; left: 1040px; }
+.refill .ro span { display: block; font: 11px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.refill .ro b { font: 700 38px var(--head); color: var(--green); }
+.refill .crit { position: absolute; left: 1110px; padding: 3px 7px; border: 1.5px solid var(--signal); color: var(--signal); font: 700 11px var(--mono); letter-spacing: 0.1em; }
+.refill .moral { top: 590px; }
+
+/* =======================================================================
+   10 RECEIPT: the trace prints like a till receipt, then each span is explained
+   ======================================================================= */
+.receipt .paper { position: absolute; left: 72px; top: 172px; width: 470px; height: 408px; background: var(--card); box-shadow: 0 14px 30px -18px rgba(28, 30, 31, 0.55);
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), 96% 100%, 92% calc(100% - 8px), 88% 100%, 84% calc(100% - 8px), 80% 100%, 76% calc(100% - 8px), 72% 100%, 68% calc(100% - 8px), 64% 100%, 60% calc(100% - 8px), 56% 100%, 52% calc(100% - 8px), 48% 100%, 44% calc(100% - 8px), 40% 100%, 36% calc(100% - 8px), 32% 100%, 28% calc(100% - 8px), 24% 100%, 20% calc(100% - 8px), 16% 100%, 12% calc(100% - 8px), 8% 100%, 4% calc(100% - 8px), 0 100%); }
+.receipt .ln { position: absolute; left: 24px; right: 24px; height: 22px; font: 13px/22px var(--mono); color: var(--ink-2); white-space: pre; }
+.receipt .ln.c { text-align: center; }
+.receipt .ln.h { font-weight: 700; color: var(--ink); }
+.receipt .ln.rule { border-top: 1.5px dashed #B9B1A0; height: 0; top: auto; }
+.receipt .ln .rt { position: absolute; right: 0; color: var(--teal); font-weight: 400; }
+.receipt .lead { position: absolute; left: 548px; width: 44px; height: 0; border-top: 1.5px solid var(--teal); }
+.receipt .an { position: absolute; left: 604px; width: 604px; }
+.receipt .an p { font: 16px/1.4 var(--body); color: var(--ink-2); }
+.receipt .an p b { color: var(--ink); }
+.receipt .an .tb { margin-top: 8px; height: 10px; background: var(--teal-2); }
+.receipt .an .tbl { margin-top: 4px; font: 11px var(--mono); color: var(--muted); }
+.receipt .moral { top: 612px; }
+
+/* =======================================================================
+   12 THE GUESS AND THE COUNT: the purchase order, the ledger, the gate, the refill
+   ======================================================================= */
+.po .doc { position: absolute; left: 72px; top: 170px; width: 640px; height: 444px; box-sizing: border-box; padding: 22px 26px; background: var(--card); border: 1px solid var(--rule); box-shadow: 0 14px 30px -20px rgba(28, 30, 31, 0.55); }
+.po .doc-h { font: 700 14px var(--mono); letter-spacing: 0.22em; text-transform: uppercase; }
+.po .doc-by { margin-top: 6px; font: 14px var(--body); color: var(--muted); }
+.po table.lines { position: absolute; left: 26px; top: 82px; width: 588px; border-collapse: collapse; margin: 0; }
+.po table.lines th { font: 11px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); text-align: left; padding: 0 0 8px; border-bottom: 1.5px solid var(--ink); font-weight: 400; }
+.po table.lines td { font: 19px var(--head); padding: 9px 0; border-bottom: 1px solid var(--rule); color: var(--ink); }
+.po table.lines td.m { font: 15px var(--mono); color: var(--ink-2); }
+.po table.lines .r { text-align: right; }
+.po td.cost span { display: inline-block; }
+.po td.cost.guess span { color: var(--faint); border-bottom: 1.5px dashed var(--faint); }
+.po td.cost.counted span { color: var(--teal); font-weight: 700; }
+.po td.qty.changed span { color: var(--green); font-weight: 700; }
+.po .total { position: absolute; left: 26px; right: 26px; top: 262px; display: flex; justify-content: space-between; align-items: baseline; }
+.po .total span { font: 12px var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.po .total b { font: 700 40px var(--head); color: var(--ink); }
+.po .total.counted b { color: var(--teal); }
+.po .total.signed b { color: var(--green); }
+.po .ask { position: absolute; left: 26px; top: 326px; font: 12px var(--mono); color: var(--muted); }
+.po .gap { position: absolute; left: 26px; top: 360px; font: italic 21px var(--head); color: var(--signal); white-space: nowrap; }
+.po .gap b { font-weight: 700; }
+.po .stamp { position: absolute; right: 24px; top: 352px; padding: 6px 14px 8px; border: 2.5px solid var(--green); color: var(--green); background: var(--card); text-align: center; transform: rotate(-2deg); }
+.po .stamp.enter { animation-name: stampdrop; }
+@keyframes stampdrop { from { opacity: 0; transform: translateY(-26px) rotate(-6deg) scale(1.3); } to { opacity: 1; transform: rotate(-2deg); } }
+.po .stamp b { display: block; font: 700 18px var(--mono); letter-spacing: 0.24em; text-transform: uppercase; }
+.po .stamp span { display: block; margin-top: 8px; font: 11px var(--mono); }
+.po .hmm { position: absolute; left: 760px; top: 200px; font: italic 32px var(--head); color: var(--ink-2); }
+.po .ledger { position: absolute; left: 760px; top: 176px; width: 448px; box-sizing: border-box; padding: 12px 16px; background: var(--teal-soft); border: 1.5px solid var(--teal); }
+.po .lg-h { font: 700 12px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--teal); margin-bottom: 6px; }
+.po .lg-r { display: flex; justify-content: space-between; font: 15px var(--body); color: var(--ink-2); padding: 3px 0; }
+.po .lg-r b { font: 700 19px var(--head); color: var(--teal); }
+.po .thread { position: absolute; left: 712px; top: 266px; width: 48px; height: 2px; background: var(--teal); }
+.po .reply { position: absolute; right: 72px; padding: 8px 14px; background: var(--ink); color: var(--paper); font: 700 15px var(--mono); }
+.po .reply span { font: 400 11px var(--mono); color: #C9C2B2; margin-right: 10px; letter-spacing: 0.08em; text-transform: uppercase; }
+.po .r1 { top: 318px; } .po .r2 { top: 368px; }
+.po .po-bay { left: 760px; top: 452px; width: 448px; height: 100px; }
+.po .po-tag { position: absolute; left: 760px; top: 572px; font: 13px var(--mono); color: var(--muted); }
+.po .po-tag b { color: var(--ink); }
+
+/* =======================================================================
+   13 FLOW: the workflow chain, the gate formula, and the dates
+   ======================================================================= */
+.flow .nd { position: absolute; top: 300px; height: 70px; box-sizing: border-box; padding: 13px 14px; background: var(--card); border: 1.5px solid var(--ink-2); transition: background 500ms, border-color 500ms; }
+.flow .nd b { display: block; font: 13px var(--mono); color: var(--ink); font-weight: 400; white-space: nowrap; }
+.flow .nd span { display: block; margin-top: 4px; font: 12px var(--body); color: var(--muted); white-space: nowrap; }
+.flow .nd.pill { border-radius: 35px; text-align: center; padding-top: 24px; }
+.flow .nd.lit { background: var(--teal-soft); border-color: var(--teal); }
+.flow .nd.gate.lit { background: var(--green-soft); border-color: var(--green); }
+.flow .lk { position: absolute; top: 334px; height: 2px; background: var(--ink-2); }
+.flow .loopsvg { position: absolute; inset: 0; width: 1280px; height: 720px; pointer-events: none; }
+.flow .loop-arc { fill: none; stroke: var(--green); stroke-width: 2; }
+.flow .loop-l { position: absolute; left: 845px; top: 212px; transform: translateX(-50%); font: 12px var(--mono); color: var(--green); white-space: nowrap; }
+.flow .cond { position: absolute; left: 72px; top: 408px; width: 620px; box-sizing: border-box; padding: 14px 18px 16px; background: var(--card); border: 1px solid var(--rule); border-left: 4px solid var(--green); }
+.flow .cd-h { font: 14px var(--body); color: var(--muted); margin-bottom: 8px; }
+.flow .cond pre { font: 13px/1.55 var(--mono); color: var(--ink-2); white-space: pre; }
+.flow .dates { position: absolute; left: 760px; top: 408px; width: 448px; }
+.flow .dt { display: flex; gap: 14px; align-items: baseline; padding: 6px 0 8px; border-bottom: 1px solid var(--rule); }
+.flow .dt b { flex: none; width: 128px; font: 22px var(--head); font-weight: 400; color: var(--signal); }
+.flow .dt span { font: 15px var(--body); color: var(--ink-2); }
+.flow .keep { margin-top: 12px; font: 15px/1.42 var(--body); color: var(--ink-2); }
+.flow .moral { top: 628px; }
+
+/* =======================================================================
+   14 CLOSE: three sentences, then the shelf fills under them
+   ======================================================================= */
+.close .cl-l { position: absolute; left: 70px; font: 58px var(--head); color: var(--ink); white-space: nowrap; }
+.close .l1 { top: 108px; } .close .l2 { top: 192px; } .close .l3 { top: 276px; }
+.close .cl-l span { font-style: italic; }
+.close .cl-edge { top: 500px; }
+.close .cl-tag { left: 72px; top: 524px; }
+
+/* ---------- print: everything in its final state ---------- */
+@media print {
+  .bx.gone { display: none; }
+  .runway .cursor { opacity: 1; }
+}

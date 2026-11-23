@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ask the shelf: Agentic Inventory Planning</title>
+  <meta name="author" content="Digvijay Chauhan">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23F5F1E8'/%3E%3Crect x='5' y='24' width='22' height='3' fill='%231C1E1F'/%3E%3Crect x='7' y='15' width='8' height='8' fill='%23138A80'/%3E%3Crect x='17' y='15' width='8' height='8' fill='none' stroke='%232F8A4C' stroke-dasharray='2 1.5'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="vendor/reveal.js-6.0.2/reset.css">
+  <link rel="stylesheet" href="vendor/reveal.js-6.0.2/reveal.css">
+  <link rel="stylesheet" href="css/motion.css">
+  <link rel="stylesheet" href="css/theme.css">
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+<!-- ===================================================================== 1 COVER -->
+<section class="scene cover" data-scene="cover" data-noctl>
+  <div class="mast k-fade">
+    <span>MicroHack · Agentic Inventory Planning</span><span>Tech talk</span>
+  </div>
+  <h1 class="cv-title k-wipe" style="--d:200ms">Ask the<br><em>shelf.</em></h1>
+  <p class="cv-sub k-rise" style="--d:700ms">Agents that plan stock on governed numbers, then wait for a person to say yes.</p>
+  <p class="byline k-rise" style="--d:1000ms">Digvijay Chauhan, Solution Engineer, Microsoft</p>
+
+  <div class="bay cv-bay" aria-label="A shelf of Leaf Blower X2 boxes at the Seattle store. Thirty boxes drain down to six.">
+    <div class="upright k-fade" style="left:0"></div><div class="upright k-fade" style="right:0"></div>
+    <div class="board k-fade" style="top:118px"></div><div class="board k-fade" style="top:248px"></div><div class="board k-fade" style="top:378px"></div>
+    <div class="cv-boxes"></div>
+  </div>
+  <div class="tag cv-tag k-rise"><span class="t-sku">P004 · Leaf Blower X2 · Seattle</span><span class="t-n">on hand <b class="cv-n">30</b></span></div>
+  <aside class="notes">
+    <p><b>[0:00, 1 minute]</b> I let the shelf fill and then watch it drain before I say anything.</p>
+    <p>Good morning. I'm Digvijay Chauhan, Solution Engineer at Microsoft. That shelf on the right is the hero of today. It's the Leaf Blower X2 at our Seattle store. In the seed data you'll load, a normal store holds thirty of them. This week, Seattle has six.</p>
+    <p>Today you're going to build agents that notice that, work out what to do about it, and then stop and ask a person before they spend money. And every number they use will come from a shelf count in a Lakehouse, not from what a model thinks sounds about right.</p>
+    <p>So, twenty minutes of why, and then you build it.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 2 THE PLAN -->
+<section class="scene plan" data-scene="plan">
+  <p class="kicker k-wipe">The problem</p>
+  <h2 class="title k-wipe" style="--d:120ms">The plan remembers last month</h2>
+  <p class="subtitle k-rise" style="--d:400ms">Planning runs on history. Demand changed two weeks ago.</p>
+
+  <div class="chart">
+    <p class="ch-head k-fade">Leaf Blower X2, units sold a week, Seattle store</p>
+    <div class="grid"></div>
+    <div class="bars"></div>
+    <div class="avg k-growx"><span>6-week average: 5.7 a week, what the reorder rule uses</span></div>
+    <div class="spike k-rise"><span>+40% in two weeks</span></div>
+  </div>
+
+  <div class="signals">
+    <p class="sg-head k-fade">ExternalSignals, the same weeks</p>
+    <div class="sg-list"></div>
+  </div>
+  <p class="moral k-land">The average remembers June. <span class="teal">The shelf is selling July.</span></p>
+  <p class="foot k-fade">Source: seed data in setup/Setup-InventoryDataAgent.ipynb (DemandHistory for P004 at ST04; ExternalSignals SIG01, SIG02, SIG07).</p>
+  <span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[1:00, 2 minutes]</b> I let the six bars grow and give the room a moment with the dashed line.</p>
+    <p>This is what the planning team sees. Weekly sales of one leaf blower at one store. Five a week, five, five, five. Then seven, and seven. The dashed line is the six-week average, five point seven. That average is exactly what the reorder rule in challenge three uses.</p>
+    <p>And that's the problem the hack is about. The plan is built on last month. The world moved two weeks ago.</p>
+    <p><b>[click]</b> Here's what moved it. These three rows are in your Lakehouse, in a table called ExternalSignals. A heatwave in the Pacific Northwest, scored 0.8. A spike in searches for leaf blowers. And look at the third one: a supplier delay at PowerTool Depot. That's the supplier of this exact product.</p>
+    <p>So the average remembers June, and the shelf is selling July.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 3 RUNWAY -->
+<section class="scene runway" data-scene="runway">
+  <p class="kicker k-wipe">The problem</p>
+  <h2 class="title k-wipe" style="--d:120ms">Empty before the truck arrives</h2>
+  <p class="subtitle k-rise" style="--d:400ms">Leaf Blower X2 at the latest rate, seven a week: one a day. Lead time: 21 days.</p>
+
+  <div class="axis k-fade"><span class="ax-l">days from today</span></div>
+  <div class="cursor"><span class="cur-l">day <b>0</b></span></div>
+  <div class="lanes"></div>
+  <p class="moral k-land">Seattle is empty on day 6. <span class="signal">The next one arrives on day 21.</span></p>
+  <p class="foot k-fade">Derived from the seed data: on hand (Inventory) at the last weekly rate (DemandHistory, 7 a week), lead time from Products. Illustrative of the risk, not a forecast.</p>
+  <span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[3:00, 2 minutes]</b> I let both lanes and the two green arrivals appear, then explain the picture before I run the clock.</p>
+    <p>Let me turn those numbers into time. Each box is one leaf blower on the shelf. Seattle has six, Portland has eight. At the latest rate, seven a week, that's one a day. On the far right, the green box is the replenishment: if we order today, the supplier's lead time in the Products table is twenty-one days.</p>
+    <p><b>[click]</b> Now I let the days run. <i>(I let the cursor walk while the boxes go.)</i> Day one, day two. Seattle's shelf is empty on day six, Portland's on day eight. And then nothing to sell, in red, until day twenty-one.</p>
+    <p>This is a simple calculation from the seed data, not a forecast. But it's the point: by the time last month's report notices, the order is already late. We need to sense it this week, and reconcile it against the real count.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 4 CHAPTER I -->
+<section class="scene chapter" data-scene="chapter" data-noctl>
+  <h1 class="cp-title k-wipe">Count.</h1>
+  <p class="cp-sub k-rise" style="--d:500ms">Where every number comes from: the Lakehouse and its Data Agent.</p>
+  <div class="cp-shelf" data-on="6" data-ghost="0"></div>
+  <div class="cp-edge k-growx" style="--d:300ms"></div>
+  <div class="tag cp-tag k-rise" style="--d:700ms"><span class="t-sku">Part I</span><span class="t-n">Challenge 1</span></div>
+  <aside class="notes">
+    <p><b>[5:00, 20 seconds]</b> Part one: count. Before any agent reasons about anything, it needs a number it can trust.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 5 QUESTION TO QUERY -->
+<section class="scene query" data-scene="query">
+  <p class="kicker k-wipe">Part I / Count</p>
+  <h2 class="title k-wipe" style="--d:120ms">A question becomes a query</h2>
+  <p class="subtitle k-rise" style="--d:400ms">The Fabric Data Agent turns plain English into a query over your seven Lakehouse tables.</p>
+
+  <p class="q k-rise">“How many <span class="ph" data-n="1">Leaf Blower X2</span> units are <span class="ph" data-n="2">on hand</span> at the<br><span class="ph" data-n="3">Portland and Seattle stores</span>, and are they <span class="ph" data-n="4">below safety stock</span>?”</p>
+  <div class="cols">
+    <div class="col k-pop" data-n="1"><span class="no">1</span><b>Products.name</b><span>'Leaf Blower X2' is P004</span></div>
+    <div class="col k-pop" data-n="2"><span class="no">2</span><b>Inventory.onHand</b><span>units on the shelf</span></div>
+    <div class="col k-pop" data-n="3"><span class="no">3</span><b>Stores.city</b><span>ST03 Portland, ST04 Seattle</span></div>
+    <div class="col k-pop" data-n="4"><span class="no">4</span><b>Inventory.safetyStock</b><span>30 for P004</span></div>
+  </div>
+
+  <div class="sql k-rise"><p class="sql-h">Illustrative: the Data Agent writes its own query</p><pre>SELECT s.city, i.onHand, i.safetyStock
+FROM Inventory i
+JOIN Stores s ON s.storeId = i.storeId
+WHERE i.productId = 'P004'
+  AND s.city IN ('Portland', 'Seattle')</pre></div>
+  <div class="ans">
+    <p class="ans-h k-fade">The answer, from the Lakehouse</p>
+    <div class="bullets"></div>
+  </div>
+  <p class="foot k-fade">The test question from Challenge 1, task 4g. Values: Inventory rows for P004 at ST03 and ST04. CRITICAL: on hand below safety stock, per the Data Agent's instructions.</p>
+  <span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[5:20, 2 minutes 30]</b> I let the question appear and read it out, then let the four phrases light up one by one.</p>
+    <p>This is the first thing you'll ask your own Data Agent in challenge one. How many Leaf Blower X2 units are on hand at the Portland and Seattle stores, and are they below safety stock?</p>
+    <p>Watch what happens to the words. Leaf Blower X2 is a product name, so P004. On hand is a column in Inventory. Portland and Seattle are two rows in Stores. Safety stock is another column. That's what the Fabric Data Agent does for you: natural language to SQL, over governed tables, without you writing a line of it.</p>
+    <p><b>[click]</b> The query on the right is my illustration, the Data Agent writes its own. And here's the answer: Portland eight, Seattle six, both below a safety stock of thirty. Both CRITICAL, because that's the rule we gave the Data Agent in its instructions.</p>
+    <p>Exact numbers, from a table you own. Everything else today builds on that.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 6 CORRECTIONS -->
+<section class="scene corr" data-scene="corr">
+  <p class="kicker k-wipe">Part I / Count</p>
+  <h2 class="title k-wipe" style="--d:120ms">Three answers that sounded right</h2>
+  <p class="subtitle k-rise" style="--d:400ms">From the hack's own troubleshooting tables. Each one is fluent. Each one is wrong.</p>
+  <div class="box">
+    <p class="box-h k-fade">Corrections</p>
+    <div class="items"></div>
+  </div>
+  <p class="moral k-land">Fluent is not the same as <span class="teal">counted.</span></p>
+  <p class="foot k-fade">The quotes restate symptoms from the troubleshooting tables in challenge-01.md, challenge-02.md and challenge-03.md.</p>
+  <span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[7:50, 2 minutes]</b> I let the three quotes appear and ask the room which one they would trust.</p>
+    <p>Here are three answers you might see today. They all look reasonable. I'd like you to guess what's wrong with each one.</p>
+    <p><b>[click]</b> The first: the model skipped the Data Agent completely and answered from the web. gpt-5.4-mini is a reasoning model, and sometimes it decides a tool is optional. The fix is in the instructions, and if it keeps happening, set tool choice to required.</p>
+    <p>The second: nothing found for Outdoor Power Tools. The data is fine; the stored value is outdoor_power_tools, in snake case. Map the label in the Data Agent instructions, or ask by SKU.</p>
+    <p>The third is my favourite. Reorder zero, for everything. The agent asked for sales at the warehouses, and DemandHistory only has sales at retail stores. So it multiplied by zero, very confidently.</p>
+    <p>Fluent is not the same as counted. And you'll catch all three of these by reading the trace, which is part two.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 7 CHAPTER II -->
+<section class="scene chapter" data-scene="chapter" data-noctl>
+  <h1 class="cp-title k-wipe">Reason.</h1>
+  <p class="cp-sub k-rise" style="--d:500ms">Three prompt agents in Foundry, one rule each, every step in the trace.</p>
+  <div class="cp-shelf" data-on="6" data-ghost="18"></div>
+  <div class="cp-edge k-growx" style="--d:300ms"></div>
+  <div class="tag cp-tag k-rise" style="--d:700ms"><span class="t-sku">Part II</span><span class="t-n">Challenges 2 and 3</span></div>
+  <aside class="notes">
+    <p><b>[9:50, 20 seconds]</b> Part two: reason. Now that the numbers are real, we can let a model think about them.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 8 THE LOOP -->
+<section class="scene loop" data-scene="loop">
+  <p class="kicker k-wipe">Part II / Reason</p>
+  <h2 class="title k-wipe" style="--d:120ms">Three agents, one loop</h2>
+  <p class="subtitle k-rise" style="--d:400ms">Sense, plan, act. Prompt agents in the Foundry portal, no application code.</p>
+  <div class="agents"></div>
+  <svg class="threads" viewBox="0 0 1280 720" aria-hidden="true"></svg>
+  <div class="arrow k-fade" style="left:418px"></div><div class="arrow k-fade" style="left:816px"></div>
+  <div class="lake k-rise">
+    <p class="lk-name">InventoryLakehouse <span>through</span> inventory-hack-agent</p>
+    <p class="lk-tables">Inventory · DemandHistory · ExternalSignals · Products · Stores · Suppliers · ReplenishmentOrders</p>
+  </div>
+  <div class="travel up u0"></div><div class="travel up u1"></div><div class="travel up u2"></div>
+  <p class="moral k-land">One governed source, <span class="teal">three different questions.</span></p>
+  <p class="foot k-fade">Agents and tools as configured in challenge-02.md, challenge-03.md and challenge-04.md. Web Search ships on new agents by default and is removed from agents 2 and 3.</p>
+  <span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[10:10, 2 minutes 30]</b> I let the three cards and the Lakehouse below them settle, and walk left to right.</p>
+    <p>This is what you build in challenges two, three and four. Three prompt agents, all in the Foundry portal, no code.</p>
+    <p>Demand sensing looks outward with Web Search and inward with the Data Agent, and says: adequate, at risk, or critically exposed. Inventory optimisation turns that into a reorder table. Replenishment action turns the table into a purchase order, and waits.</p>
+    <p>The teal band at the bottom is the important part. All three connect to the same published Data Agent, through the Fabric IQ tool in the OneLake catalog. You set up that connection once, in challenge two, and reuse it.</p>
+    <p><b>[click]</b> Each agent asks the Lakehouse its own question, and hands its answer to the next. <i>(I let the three answers land.)</i> One detail that will save you time: new agents come with Web Search switched on. On agents two and three, take it off. Otherwise the model will happily look up stock levels on the internet.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 9 THE REFILL RULE -->
+<section class="scene refill" data-scene="refill">
+  <p class="kicker k-wipe">Part II / Reason</p>
+  <h2 class="title k-wipe" style="--d:120ms">The refill rule</h2>
+  <p class="subtitle k-rise" style="--d:400ms">Challenge 3 gives the agent one rule. The model does the arithmetic; the Lakehouse supplies the numbers.</p>
+  <p class="formula k-rise" style="--d:300ms">reorder = max(<span class="d">0</span>, <span class="ink">30-day demand</span> − <span class="teal">on hand</span>)</p>
+  <p class="formula-2 k-fade" style="--d:600ms">30-day demand = average weekly units ÷ 7 × 30, at the stores where the product sells</p>
+  <div class="rows"></div>
+  <p class="moral k-land">Arithmetic you can check, on <span class="teal">numbers you can trace.</span></p>
+  <p class="foot k-fade">Sample from walkthrough/challenge-03/solution-03.md; exact quantities depend on the agent's rounding. CRITICAL: on hand below the reorder point.</p>
+  <span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[12:40, 2 minutes]</b> I let the formula and the three shelves appear, and point at the dashed outline before I click.</p>
+    <p>The optimisation agent gets one rule. Reorder equals thirty days of demand minus what's on the shelf, and never below zero. Thirty days of demand is the average weekly sales divided by seven, times thirty.</p>
+    <p>The solid boxes are on hand. The dashed outline is thirty days of demand: twenty-four leaf blowers in each store, twenty hedge trimmers in Portland.</p>
+    <p><b>[click]</b> And the agent fills the gap. Eighteen for Seattle, sixteen for Portland, eight hedge trimmers. All three CRITICAL, because they're already below their reorder point.</p>
+    <p>Notice the split. The model did the arithmetic, which you can check by hand. The numbers came from the Lakehouse, which you can trace. That's the next slide.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 10 THE RECEIPT -->
+<section class="scene receipt" data-scene="receipt">
+  <p class="kicker k-wipe">Part II / Reason</p>
+  <h2 class="title k-wipe" style="--d:120ms">Every answer leaves a receipt</h2>
+  <p class="subtitle k-rise" style="--d:400ms">The agent's Traces tab shows what it asked, what Fabric returned, and what the model made of it.</p>
+  <div class="paper k-fade">
+    <div class="lines"></div>
+  </div>
+  <div class="notesR"></div>
+  <p class="moral k-land">Point to the span, and you can <span class="teal">defend the number.</span></p>
+  <p class="foot k-fade">Span names from walkthrough/challenge-03/solution-03.md. Durations as described there (tens of seconds, under a second); the bars are illustrative.</p>
+  <span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[14:40, 2 minutes]</b> I let the receipt print itself, line by line.</p>
+    <p>Every run of every agent leaves a receipt. In Foundry it's the Traces tab. This is the shape you'll see in challenge three.</p>
+    <p>At the top, Invoke Agent: one run. Inside it, Execute Tool, the call to your Data Agent, with its long MCP name. That one takes tens of seconds, because it's writing and running a query. Then Chat: the model writing the answer, in under a second.</p>
+    <p><b>[click]</b> And each line answers a question you'll be asked. On the tool span, you can read the exact English question the agent sent to Fabric, and the rows that came back. On the chat span, how the model turned those rows into the table.</p>
+    <p>So when a planner asks you why the agent ordered eighteen, you don't say "the AI decided". You point to the span. That's how you defend the number.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 11 CHAPTER III -->
+<section class="scene chapter" data-scene="chapter" data-noctl>
+  <h1 class="cp-title k-wipe">Sign.</h1>
+  <p class="cp-sub k-rise" style="--d:500ms">The agent proposes. A person decides. Then the agent acts.</p>
+  <div class="cp-shelf" data-on="6" data-ghost="18"></div>
+  <div class="cp-edge k-growx" style="--d:300ms"></div>
+  <div class="tag cp-tag k-rise" style="--d:700ms"><span class="t-sku">Part III</span><span class="t-n">Challenges 4 and 5</span></div>
+  <aside class="notes">
+    <p><b>[16:40, 20 seconds]</b> Part three: sign. This is where an assistant becomes an agent, because something actually happens.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 12 THE GUESS AND THE COUNT -->
+<section class="scene po" data-scene="po">
+  <p class="kicker k-wipe">Part III / Sign</p>
+  <h2 class="title k-wipe" style="--d:120ms">The guess and the count</h2>
+  <p class="subtitle k-rise" style="--d:400ms">Challenge 4: the agent prices the order, then waits for a person.</p>
+
+  <div class="doc k-rise">
+    <p class="doc-h">Purchase order proposal</p>
+    <p class="doc-by">Requested by: Inventory Optimisation Agent</p>
+    <table class="lines">
+      <thead><tr><th>Line</th><th>SKU</th><th>Location</th><th class="r">Qty</th><th class="r cost-h">Unit cost</th><th class="r">Line total</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <p class="total"><span>Total estimated value</span><b class="tv">$840</b></p>
+    <p class="ask">Do you approve this purchase order? Reply YES, NO or MODIFY &lt;line&gt; &lt;qty&gt;.</p>
+    <p class="gap k-land">The counted order is <b>4.7 times the guess.</b></p>
+    <div class="stamp k-drop"><b>Submitted</b><span>PO-&lt;YYYYMMDD&gt;-001 to ERP, simulated</span></div>
+  </div>
+
+  <p class="hmm k-land">Does this look right?</p>
+  <div class="ledger k-rise">
+    <p class="lg-h">Products, in the Lakehouse</p>
+    <p class="lg-r"><span>P004 · Leaf Blower X2</span><b>$95</b></p>
+    <p class="lg-r"><span>P006 · Hedge Trimmer</span><b>$85</b></p>
+  </div>
+  <div class="thread k-growx"></div>
+  <div class="reply r1 k-rise"><span>Planner</span>MODIFY 1 50</div>
+  <div class="reply r2 k-rise"><span>Planner</span>YES</div>
+
+  <div class="bay po-bay" aria-label="The Seattle shelf: 6 on hand, 50 on order after approval.">
+    <div class="board k-fade" style="top:40px"></div><div class="board k-fade" style="top:92px"></div>
+    <div class="po-boxes"></div>
+  </div>
+  <p class="po-tag k-fade">Seattle · P004 · <b class="pt">on hand 6</b></p>
+  <p class="foot k-fade">Sample table, $20 fallback and replies: challenge-04.md. Costs: Products ($95, $85), as in challenge-05.md. The submit is simulated: no ERP is called.</p>
+  <span class="fragment beat"></span><span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[17:00, 3 minutes]</b> I let the purchase order print, then ask the question on the right and wait for an answer from the room.</p>
+    <p>This is the replenishment agent's first message: a proper purchase order proposal. Three lines, quantities from the reorder table, unit costs, a total of eight hundred and forty dollars. It looks finished. Does this look right?</p>
+    <p><i>(I give the room a few seconds.)</i> Look at the unit cost column. Twenty, twenty, twenty. The instructions say: look up the cost in Products, and use twenty dollars only as a fallback. This is the failure the troubleshooting table in challenge five warns you about: the agent skipped the lookup.</p>
+    <p><b>[click]</b> So let's count instead of guess. The agent asks the Data Agent for Products. <i>(I let the costs flip.)</i> Ninety-five, ninety-five, eighty-five. Same quantities, same format, and the total is three thousand nine hundred and ten dollars. The guess was four point seven times too low, and it looked exactly as confident.</p>
+    <p>Now, the agent has done everything it's allowed to do. It stops and asks.</p>
+    <p><b>[click]</b> The planner knows something the model doesn't, say a promotion next week, and replies MODIFY 1 50. The agent updates line one to fifty, recalculates to six thousand nine hundred and fifty, presents it again, and waits. Then YES. And only then: submitted. <i>(I let the shelf refill.)</i> Six on the shelf, fifty on the way.</p>
+    <p>In the lab the submit is simulated: the agent writes the confirmation itself, because there's no ERP to call. In production that's an OpenAPI tool. The gate stays exactly where it is.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 13 ONE PROMPT, ONE YES -->
+<section class="scene flow" data-scene="flow">
+  <p class="kicker k-wipe">Part III / Sign</p>
+  <h2 class="title k-wipe" style="--d:120ms">One prompt, one yes</h2>
+  <p class="subtitle k-rise" style="--d:400ms">Challenge 5, the stretch: a Foundry workflow runs all three agents and stops only at the gate.</p>
+  <div class="chain"></div>
+  <svg class="loopsvg" viewBox="0 0 1280 720" aria-hidden="true">
+    <path class="loop-arc k-draw" pathLength="1" d="M775 300 C775 240 915 240 915 300"/>
+  </svg>
+  <p class="loop-l k-fade">multi-turn: waits for YES, NO or MODIFY</p>
+  <div class="cond k-rise">
+    <p class="cd-h">Loop condition on the last node: keep waiting until</p>
+<pre>And(
+  IsBlank(Find("submitted to ERP", Last(Local.LatestMessage).Text)),
+  IsBlank(Find("Order cancelled", Last(Local.LatestMessage).Text))
+)</pre>
+  </div>
+  <div class="dates">
+    <div class="dt k-rise"><b>30 Nov 2026</b><span>last day the visual workflow designer is supported</span></div>
+    <div class="dt k-rise" style="--d:200ms"><b>1 Dec 2026</b><span>in-portal workflows retire</span></div>
+    <p class="keep k-rise" style="--d:400ms">Keep the pattern: copy the workflow YAML, then run it with Microsoft Agent Framework as a hosted agent, Azure Logic Apps, or agent-to-agent (A2A).</p>
+  </div>
+  <p class="moral k-land">The wiring will change. <span class="green">The gate stays.</span></p>
+  <p class="foot k-fade">Workflow, formula and dates from challenges/challenge-05.md and walkthrough/challenge-05/solution-05.md.</p>
+  <span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[20:00, 1 minute 30]</b> I let the chain light up node by node.</p>
+    <p>If you finish early, challenge five chains the three agents in a Foundry workflow. One prompt goes in, the nodes run in order in one shared conversation, and the last one loops, waiting for you. That little formula is the whole gate: keep waiting until the agent says submitted or cancelled.</p>
+    <p><b>[click]</b> And an honest note on dates. The visual designer is supported until the thirtieth of November 2026, and in-portal workflows retire on the first of December. So if you build it, copy the YAML before you leave. The pattern moves to Microsoft Agent Framework, Logic Apps, or agent-to-agent calls.</p>
+    <p>The wiring will change. The gate stays.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 14 CLOSE -->
+<section class="scene close" data-scene="close" data-noctl>
+  <p class="cl-l l1 k-land">Let the model <span>reason.</span></p>
+  <p class="cl-l l2 k-land" style="--d:900ms">Let the Lakehouse <span class="teal">count.</span></p>
+  <p class="cl-l l3 k-land" style="--d:1800ms">Let a person <span class="green">sign.</span></p>
+  <div class="cl-shelf"></div>
+  <div class="cp-edge cl-edge k-growx"></div>
+  <div class="tag cl-tag k-rise"><span class="t-sku">Next: Challenge 1, Get Grounded</span><span class="t-n">Digvijay Chauhan, Solution Engineer, Microsoft</span></div>
+  <aside class="notes">
+    <p><b>[21:30, 1 minute]</b> I let the three lines land, one at a time, and the shelf fill under them.</p>
+    <p>If you remember one sentence from this morning, make it this one. Let the model reason. Let the Lakehouse count. Let a person sign.</p>
+    <p>Everything you build today is that sentence: a Data Agent you own, three agents that ask it before they speak, and a gate that waits for you.</p>
+    <p>Challenge one starts now: forty-five minutes to stand up your own Lakehouse and Data Agent. Let's go fill that shelf. Thank you.</p>
+  </aside>
+</section>
+
+</div></div>
+<script src="vendor/reveal.js-6.0.2/reveal.js"></script>
+<script src="vendor/reveal.js-6.0.2/plugin/notes.js"></script>
+<script src="js/data.js"></script>
+<script src="js/scenes.js"></script>
+<script src="js/beat-engine.js"></script>
+<script>startDeck();</script>
+</body>
+</html>

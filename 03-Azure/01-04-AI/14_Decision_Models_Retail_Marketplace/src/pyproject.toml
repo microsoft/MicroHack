@@ -1,0 +1,28 @@
+[project]
+name = "decision-models-marketplace-hack"
+version = "0.1.0"
+description = "Decision Models for a Retail Marketplace — MicroHack"
+requires-python = ">=3.11"
+dependencies = [
+    # OpenAI SDK: `client.decisions.create(...)` for the Azure OpenAI Decisions API
+    # (gpt-6-luna) and the Responses API for the generative baseline. Decisions support
+    # arrived in 3.26.0; tested with 3.49.
+    "openai>=3.26.0,<4",
+    # Keyless sign-in (Entra ID) for both decision APIs. Tested with 1.27.
+    "azure-identity>=1.19.0,<2",
+    # HTTP client for the Microsoft-Decision-1.1 endpoint, which has no SDK yet.
+    "httpx>=0.27.0,<1",
+    # Listing Gate console: FastAPI + one static HTML page, no build step.
+    "fastapi>=0.115.0,<1",
+    "uvicorn[standard]>=0.30.0,<1",
+    # Load src/.env during development.
+    "python-dotenv>=1.0.1,<2",
+    # Challenge 6: Foundry evaluators (GroundednessEvaluator) with Microsoft-Decision-1 as the
+    # judge. Decision-model judges arrived in 1.18.11; tested with 1.18.12.
+    "azure-ai-evaluation>=1.18.11,<2",
+]
+
+# This is an application, not an installable library — uv manages the environment
+# without building/installing the project itself.
+[tool.uv]
+package = false

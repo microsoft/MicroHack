@@ -352,9 +352,12 @@ foreach ($region in $candidateRegions) {
     # Foundry projects reports 'Soft-deleted workspace exists' for a short window after the
     # parent account is purged. Retrying in place beats moving region — a different region
     # would hit the same lag, and for a non-empty RG there is no other region to move to.
+    # Cognitive Services also rejects a second write on an account that is still busy with a
+    # previous one ('RequestConflict: Another operation is being performed on the parent resource').
     $transientPatterns = @(
         'ServiceLocked', 'is transitioning', 'Soft-deleted workspace exists',
-        'AnotherOperationInProgress', 'operation is in progress', 'RetryableError'
+        'AnotherOperationInProgress', 'operation is in progress', 'RetryableError',
+        'RequestConflict', 'Another operation is being performed'
     )
     $maxAttempts = 3
 

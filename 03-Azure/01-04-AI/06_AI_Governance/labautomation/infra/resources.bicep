@@ -319,9 +319,15 @@ var llmBackendConfig = [
 // ===== Phase 4: Model Deployments to Hub Foundry Account =====
 // Each model deployed to support Notebooks 1-6
 // @batchSize(1) serializes deployments to avoid Cognitive Services account conflicts
+// Azure allows one write at a time on a Cognitive Services account (RequestConflict otherwise),
+// so account writes are chained: project -> App Insights connection -> model deployments.
 @batchSize(1)
 resource hubFoundryModelDeployments 'Microsoft.CognitiveServices/accounts/deployments@2025-04-01-preview' = [for (model, index) in aiFoundryModels: {
   parent: hubFoundryAccount
+  dependsOn: [
+    hubFoundryProject
+    hubFoundryAppInsightsConnection
+  ]
   name: replace(model.name, '.', '-')
   sku: {
     name: model.sku
@@ -1507,6 +1513,9 @@ resource acrPullForSpokeProject 'Microsoft.Authorization/roleAssignments@2022-04
 // ===== Connect App Insights to Hub Foundry for Agent Tracing =====
 resource hubFoundryAppInsightsConnection 'Microsoft.CognitiveServices/accounts/connections@2025-04-01-preview' = {
   parent: hubFoundryAccount
+  dependsOn: [
+    hubFoundryProject
+  ]
   name: '${hubFoundryAccountName}-appinsights'
   properties: {
     category: 'AppInsights'
@@ -1526,6 +1535,9 @@ resource hubFoundryAppInsightsConnection 'Microsoft.CognitiveServices/accounts/c
 // ===== Connect App Insights to Spoke Foundry for Agent Tracing =====
 resource spokeFoundryAppInsightsConnection 'Microsoft.CognitiveServices/accounts/connections@2025-04-01-preview' = {
   parent: spokeFoundryAccount
+  dependsOn: [
+    spokeFoundryProject
+  ]
   name: '${spokeFoundryAccountName}-appinsights'
   properties: {
     category: 'AppInsights'

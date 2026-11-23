@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.49.2.45890",
-      "templateHash": "1328121123716691226"
+      "templateHash": "1550211353606101039"
     }
   },
   "parameters": {
@@ -363,7 +363,9 @@
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.CognitiveServices/accounts', variables('hubFoundryAccountName'))]"
+        "[resourceId('Microsoft.CognitiveServices/accounts', variables('hubFoundryAccountName'))]",
+        "[resourceId('Microsoft.CognitiveServices/accounts/connections', variables('hubFoundryAccountName'), format('{0}-appinsights', variables('hubFoundryAccountName')))]",
+        "[resourceId('Microsoft.CognitiveServices/accounts/projects', variables('hubFoundryAccountName'), variables('hubFoundryProjectName'))]"
       ]
     },
     {
@@ -1714,7 +1716,8 @@
       },
       "dependsOn": [
         "[resourceId('Microsoft.Insights/components', variables('aiName'))]",
-        "[resourceId('Microsoft.CognitiveServices/accounts', variables('hubFoundryAccountName'))]"
+        "[resourceId('Microsoft.CognitiveServices/accounts', variables('hubFoundryAccountName'))]",
+        "[resourceId('Microsoft.CognitiveServices/accounts/projects', variables('hubFoundryAccountName'), variables('hubFoundryProjectName'))]"
       ]
     },
     {
@@ -1736,7 +1739,8 @@
       },
       "dependsOn": [
         "[resourceId('Microsoft.Insights/components', variables('spokeAiName'))]",
-        "[resourceId('Microsoft.CognitiveServices/accounts', variables('spokeFoundryAccountName'))]"
+        "[resourceId('Microsoft.CognitiveServices/accounts', variables('spokeFoundryAccountName'))]",
+        "[resourceId('Microsoft.CognitiveServices/accounts/projects', variables('spokeFoundryAccountName'), variables('spokeFoundryProjectName'))]"
       ]
     },
     {

@@ -32,6 +32,10 @@ foundry model list
 
 `foundry model list` shows the catalog. The *Device* column says where each model runs (NPU, GPU or CPU) and the *Tools* column shows which models support tool calling.
 
+![foundry model list on a Snapdragon laptop: the columns to read, and the same catalog placing qwen2.5-1.5b on the NPU and phi-4-mini on the GPU](../../images/c1-catalog.png)
+
+*① Device and Tools: where a model runs and whether it can call tools · ② `qwen2.5-1.5b` runs on the NPU here · ③ `phi-4-mini` runs on the GPU. The first command also starts the local service.*
+
 ### **Task 2: Download a model and chat with it**
 
 ```powershell
@@ -39,7 +43,7 @@ foundry model download phi-4-mini
 foundry run phi-4-mini
 ```
 
-Type a question, then leave the chat with `exit`. The model files are stored in `~/.foundry/cache/models`.
+Type a question, then leave the chat with `/exit` (in Foundry Local 0.14, a plain `exit` is sent to the model as a message). The model files are stored in `~/.foundry/cache/models`.
 
 ### **Task 3: Call the model from Python**
 
@@ -68,7 +72,7 @@ reply = client.chat.completions.create(
 print(reply.choices[0].message.content)
 ```
 
-Expected: one sentence about the spindle, in 1 to 3 seconds on a laptop with a GPU or NPU.
+Expected: one sentence about the spindle, in 1 to 3 seconds on a laptop with a GPU or NPU. The very first call also loads the model, so it takes longer (6.1 s on the Snapdragon laptop, then 2.5 s).
 
 ### **Task 4: Find the address of the local service**
 
@@ -76,12 +80,18 @@ Expected: one sentence about the spindle, in 1 to 3 seconds on a laptop with a G
 foundry server status
 ```
 
+![hello.py answering from phi-4-mini on the laptop's GPU, and foundry server status showing a loopback address](../../images/c1-first-call.png)
+
+*① The model ID the service expects (`Phi-4-mini-instruct-generic-gpu:5`), not the alias · ② The service listens on `127.0.0.1` only*
+
 The address is `http://127.0.0.1:<port>`. `127.0.0.1` is the **loopback** address: only programs on the same computer can reach it, so no other device and no one on the internet can call your model. The port is chosen when the service starts. `foundry server start --port 5273` pins it, and the `FOUNDRY_LOCAL_URL` environment variable tells `fl.py` where to look.
 
 You successfully completed challenge 1! 🚀🚀🚀
 
 ## Coach notes
 
+- **Re-verified end to end on 23 November 2026** with Foundry Local **0.14.0** on a Snapdragon X Elite laptop (Windows 11 on ARM, Python 3.12): challenges 1 to 6, including the Azure Machine Learning studio path and the offline run. The screenshots in this walkthrough come from that run.
+- **Install the Python packages before the day.** Creating the virtual environment and installing `requirements.txt` took **9.5 minutes** through a corporate package proxy on that laptop (all three packages have ready-made ARM64 wheels, nothing is compiled). On a slow network, ask teams to do Task 3 before the session.
 - **Pre-cache the models. Verified on the VM.** Sizes on the VM (CPU variants): `phi-4-mini` 4.8 GB, `qwen2.5-1.5b` 1.8 GB, `qwen3-1.7b` 1.3 GB, `qwen3-embedding-0.6b` 0.5 GB. Downloading `phi-4-mini`, `qwen2.5-1.5b` and the embedding model took 92 s, 33 s and 7 s, together 7.6 GB. To build an image with the models already in it:
   1. Download the models once with `foundry model download <alias>`.
   2. Copy the cache folder (`foundry cache location` shows it, `~/.foundry/cache/models`) to a shared folder. `robocopy` copied 7.6 GB in 71 s.

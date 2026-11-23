@@ -12,7 +12,7 @@ Your coach tells you which path to take. The result is the same.
 
 ### Full path (60 minutes)
 
-* In your Azure Machine Learning workspace (the name is on your lab page), create a small compute instance and open a notebook.
+* In your Azure Machine Learning workspace, create a small compute instance and open a notebook. In the [studio](https://ml.azure.com), go to **Workspaces**: your workspace is listed as **Offline Industrial Copilot**, in the resource group on your lab page. The compute instance takes about 4 minutes to start.
 * Upload `resources/data/sensor_history.csv` and train a **fault classifier**: from the sensor readings it predicts `normal`, `bearing_wear`, `overheating` or `low_lubrication`.
 * Export the model to **ONNX** and check that ONNX Runtime gives the same answers as your training library.
 * Download the ONNX file to your device.

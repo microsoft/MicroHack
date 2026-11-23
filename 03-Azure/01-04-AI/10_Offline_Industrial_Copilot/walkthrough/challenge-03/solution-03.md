@@ -97,6 +97,12 @@ if not approve(name, args):
 
 **3. The app reports the result, not the model.** After the ticket tool runs, the app builds the confirmation from the tool result:
 
+![agent.py: a status question, a ticket the technician approves, and a ticket the technician refuses](../../images/c3-agent.png)
+
+*① The model calls the status tool with a proper argument · ② The app asks the technician before it writes anything · ③ The confirmation comes from the tool result, with a real ticket number · ④ Refused: nothing is written*
+
+On the laptop the first request took 30 s (it loads the model), the next ones 6 to 9 s.
+
 ```text
   The assistant wants to run create_maintenance_ticket({'machine_id': 'CNC-07', 'priority': 'high', ...}). Allow? [y/N] y
 Ticket MT-1001 created for CNC-07 (high priority): Spindle vibration above the stop limit

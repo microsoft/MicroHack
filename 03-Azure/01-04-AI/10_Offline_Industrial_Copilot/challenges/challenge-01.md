@@ -12,7 +12,7 @@ Get a small language model running **on your own device** and call it from Pytho
   * Windows: `winget install Microsoft.FoundryLocal`
   * macOS: `brew tap microsoft/foundrylocal` and then `brew install foundrylocal`
 * Open a new terminal and check that the `foundry` command works. Find out how to list the models in the catalog.
-* Download the model with the alias `phi-4-mini` and chat with it in the terminal.
+* Download the model with the alias `phi-4-mini` and chat with it in the terminal. Type `/exit` to leave the chat.
 * Create a folder named `work` inside this lab folder, next to `resources`. Create a Python virtual environment there and install the packages from `resources/starter/requirements.txt`. Copy `resources/starter/fl.py` into `work`.
 * Write a short Python script that sends one question to the local model and prints the answer. The helper in `fl.py` gives you the model ID and a ready-to-use OpenAI client.
 * Find the address of the local service. What is special about it?

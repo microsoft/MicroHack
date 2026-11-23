@@ -10,16 +10,59 @@ Please ensure that you successfully completed [Challenge 4](../../challenges/cha
 
 ### **Task 1 (full path): Train in Azure Machine Learning**
 
-1. Open [Azure Machine Learning studio](https://ml.azure.com) and select your workspace (`mlw-oic-...`).
-2. **Compute** > **Compute instances** > **New**. Choose a small CPU size such as `Standard_DS3_v2`. Training takes a few seconds, so a small size is enough.
-3. **Notebooks**: upload `resources/shortcut/train_fault_classifier.ipynb` and `resources/data/sensor_history.csv`, open the notebook and run all cells. You can also paste the code of [train_fault_classifier.py](../code/train_fault_classifier.py).
-4. The notebook:
+1. Open [Azure Machine Learning studio](https://ml.azure.com) and choose **Workspaces**. Your workspace is listed by its display name **Offline Industrial Copilot**, in the resource group from your lab page. (The studio's home page may say you have no recent workspaces; use the Workspaces list.)
+
+   ![The Workspaces list in the studio, with the lab workspace](../../images/c5-aml-workspace.png)
+
+   *① The lab workspace, by its display name · ② Your resource group from the lab page*
+
+2. **Compute** > **Compute instances** > **New**. Keep the suggested name, choose **`Standard_DS3_v2`** (4 cores, a few cents an hour) and select **Review + Create**, then **Create**. Training takes a few seconds, so a small size is enough.
+
+   ![Create compute instance: the Standard_DS3_v2 size](../../images/c5-aml-compute.png)
+
+   *① A small CPU size is enough · ② Review + Create*
+
+   **Idle shutdown is on by default** (after 60 minutes without activity), on the *Scheduling* page. Leave it on.
+
+   ![Scheduling: idle shutdown enabled after 60 minutes](../../images/c5-aml-shutdown.png)
+
+   The instance is **Running** after about 4 minutes. Prepare the next step while it starts.
+
+   ![The compute instance is running, with idle shutdown of 1 hour](../../images/c5-aml-running.png)
+
+   *① Running after about 4 minutes · ② Idle shutdown · ③ Stop, when you are done*
+
+3. **Notebooks** > **Add files** (the ⊕ icon) > **Upload files**: choose `resources/shortcut/train_fault_classifier.ipynb` and `resources/data/sensor_history.csv`. They go into your own folder under *Users*. You can also paste the code of [train_fault_classifier.py](../code/train_fault_classifier.py) into a new notebook.
+
+   ![Notebooks: Add files, then Upload files](../../images/c5-aml-upload.png)
+
+   *① Add files · ② Upload files*
+
+4. Open the notebook, check that your compute instance is selected, and select **Restart kernel and run all cells** (the ▷▷ icon). The yellow *"You need to be authenticated to the compute to use any Azure SDK"* banner does not matter here: the notebook does not use the Azure SDK.
+
+   ![The notebook open on the compute instance](../../images/c5-aml-notebook.png)
+
+   *① Your compute instance and the Python 3 kernel · ② Restart kernel and run all cells · ③ The Authenticate banner: not needed for this notebook*
+
+   The notebook:
+   - installs `scikit-learn`, `skl2onnx`, `onnxruntime` and `pandas` (17 s),
    - loads the 2,400 labelled sensor readings,
-   - trains a random forest (about 94 percent accuracy on held-out data),
+   - trains a random forest (**accuracy 0.94** on held-out data),
    - exports it to **ONNX**,
    - loads the ONNX file with ONNX Runtime and checks that it gives the same answers as the training library.
-5. Download `fault_classifier.onnx` and `fault_labels.json` and copy them into your `work` folder, in a folder named `artifacts`.
+
+   ![Accuracy 0.94 and the confusion matrix](../../images/c5-aml-accuracy.png)
+
+   *① Accuracy on the held-out quarter of the data · ② Confusion matrix (rows: the real fault, columns: the prediction)*
+
+   ![ONNX Runtime matches scikit-learn on every test row](../../images/c5-aml-onnx-check.png)
+
+   *① ONNX Runtime gives the same answer as scikit-learn on 100 percent of the test rows · ② A machine like CNC-07 is predicted as bearing wear*
+
+5. Download `fault_classifier.onnx` and `fault_labels.json` (in the file list, **...** > **Download**) and copy them into your `work` folder, in a folder named `artifacts`.
 6. **Stop** the compute instance (or delete it). It bills while it runs.
+
+   ![The compute instance is stopped](../../images/c5-aml-stopped.png)
 
 💡 The point of the exercise is the **workflow**: cloud tools for training, a portable file for delivery, a small runtime on the device. This model is tiny, so you could also train it on your laptop with `python train_fault_classifier.py`.
 
@@ -65,8 +108,10 @@ Without help, the agent often does not make this call (see task 3b). The copilot
 
 | `phi-4-mini` sees... | First tool correct | Fault prediction |
 |----------------------|--------------------|------------------|
-| all four tools (what we had) | 14 of 23 (61%) | 0 of 5 |
+| all four tools (what we had) | 14 to 19 of 23 | 0 to 3 of 5 |
 | the tool chosen by the router | **23 of 23** | 5 of 5 |
+
+Without the router the score changed from run to run: 14 of 23 in the first test, 19 of 23 on 23 November 2026 (Foundry Local 0.14.0), when it still missed 2 of the 5 fault requests and 2 of the 5 ticket requests. With the router it was 23 of 23 both times.
 
 The wording mattered a lot: *"Run the fault prediction model for CNC-07"* worked, while *"Predict the most likely fault for CNC-07 from its sensor readings"* or *"What does the classifier say is wrong with CMP-01?"* did not. The same prompts even routed differently from one session to the next, so there is no wording that "always works".
 
@@ -101,6 +146,12 @@ Results with `phi-4-mini`, first tool correct:
 - **Be careful with these numbers.** The cards were written by us after we had seen the first failures, and the held-out set is only 23 requests. The held-out result shows the idea works. It does not prove that a new phrasing can never fail. Teams should add their own requests to the two JSON files.
 - The router costs one embedding call per request (about 0.2 s on the laptop GPU).
 
+![The ONNX classifier on the device, the copilot calling it, and the routing check without and with the router](../../images/c5-onnx-router.png)
+
+*① A prediction takes well under a millisecond on the CPU, and PRESS-02 is the least certain · ② The router sends the request to the classifier · ③ Without the router: 19 of 23 held-out requests reach the right tool first · ④ With the router: 23 of 23*
+
+`check_routing.py` sends every request through the agent, so it is slow on a laptop: 4 minutes for the held-out set with the router, 13 minutes without it, and 17 minutes for the 32-request tuning set. Run one set per team, or run it once at the front.
+
 
 ### **Task 4: How far do you trust it?**
 
@@ -126,5 +177,6 @@ You successfully completed challenge 5! 🚀🚀🚀
 - **Custom model serving in Foundry Local:** this MicroHack does **not** serve the classifier through Foundry Local. Foundry Local serves the catalog models, and a scikit-learn classifier is not a chat model. What we validated is the fallback from the outline: the ONNX classifier runs as an **agent tool next to** the small language model, with ONNX Runtime. A fine-tuned small language model served by Foundry Local is not covered here.
 - **Cost:** the Azure Machine Learning workspace costs nothing while idle. The compute instance costs a few cents per hour. Remind teams to stop it.
 - **Verified with the `az ml` command line** against the workspace that the lab automation creates: the compute instance (`Standard_DS3_v2`) was `Running` **3.7 minutes** after the request, and the training job (`pip install skl2onnx onnx`, then `train_fault_classifier.py`) ran in **2.5 minutes** on it. It reproduced the local result exactly: accuracy 0.940, the same confusion matrix, and an ONNX file that is **byte-identical** to `resources/shortcut/fault_classifier.onnx`. So the shortcut file is a faithful stand-in for a team's own result, and a team's file can be checked against it with a file hash.
-- **Not verified:** the clicks in the Azure Machine Learning **studio** (notebooks, kernel start-up) were not exercised, only the same steps through the command line. Plan about 4 minutes for the compute instance to start, and do the studio steps once before the first event.
+- **Verified in the Azure Machine Learning studio** on 23 November 2026, in a workspace deployed by the lab automation: the compute instance (`Standard_DS3_v2`) was `Running` **4.2 minutes** after **Create**, *Restart kernel and run all cells* ran the notebook in under a minute (the package install took 17 s), with accuracy 0.94, *"ONNX matches scikit-learn on 100 percent of the test rows"*, and an ONNX file that is again **byte-identical** to `resources/shortcut/fault_classifier.onnx` (SHA-256 `112BB623…378B1F`). Plan the 4 minutes of start-up: let teams read the notebook while the instance starts.
+- The notebook shows a yellow banner, *"You need to be authenticated to the compute to use any Azure SDK"*. It does not stop this notebook, which uses no Azure SDK. Teams can ignore it or select **Authenticate**.
 - **Stretch:** compare the classifier's verdict with what the language model says about the same readings (*"given vibration 9.4 mm/s and 78 °C, what is wrong?"*) and discuss which to trust when.

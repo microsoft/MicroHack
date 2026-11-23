@@ -75,9 +75,17 @@ Reference results with `phi-4-mini` (13 answerable questions and 2 that are not 
 | | Retrieval finds the right SOP | Answer has the expected facts | Right SOP cited | Refuses what it cannot answer |
 |---|---|---|---|---|
 | Always retrieve | 13/13 | 12/13 | 11/13 | 2/2 |
-| Agent with `search_sops` | n/a | 12/13 | 12/13 | 2/2 |
+| Agent with `search_sops` | n/a | 12/13 to 13/13 | 12/13 to 13/13 | 2/2 |
 
-Questions with two topics (3 questions, 2 runs each): both SOPs found in 6 of 6 runs, all expected facts in 4 of 6, and two runs in six did not split the question into two topics. The answers are not identical between runs, so a difference of one is noise.
+The agent row moved by one between runs (13/13 on both on 23 November 2026, Foundry Local 0.14.0); the "always retrieve" row was identical.
+
+![The copilot answers from SOP-CNC-001 with its sources, refuses a question that is not in the SOPs, and the two evaluations](../../images/c4-retrieval.png)
+
+*① The agent decides to search the SOPs · ② The app attaches the SOPs it really retrieved · ③ Nothing above the score threshold, so it refuses instead of inventing · ④ The agent cites the right SOP for all 13 questions*
+
+The evaluations take time on a laptop: about 3 minutes for each `evaluate_retrieval.py` run and 12 minutes for `evaluate_compound.py`. Start them and discuss the results of the previous run while they work.
+
+Questions with two topics (3 questions, 2 runs each): both SOPs found in 6 of 6 runs, all expected facts in 4 of 6, and in the first test two runs in six did not split the question into two topics (on 23 November 2026 all six split it). The answers are not identical between runs, so a difference of one is noise.
 
 💡 Retrieval is rarely the problem here: the right SOP is found every time. The misses are in what the small model **does with** the excerpts, for example it quotes the trip temperature (110 °C) instead of the alarm temperature (100 °C). That is the kind of thing a team can improve.
 

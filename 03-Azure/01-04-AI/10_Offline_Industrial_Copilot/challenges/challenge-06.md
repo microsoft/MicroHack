@@ -9,7 +9,7 @@
 ## Actions
 
 * Run your complete copilot once **while connected** and write down how long each kind of question takes: a procedure question, a machine status, a fault prediction, and a ticket.
-* **Get ready before you disconnect.** Make sure the Foundry Local service is running and your models are loaded, and ask one question of each kind so everything is warm. **Do not restart the service while you are offline.** Find out why: what does the service need when it starts?
+* **Get ready before you disconnect.** Make sure the Foundry Local service is running and your models are loaded, and ask one question of each kind so everything is warm. Downloads and package installs are impossible once you are offline. Find out what the service needs when it **starts**: can your version restart while offline and still load the models that are on your disk? Test it, do not assume it.
 * Disconnect the device from the internet. Choose a way that matches your setup:
   * Laptop: turn off Wi-Fi, unplug the cable, or block outbound traffic with the firewall.
   * VM: block outbound internet traffic with a network security group rule. Keep a way to reach the VM.
@@ -18,7 +18,7 @@
 * Record the latency of each step while offline.
 * Find out whether **anything** still needs the internet. Look at what your copilot does at start-up, and what the Foundry Local service does.
 * Discuss what must still happen when the device is back online: updates, new models, syncing tickets, monitoring.
-* **Stretch:** make your copilot survive a restart of the model service while the device is offline. The Foundry Local SDK (`pip install foundry-local-sdk`) can start models from your local cache. What does it need that the `foundry` service gets from the internet?
+* **Stretch:** make your copilot survive a restart of the model service while the device is offline, whatever the version of the `foundry` service does. The Foundry Local SDK (`pip install foundry-local-sdk`) can start models from your local cache. What does it need that the `foundry` service gets from the internet?
 
 ## Success criteria
 

@@ -25,9 +25,11 @@ Reference timings on the laptop (Snapdragon X Elite, GPU variant), **connected**
 
 The ticket time includes the seconds the technician needs to type `y`. The first request is the slowest because the models are still cold. The times for the Windows VM are in task 5.
 
+Re-run on 23 November 2026 (Foundry Local 0.14.0, same laptop, warm models): status 9.2 s, fault prediction 10.9 s, SOP question 16.6 s, ticket 5.2 s.
+
 ### **Task 2: Get ready, then disconnect**
 
-💥 **Start everything before you disconnect, and do not restart the `foundry` service while you are offline.** The service loads its model catalog from the internet when it starts. A service that is already running, with its models loaded, keeps answering offline. A service that is restarted offline cannot find any model, even a model that is on the disk (see the coach notes).
+💥 **Start everything before you disconnect, and test a restart before you rely on it.** Older versions of the `foundry` service (0.11 and 0.12, see the coach notes) load their model catalog from the internet when they start: restarted offline, they could not find any model, even a model that was on the disk. **Foundry Local 0.14.0 no longer has this problem:** on 23 November 2026 we restarted the service with the internet blocked, it loaded `phi-4-mini` in 5 s and the embedding model in 3 s from the disk, and the whole copilot worked. Downloads still fail offline (*"region fallback exhausted all 8 candidate regions"*), so get every model and package first.
 
 1. Make sure the service is running and both models are loaded:
 
@@ -46,7 +48,7 @@ python serve_offline.py                        # serves phi-4-mini and the embed
 $env:FOUNDRY_LOCAL_URL = "http://127.0.0.1:5272/v1"    # in the terminal where you run the copilot
 ```
 
-By default it uses the **CPU** variants of the models. On the VM that is what you get anyway. On a laptop with a GPU or NPU, add `--accelerate` to use those variants instead. That works offline as long as you ran a GPU model once while you were online (see the coach notes).
+By default it uses the **CPU** variants of the models. On the VM that is what you get anyway. On a laptop with a GPU or NPU, add `--accelerate` to use those variants instead. That works offline as long as you ran a GPU model once while you were online (see the coach notes). It prints `failed to fetch catalog from http://127.0.0.1:9` at the start: that is expected, it is the catalog address the script makes fail on purpose. Verified offline on 23 November 2026 with `--accelerate` (SDK 2.5.0, Foundry Local 0.14.0): it served the GPU variants of both models, and the copilot answered status, SOP and fault questions through it.
 
 ### **Task 3: Disconnect**
 
@@ -57,6 +59,18 @@ New-NetFirewallRule -DisplayName "Offline copilot test" -Direction Outbound -Act
 ```
 
 Remove it afterwards with `Remove-NetFirewallRule -DisplayName "Offline copilot test"`. Turning Wi-Fi off or unplugging the cable works as well.
+
+⚠️ **Check that the block really covers the model service.** On a company-managed laptop, a rule with `-RemoteAddress Internet` blocked Python, but the Foundry Local service (`foundrylocald.exe`) still downloaded a model. Test it with `foundry model download qwen2.5-0.5b`: it must fail. If it does not, block the two programs for **every** remote address instead (loopback traffic is not affected):
+
+```powershell
+$fl = (Get-Process foundrylocald).Path
+$py = python -c "import sys; print(sys._base_executable)"   # the real interpreter, not the .venv launcher
+New-NetFirewallRule -DisplayName "Offline copilot test" -Direction Outbound -Action Block -RemoteAddress Any -Program $fl
+New-NetFirewallRule -DisplayName "Offline copilot test" -Direction Outbound -Action Block -RemoteAddress Any -Program $py
+foundry server stop; foundry server start    # connections that were already open survive a new rule
+```
+
+On that laptop the service then failed to download (*"region fallback exhausted all 8 candidate regions"*), while every local answer still worked.
 
 **VM**: add an outbound rule to the network security group of the VM. It blocks the internet and keeps your Remote Desktop session and the Azure management path:
 
@@ -88,6 +102,10 @@ Local answers : [2.48, 1.05] s
 
 If it says `REACHABLE`, the block does not work yet. Do not continue until it says `not reachable`.
 
+![Offline: offline_check.py, the whole scenario after restarting the service offline, and a download that fails](../../images/c6-offline.png)
+
+*From the laptop on 23 November 2026 (Foundry Local 0.14.0), with the firewall block above. ① The internet is not reachable · ② The SOP answer still has its sources · ③ The ticket is written · ④ A download cannot reach any region. The scenario ran after the `foundry` service had been stopped and started again while offline.*
+
 ### **Task 5: Run the whole scenario again**
 
 Repeat the questions from task 1 and write down the timings. Every capability from challenges 3 to 5 must work: the tools, the SOP search with sources, the ONNX model and the ticket.
@@ -111,7 +129,7 @@ Go through the copilot and the Foundry Local service and ask *"does this need th
 
 | Needs the internet | When |
 |--------------------|------|
-| Starting or restarting the Foundry Local service | Whenever it starts (it fetches the model catalog) |
+| Starting or restarting the Foundry Local service | Versions 0.11 and 0.12: whenever it starts (it fetches the model catalog). 0.14.0: not for models already on the disk |
 | Downloading a model or a model update | Once, and when a model is refreshed |
 | Updating Foundry Local itself and the Python packages | On a schedule, from a controlled place |
 | Syncing the maintenance tickets to the central system | When the device is back online |
@@ -130,9 +148,9 @@ You successfully completed challenge 6! 🚀🚀🚀
 - With the service started and the models loaded **before** the block, the whole copilot works offline, with the same timings as connected.
 - Starting the service takes 2 seconds, loading `phi-4-mini` and the embedding model about 17 seconds, and the first chat answer after that 0.6 s.
 
-### What breaks offline: restarting the service
+### What broke offline in older versions: restarting the service
 
-After `foundry server restart` with the internet blocked, `foundry model load` and every other command that names a model failed with `No model matching 'phi-4-mini' was found in the catalog`, **also for a model that was already downloaded** and also when the full variant ID was used. The service log shows why:
+With Foundry Local 0.11 and 0.12, after `foundry server restart` with the internet blocked, `foundry model load` and every other command that names a model failed with `No model matching 'phi-4-mini' was found in the catalog`, **also for a model that was already downloaded** and also when the full variant ID was used. The service log shows why:
 
 ```text
 GetModelVariant: 'Phi-4-mini-instruct-generic-cpu:5' not in cache, fetching from catalog source.
@@ -143,7 +161,8 @@ RegionFallback: region 'centralus' unhealthy (transport failure); trying next ca
 
 It tries 7 regions in turn, which is about 2.5 minutes of waiting, and then gives up. Teams that block the network and then restart the service (or reboot the VM) will lose the copilot and will think the network block broke something.
 
-- **Tell teams in the briefing:** start and warm up first, disconnect second, do not restart the `foundry` service.
+- **Tell teams in the briefing:** start and warm up first, disconnect second, and test a restart before relying on it.
+- **Foundry Local 0.14.0 (23 November 2026, Snapdragon laptop):** the same test passed. With the service and Python blocked for every remote address (a model download failed in all 8 regions), `foundry server stop`, `foundry server start` (7 s) and `foundry model load` brought back `phi-4-mini` in 5 s and the embedding model in 3 s, and status, fault prediction, SOP question and ticket all worked (11.7 s, 7.9 s, 13.8 s, 4.7 s). Teams on an older version still need the briefing above or `serve_offline.py`. `foundry server restart` itself timed out once while the old process was still shutting down; `stop`, then `start`, worked.
 
 ### The fix we verified: start the models from the SDK
 
@@ -171,23 +190,23 @@ Details and limits:
 
 - **The service keeps trying to reach the internet in the background.** Even in a steady state, `Get-NetTCPConnection` shows connections in the `SynSent` state to Azure addresses on port 443 (for example `20.42.73.27`) that never complete. They do not slow the answers. This is useful for the discussion about *"does it phone home?"*: with the network blocked the attempts fail quietly and nothing in the copilot depends on them. We did not find out what the service sends.
 - **Python packages must be installed before the disconnect.** `pip` has no internet either.
-- **The block must not stop the loopback address.** `127.0.0.1` is not "Internet" for the firewall rule above. If a team blocks "all" outbound traffic and the copilot stops, this is why.
+- **The block must not stop the loopback address.** `127.0.0.1` is not "Internet" for the firewall rule above, and on the laptop a program rule for **every** remote address (Task 3) did not stop loopback traffic either. If a team's own block stops the copilot, check that it does not cover `127.0.0.1`.
 
 ### Verified on a laptop (Windows 11 ARM64)
 
 `New-NetFirewallRule -Direction Outbound -Action Block -RemoteAddress Internet` was run in an administrator terminal. With the rule active, `offline_check.py` printed `not reachable (offline)`, the local model still answered (1.5 s, loopback is not "Internet") and a full copilot question worked. We scoped the rule to the Foundry service and to Python with `-Program`, because the documented rule without `-Program` would have cut our own session. **The rule exactly as written in task 3 (for all programs) was not run.** Two things to know:
 
-- If you scope the rule to Python with `-Program`, use the **real interpreter**, not the one in the virtual environment. `.venv\Scripts\python.exe` is only a launcher that starts the real one, so a rule for it blocks nothing (our first attempt printed `REACHABLE`). `python -c "import sys; print(sys._base_executable)"` shows the real path. The rule in task 3 has no `-Program`, so it does not have this problem.
+- If you scope the rule to Python with `-Program`, use the **real interpreter**, not the one in the virtual environment. `.venv\Scripts\python.exe` is only a launcher that starts the real one, so a rule for it blocks nothing (our first attempt printed `REACHABLE`). `python -c "import sys; print(sys._base_executable)"` shows the real path. The first rule in task 3 has no `-Program`, so it does not have this problem; the per-program fallback uses the real path.
 - Remove the rule when you are done, also if a test fails halfway. A `try ... finally` around the test is a good habit.
 
 ### A Foundry Local documentation claim that does not hold for the CLI service
 
-The documentation says: *"After the initial download, models run entirely offline from the local cache."* That is true for a service that is already running, and for the SDK as shown above, but **not** for a `foundry` service that is restarted offline.
+The documentation says: *"After the initial download, models run entirely offline from the local cache."* With Foundry Local 0.11 and 0.12 that was true for a service that was already running, and for the SDK as shown above, but **not** for a `foundry` service that was restarted offline. With 0.14.0 it held for a restart as well.
 
 ### Not verified
 
 - Turning Wi-Fi off or unplugging the cable.
-- A real reboot of a GPU or NPU device with no network. We blocked the network for the launcher process and did not restart the machine.
+- A real reboot of a GPU or NPU device with no network. We blocked the network for the service and Python and restarted the service, not the machine.
 - The `foundry` service itself with a local provider: we only fixed the SDK path.
 
 **Stretch:** design the reconnection routine from task 6 and write the ticket-sync part.

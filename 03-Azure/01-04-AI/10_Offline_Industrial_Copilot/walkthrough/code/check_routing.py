@@ -1,4 +1,4 @@
-"""Challenge 4: how often does the agent pick the right tool first?
+"""Challenge 5: how often does the agent pick the right tool first?
 
   python check_routing.py                         tuning set, tool shortlist of 1
   python check_routing.py holdout                 requests the router was not tuned on

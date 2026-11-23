@@ -26,11 +26,14 @@ Models without tool calling (for example `phi-4` and `phi-3.5-mini`) cannot be t
 
 ### **Task 2: Run the same questions against each model**
 
-[benchmark.py](../code/benchmark.py) measures speed, tool calling and answer quality for every alias you give it:
+[benchmark.py](../code/benchmark.py) measures speed, tool calling and answer quality for every alias you give it. The reference scripts import `fl.py` and each other, so copy all of them into your `work` folder first:
 
 ```powershell
+copy ..\walkthrough\code\*.py .
 python benchmark.py phi-4-mini qwen2.5-1.5b qwen3-1.7b
 ```
+
+Without the copy, `benchmark.py` stops with `ModuleNotFoundError: No module named 'tools'`. The run takes about 15 minutes for the three models on a laptop.
 
 How it measures:
 
@@ -40,18 +43,22 @@ How it measures:
 
 ### **Task 3: Read the results**
 
-Example from a Snapdragon X Elite laptop (Windows 11 on ARM, 64 GB RAM). **Your numbers will be different**, because the device decides which variant runs.
+Example from a Snapdragon X Elite laptop (Windows 11 on ARM, 64 GB RAM, Foundry Local 0.14.0, 23 November 2026). **Your numbers will be different**, because the device decides which variant runs.
+
+![benchmark.py results for the three models](../../images/c2-benchmark.png)
+
+*① `phi-4-mini`: 7 of 8 tool cases with `required`, every answer correct · ② `qwen2.5-1.5b` on the NPU: correct answers, but no tool case passes · ③ `qwen3-1.7b`: fast, but 1 of 8 tool cases and 9 of 13 answers*
 
 | Model | Runs on | Size | First token | Tokens/s | Tools `auto` | Tools `required` | Quality |
 |-------|---------|------|-------------|----------|--------------|------------------|---------|
-| `phi-4-mini` | GPU | 3.8 GB | 0.7 s | 27 | 1/8 | **7/8** | **13/13** |
-| `qwen2.5-1.5b` | NPU | 1.1 GB | 0.2 s | 13 to 51 | 1/8 | 0/8 | 13/13 |
-| `qwen3-1.7b` | GPU | 1.4 GB | 0.5 s | 32 | 1/8 | 1/8 | 9/13 |
+| `phi-4-mini` | GPU | 3.8 GB | 0.75 s | 21.5 | 1/8 | **7/8** | **13/13** |
+| `qwen2.5-1.5b` | NPU | 1.1 GB | 1.2 s | 3.8 | 0/8 | 0/8 | 13/13 |
+| `qwen3-1.7b` | GPU | 1.4 GB | 0.85 s | 27.1 | 1/8 | 1/8 | 9/13 |
 
 What the teams should notice:
 
 - **`tool_choice="auto"` almost never works with small models.** They describe the call in text, or answer from memory. `"required"` forces a structured call, and that is what the agent in challenge 3 uses. Note that the case without a tool (*"Why is the sky blue?"*) can **never** pass with `"required"`, so 7/8 is the best possible score in that column, and `"auto"` scores 1/8 because it passes only that one case.
-- **`qwen2.5-1.5b` on the NPU** is the fastest and smallest, and its answers are as good as those of `phi-4-mini`, but with `"required"` the service returns an error (*HTTP 500, inference failed*). It cannot be the agent model on this hardware.
+- **`qwen2.5-1.5b` on the NPU** is the smallest, and its answers are as good as those of `phi-4-mini`, but **every request that includes tools** fails with *HTTP 500, inference failed* (`BuildToolCallContextForRequest`), with `"auto"` as well as `"required"`. That is why it scores 0/8 in both columns. On Foundry Local 0.14 it was also slow on this laptop (47 s to load, 3.8 tokens/s). It cannot be the agent model on this hardware. In an earlier run with Foundry Local 0.11 it was the fastest model (13 to 51 tokens/s) and failed only with `"required"`: the same model behaves differently between versions, which is one more reason to measure.
 - **`qwen3-1.7b` calls both tools**, including `create_maintenance_ticket` with an invented summary, when asked only for a status. A model that takes actions nobody asked for is worse than a slow one. Its quality score is low partly because it spends its token budget on thinking. Its thinking text arrives in a separate `reasoning_content` field.
 - **Memory:** on a GPU or NPU the model does not show up in the process memory. Look at the dedicated or shared GPU memory (Task Manager, Performance tab) or at the NPU. With all three models loaded the Foundry Local service held about 5.9 GB.
 
@@ -59,7 +66,7 @@ What the teams should notice:
 
 A good answer for this scenario:
 
-> *"We chose `phi-4-mini`: it is the only one of the three that made a correct tool call in 7 of 8 cases while giving a correct answer to every question. It is the largest and the slowest, but 0.7 s to the first token is fine for a technician, and it fits on a normal PC."*
+> *"We chose `phi-4-mini`: it is the only one of the three that made a correct tool call in 7 of 8 cases while giving a correct answer to every question. It is the largest, but 0.75 s to the first token is fine for a technician, and it fits on a normal PC."*
 
 A different choice is fine **if the team has evidence**. A team that finds a smaller model that passes the tool cases has found something useful.
 

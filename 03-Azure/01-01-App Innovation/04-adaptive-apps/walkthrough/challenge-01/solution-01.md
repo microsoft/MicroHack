@@ -44,7 +44,7 @@ inside this container; the lab platforms run in Azure.
 
    In the **top-right corner of the Codespaces tab**, select **...**, then **New
    with options**. Do not use the quick-create button: this repository has
-   multiple devcontainers, and you must choose **walkthrough/challenge-01/solution-01.md**
+   multiple devcontainers, and you must choose **Azure/App Innovation/Adaptive-Apps**
 
    <a href="https://docs.github.com/assets/images/help/codespaces/default-machine-type.png"><img src="https://docs.github.com/assets/images/help/codespaces/default-machine-type.png" alt="GitHub documentation example showing the Codespaces three-dot menu and New with options" width="420"></a>
 

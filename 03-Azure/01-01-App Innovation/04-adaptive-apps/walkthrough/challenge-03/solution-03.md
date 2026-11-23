@@ -51,7 +51,7 @@ steps; do not set them again in each step.
 
 ### 2. New terminals and reconnecting (LAB and BYOS)
 
-In each new Bash terminal, restore the saved variables:
+In EACH Bash terminal, restore the saved variables:
 
 ```bash
 source artifacts/lab-env.sh
@@ -313,12 +313,12 @@ rad install kubernetes \
   --set global.azureWorkloadIdentity.enabled=true
 ```
 
-If GHCR returns HTTP 403:
+Check if the Entra identity is attached to the Radius control plane. The output should have a clientId and tenantid populated:
 
 ```bash
-helm registry logout ghcr.io || true
-docker logout ghcr.io || true
+rad credential show azure --workspace ws-azure-prod
 ```
+
 
 Then rerun the installation.
 

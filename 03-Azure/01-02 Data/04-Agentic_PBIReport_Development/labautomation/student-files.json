@@ -1,0 +1,127 @@
+[
+  {
+    "path": "datasets/banking/DimBranch.csv",
+    "target": "datasets/banking/DimBranch.csv",
+    "sha256": "5acaa8275671cbca58e08408784e1cffedadb02ae041aa76553a1cde3913a087"
+  },
+  {
+    "path": "datasets/banking/DimChannel.csv",
+    "target": "datasets/banking/DimChannel.csv",
+    "sha256": "de3aca3991716e26f2262bd473dbb317c68f75603e771054c865cc73a6a34219"
+  },
+  {
+    "path": "datasets/banking/DimCustomer.csv",
+    "target": "datasets/banking/DimCustomer.csv",
+    "sha256": "548a9a232e70e2b200a0fa94837f0c7e36a079e482c9c57db2bcb21cb9c675fe"
+  },
+  {
+    "path": "datasets/banking/DimDate.csv",
+    "target": "datasets/banking/DimDate.csv",
+    "sha256": "77fa0e822acd070a1b2f45231ae3306506ad232a3b00445b7f2542b9a4ee4dde"
+  },
+  {
+    "path": "datasets/banking/DimProduct.csv",
+    "target": "datasets/banking/DimProduct.csv",
+    "sha256": "d44aca4762f78d4f6056a9415613856f00416211920135fbd95db0b7930b8e8a"
+  },
+  {
+    "path": "datasets/banking/DimRiskBand.csv",
+    "target": "datasets/banking/DimRiskBand.csv",
+    "sha256": "e98884644cecec6335e4168609a980f95329a3b36e3935ae6ade75a8b2da2c21"
+  },
+  {
+    "path": "datasets/banking/FactLoanMonthlySnapshot.csv",
+    "target": "datasets/banking/FactLoanMonthlySnapshot.csv",
+    "sha256": "9353b43384540b68d10982e42c3eab3ab32a8f6b141920ce1eb60db0565469b2"
+  },
+  {
+    "path": "datasets/banking/FactTransactions.csv",
+    "target": "datasets/banking/FactTransactions.csv",
+    "sha256": "0acf802324c9940386ae88f016b85929a128c34114fc00afecdd62bf86b162e6"
+  },
+  {
+    "path": "datasets/insurance/DimClaimType.csv",
+    "target": "datasets/insurance/DimClaimType.csv",
+    "sha256": "d58187f8fb91c9f363ddc49ba122d66320971a80f9b6e04904d5f59b3d625768"
+  },
+  {
+    "path": "datasets/insurance/DimCustomer.csv",
+    "target": "datasets/insurance/DimCustomer.csv",
+    "sha256": "adcf5e1b43d2e7656cf63a7461f28afd0a8677524f7b5a22f9723ef18ee13023"
+  },
+  {
+    "path": "datasets/insurance/DimDate.csv",
+    "target": "datasets/insurance/DimDate.csv",
+    "sha256": "77fa0e822acd070a1b2f45231ae3306506ad232a3b00445b7f2542b9a4ee4dde"
+  },
+  {
+    "path": "datasets/insurance/DimDistributionChannel.csv",
+    "target": "datasets/insurance/DimDistributionChannel.csv",
+    "sha256": "d327ae519702183ff505bbadb6be8314f33c1336989f2c0c7c7781cfdf87d0b7"
+  },
+  {
+    "path": "datasets/insurance/DimGeography.csv",
+    "target": "datasets/insurance/DimGeography.csv",
+    "sha256": "55243990eeb40f1d8f96c1bd7eee6fef0cb546cadfb2b7df9ee45986bc14e024"
+  },
+  {
+    "path": "datasets/insurance/DimInsuranceProduct.csv",
+    "target": "datasets/insurance/DimInsuranceProduct.csv",
+    "sha256": "55d43a5e1b728012e48f094d9ed05ca1c9f81916f26e8f58a88e8e9a6971a16d"
+  },
+  {
+    "path": "datasets/insurance/FactClaimTransactions.csv",
+    "target": "datasets/insurance/FactClaimTransactions.csv",
+    "sha256": "65048d754d88d39a6bdbe49ba818013a87603d0c59553ffc4806b296ddb3f08a"
+  },
+  {
+    "path": "datasets/insurance/FactPremiumMonthly.csv",
+    "target": "datasets/insurance/FactPremiumMonthly.csv",
+    "sha256": "eea4b239b33f0f830c11cf8ae8ac1815a1c80157dfe07e44424558153a769bc0"
+  },
+  {
+    "path": "datasets/manifest.json",
+    "target": "datasets/manifest.json",
+    "sha256": "d70109ff84776329f3f625e0765659fb18a7c9b61db99242946c7621738ac133"
+  },
+  {
+    "path": "datasets/dictionary.md",
+    "target": "datasets/dictionary.md",
+    "sha256": "aee10877128c8ddcc39676ca67e0c315d2bd31477caa26e6e428caa455f2ad88"
+  },
+  {
+    "path": "datasets/generate_data.py",
+    "target": "datasets/generate_data.py",
+    "sha256": "953c2f205b588ec36f9cfd1becbe16811a9fc244c8dc4b230523ec848517e206"
+  },
+  {
+    "path": "datasets/generate-data.py",
+    "target": "datasets/generate-data.py",
+    "sha256": "39ebd7f12cf68e3b29982017406b4808a428b0b7b3de903e00fbf09c30fbe711"
+  },
+  {
+    "path": "resources/banking-business-brief.md",
+    "target": "briefs/banking-business-brief.md",
+    "sha256": "bcc4dff9fbaf2c75e0a90b698d6e76ff1885a65a1b5d8c5f5f41843a32060d39"
+  },
+  {
+    "path": "resources/insurance-business-brief.md",
+    "target": "briefs/insurance-business-brief.md",
+    "sha256": "b64df527a89edfcb4a0f67590ef9fab836cc6f1a07b2fcfd42ba38c1602ee6f2"
+  },
+  {
+    "path": "resources/report-design-brief.md",
+    "target": "briefs/report-design-brief.md",
+    "sha256": "8ed7d82d12737750410ebbc30ec06a83fca0909c616730ffabaf609c9c25a9bd"
+  },
+  {
+    "path": "resources/copilot-instructions.md",
+    "target": "briefs/copilot-instructions.md",
+    "sha256": "f13ea040ebd6092e214127dce2ac0ddaf4f7def73566cee7c82efc7f5c60a204"
+  },
+  {
+    "path": "resources/cleanup.md",
+    "target": "briefs/cleanup.md",
+    "sha256": "6d8ad38a043636cc1c652dda13efcfaa8234188f0cd103a78ec126570531627f"
+  }
+]

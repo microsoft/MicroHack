@@ -35,6 +35,9 @@ Q-04: item-policy availability/route coverage and managed SQL endpoint dependenc
 Q-05: CHF is confirmed; business approval of proposed sizes/grains/KPIs and
 AC thresholds remains outstanding.
 Q-06: image/OS license, VM size/access, regions, budget and retention.
+Access is now shared Azure Bastion with private VMs (user-confirmed). The source
+defaults to licensed Windows Server, but image/SKU availability, regional quota,
+cost and retention still need event-specific validation and approval.
 Q-07: maintainer approval of the requested legacy-style folder.
 Q-08: explicit requirements baseline sign-off.
 

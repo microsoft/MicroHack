@@ -11,23 +11,28 @@ missing packages, change tenant settings or update the event image yourself.
   CSV folders, `manifest.json`, `dictionary.md` and generator scripts must be under
   `datasets`; business/design briefs are under `briefs` on the VM. The platform's
   Student download instead keeps supporting briefs under `resources`.
+- Connect to your private VM through the Azure portal's **Connect > Bastion**
+  page using the VM credentials provided by the lab platform. A public VM IP or
+  personal RDP source-range registration is not required.
 - From that exercise folder, run `python datasets\generate-data.py --validate`.
   This reads and verifies both scenarios without changing files. Stop and ask the
   coach if files are absent or validation fails; do not regenerate over bad inputs.
 - Check the supplied Git, Python, Node, Azure CLI, Copilot, VS Code and
-  `powerbi-report-author` commands against the organizer's approved version record.
+  PowerShell 7 and `powerbi-report-author` commands against the organizer's
+  approved version record.
   Report a missing tool or version mismatch rather than installing `latest`.
 
 ## Sign in and verify your chosen host
 
 - **Copilot CLI (primary):** sign in as yourself, choose the approved available
-  model, check your permitted usage budget, and inspect active authoring skills/MCP
-  tools. The coach must resolve missing tools; a consumption-only MCP is not enough.
+  model, check your permitted usage budget, and inspect active authoring skills
+  and CLI tools. The prepared path uses CLI/REST authoring, not a required MCP.
+  The coach must resolve missing tools; a consumption-only MCP is not enough.
   If the coach asks you to run `C:\MicroHack\initialize-user.ps1`, review it first;
-  it initializes only your prepared CLI profile and refuses to overwrite an
-  existing configuration.
+  it initializes your CLI skills and installs/verifies the prepared VS Code
+  extensions in your profile. It refuses to overwrite unrelated existing skills.
 - **VS Code Agent (alternative):** open the exercise folder, sign in, select Agent
-  mode and the approved model, and inspect the prepared skills/MCP registration.
+  mode and the approved model, and inspect project skills and authoring commands.
   CLI plugin installation alone does not configure VS Code.
 - Authenticate to Fabric/Power BI interactively with your assigned identity.
   Never share or print tokens. Opening the portal or acquiring a Fabric token does

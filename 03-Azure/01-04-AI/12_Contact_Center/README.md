@@ -18,6 +18,8 @@ Everything happens in the browser: the agents in the **Microsoft Foundry portal*
 > [!TIP]
 > You talk to your agent with your own voice, so bring a headset with a microphone, or use a quiet room.
 
+**Tech talk:** open the day with [Say it once](techtalk/README.md), a 23-minute animated talk with speaker notes.
+
 ## Pick your industry
 
 The contact center works the same way in every industry, so **you choose the company you work for** in Challenge 1. Each industry pack has its own knowledge articles, customers, appointments, recorded calls and test questions:

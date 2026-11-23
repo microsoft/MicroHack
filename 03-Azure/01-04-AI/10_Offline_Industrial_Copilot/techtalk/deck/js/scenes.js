@@ -540,5 +540,5 @@
   document.addEventListener('visibilitychange', syncPause);
   reduced.addEventListener('change', () => enter(Reveal.getCurrentSlide()));
   window.addEventListener('beforeprint', () => $$(document, '.reveal .slides > section[data-scene]').forEach(s => settle(s, lastBeat(s))));
-  window.TalkDeck = { settle, replay, showAll, clock };
+  window.TalkDeck = { settle, replay, showAll, clock, busy: () => clock.pending() };
 })();

@@ -33,7 +33,7 @@ copy ..\walkthrough\code\*.py .
 python benchmark.py phi-4-mini qwen2.5-1.5b qwen3-1.7b
 ```
 
-Without the copy, `benchmark.py` stops with `ModuleNotFoundError: No module named 'tools'`. The run takes about 15 minutes for the three models on a laptop.
+Without the copy, `benchmark.py` stops with `ModuleNotFoundError: No module named 'tools'`. The run takes about 15 minutes for the three models on a laptop. Add `--quick` to ask 5 of the 13 quality questions (all tool cases stay): `python benchmark.py --quick phi-4-mini qwen3-1.7b` took 6 minutes and gave the same picture (phi-4-mini 7/8 tools with `required`, 5/5 quality; qwen3 1/8, 3/5).
 
 How it measures:
 

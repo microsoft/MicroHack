@@ -152,7 +152,7 @@ Results with `phi-4-mini`, first tool correct:
 
 *① A prediction takes well under a millisecond on the CPU, and PRESS-02 is the least certain · ② The router sends the request to the classifier · ③ Without the router: 19 of 23 held-out requests reach the right tool first · ④ With the router: 23 of 23*
 
-`check_routing.py` sends every request through the agent, so it is slow on a laptop: 4 minutes for the held-out set with the router, 13 minutes without it, and 17 minutes for the 32-request tuning set. Run one set per team, or run it once at the front.
+`check_routing.py` sends every request through the agent, so it is slow on a laptop: 4 minutes for the held-out set with the router, 13 minutes without it, and 17 minutes for the 32-request tuning set. Add `--quick` to send only the first 2 requests per tool (`python check_routing.py holdout --quick` took 1 minute, 8 of 8). Use it while tuning, then run one full set per team, or once at the front.
 
 
 ### **Task 4: How far do you trust it?**

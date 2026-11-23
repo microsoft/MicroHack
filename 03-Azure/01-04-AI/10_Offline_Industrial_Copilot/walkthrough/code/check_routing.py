@@ -4,6 +4,7 @@
   python check_routing.py holdout                 requests the router was not tuned on
   python check_routing.py tuning baseline         no router: the model sees all tools
   python check_routing.py tuning top2             router shortlists 2 tools, the model chooses
+  add --quick                                     two requests per tool instead of the whole set
 
 Set ROUTING_MODEL_ID to a full model ID (for example Phi-4-mini-instruct-generic-cpu:5) to test one hardware variant.
 Only the first tool the model picks is counted. Tickets are never created (the approval is always 'no').
@@ -34,9 +35,18 @@ def _spy(reply):
 agent.first_tool_call = _spy
 
 if __name__ == "__main__":
-    dataset = sys.argv[1] if len(sys.argv) > 1 else "tuning"
-    strategy = sys.argv[2] if len(sys.argv) > 2 else "top1"
+    quick = "--quick" in sys.argv
+    args = [a for a in sys.argv[1:] if a != "--quick"]
+    dataset = args[0] if len(args) > 0 else "tuning"
+    strategy = args[1] if len(args) > 1 else "top1"
     cases = json.loads((fl.DATA / "eval" / SETS[dataset]).read_text(encoding="utf-8"))
+    if quick:  # the first two requests for every tool, so each tool still counts
+        taken, picked = {}, []
+        for c in cases:
+            if taken.get(c["expected_tool"], 0) < 2:
+                picked.append(c)
+                taken[c["expected_tool"]] = taken.get(c["expected_tool"], 0) + 1
+        cases = picked
 
     client = fl.client()
     embed_model = fl.load(retrieval.EMBED_MODEL)
@@ -61,7 +71,7 @@ if __name__ == "__main__":
         stats[1] += 1
         if not ok:
             misses.append((case["id"], case["request"][:58], case["expected_tool"], picked))
-    print(f"[{dataset} / {strategy} / {chat_model}]")
+    print(f"[{dataset}{' quick' if quick else ''} / {strategy} / {chat_model}]")
     for tool, (ok, n) in per_tool.items():
         print(f"  {ok}/{n}  {tool}")
     print(f"first tool correct: {right}/{len(cases)}  ({time.perf_counter() - start:.0f} s)")

@@ -1,5 +1,10 @@
-"""Challenge 4: does the agent retrieve more than once when a question needs it?"""
+"""Challenge 4: does the agent retrieve more than once when a question needs it?
+
+  python evaluate_compound.py           each question twice (answers vary between runs)
+  python evaluate_compound.py --quick   each question once (half the time)
+"""
 import json
+import sys
 
 import agent
 import fl
@@ -35,4 +40,4 @@ def evaluate(repeats=2):
 
 
 if __name__ == "__main__":
-    evaluate()
+    evaluate(repeats=1 if "--quick" in sys.argv else 2)

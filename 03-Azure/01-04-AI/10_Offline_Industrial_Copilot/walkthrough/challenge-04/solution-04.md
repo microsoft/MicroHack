@@ -83,7 +83,7 @@ The agent row moved by one between runs (13/13 on both on 23 November 2026, Foun
 
 *① The agent decides to search the SOPs · ② The app attaches the SOPs it really retrieved · ③ Nothing above the score threshold, so it refuses instead of inventing · ④ The agent cites the right SOP for all 13 questions*
 
-The evaluations take time on a laptop: about 3 minutes for each `evaluate_retrieval.py` run and 12 minutes for `evaluate_compound.py`. Start them and discuss the results of the previous run while they work.
+The evaluations take time on a laptop: about 3 minutes for each `evaluate_retrieval.py` run and 12 minutes for `evaluate_compound.py`. Start them and discuss the results of the previous run while they work. While iterating, add `--quick` (for example `python evaluate_retrieval.py agent --quick`): it uses 7 of the 13 questions plus both refusals, and asks each compound question once. Quick runs took 1 minute (pipeline), 2 minutes (agent) and 1.5 minutes (compound), with the same pattern of results. Run the full set once for the numbers you report.
 
 Questions with two topics (3 questions, 2 runs each): both SOPs found in 6 of 6 runs, all expected facts in 4 of 6, and in the first test two runs in six did not split the question into two topics (on 23 November 2026 all six split it). The answers are not identical between runs, so a difference of one is noise.
 

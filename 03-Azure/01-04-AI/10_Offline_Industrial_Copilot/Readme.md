@@ -84,9 +84,34 @@ Complete these tasks **before** the session so the time goes to the agent and no
 - This repository (or a copy of this folder) on your device.
 - An **Azure subscription** with permission to create an Azure Machine Learning workspace. Needed for challenge 5 only. If you take the shortcut in challenge 5 you do not need it.
 
-You can start the model downloads early. They are a few gigabytes in total.
+You can start the model downloads early. They are a few gigabytes in total, and the setup script below does them for you.
 
-## Challenges
+### Before the day: run the setup script
+
+Do this at least a day before the session, while you are online. It saves the first hour of the day:
+
+```powershell
+winget install Microsoft.FoundryLocal                                     # then open a new terminal
+powershell -ExecutionPolicy Bypass -File resources\starter\setup.ps1      # macOS: bash resources/starter/setup.sh
+```
+
+The script creates the `work` folder, a Python virtual environment with the packages, copies the starter helper, downloads the four models of the day (several gigabytes) and ends with a check that a local model answers. It took **12 minutes** on a laptop where the models were already downloaded, almost all of it installing the Python packages through a corporate proxy. It is safe to run again. Behind a proxy, set `PIP_INDEX_URL` first. It does **not** copy any solution code.
+
+## Coach timing plan
+
+Some measurements take minutes, because every question goes through the local model. Times on a Snapdragon X Elite laptop (GPU); a CPU-only VM is two to three times slower:
+
+| Script | Full | `--quick` |
+|--------|------|-----------|
+| `benchmark.py` (challenge 2) | 16 min for three models | 6 min for two models (5 of 13 quality questions, all tool cases) |
+| `evaluate_retrieval.py` and `... agent` (challenge 4) | 3 and 4 min | 1 and 2 min (7 of 13 questions, both refusals) |
+| `evaluate_compound.py` (challenge 4) | 12 min | 1.5 min (each question once) |
+| `check_routing.py holdout` (challenge 5) | 4 min (13 min without the router) | 1 min (2 requests per tool) |
+
+- Let teams use `--quick` while they iterate, and run the full set once for the numbers they report.
+- Start a long run, then discuss the previous result while it works.
+- On the VM, run the full sets once at the front and share the output instead of every team waiting.
+
 
 * [Challenge 1 - Get set up](challenges/challenge-01.md)  **<- Start here**
 * [Challenge 2 - Choose your edge model](challenges/challenge-02.md)

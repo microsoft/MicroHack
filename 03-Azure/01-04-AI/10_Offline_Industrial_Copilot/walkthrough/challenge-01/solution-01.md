@@ -57,6 +57,8 @@ pip install -r ..\resources\starter\requirements.txt
 copy ..\resources\starter\fl.py .
 ```
 
+If the team ran `resources\starter\setup.ps1` (or `setup.sh`) before the day, all of this is done: run `cd work` and `.venv\Scripts\activate`.
+
 [fl.py](../code/fl.py) finds the local service, loads a model and returns the **model ID** that the service expects. Then call the model with the normal OpenAI library ([hello.py](../code/hello.py)):
 
 ```python
@@ -91,7 +93,7 @@ You successfully completed challenge 1! 🚀🚀🚀
 ## Coach notes
 
 - **Re-verified end to end on 23 November 2026** with Foundry Local **0.14.0** on a Snapdragon X Elite laptop (Windows 11 on ARM, Python 3.12): challenges 1 to 6, including the Azure Machine Learning studio path and the offline run. The screenshots in this walkthrough come from that run.
-- **Install the Python packages before the day.** Creating the virtual environment and installing `requirements.txt` took **9.5 minutes** through a corporate package proxy on that laptop (all three packages have ready-made ARM64 wheels, nothing is compiled). On a slow network, ask teams to do Task 3 before the session.
+- **Install the Python packages before the day.** Creating the virtual environment and installing `requirements.txt` took **9.5 minutes** through a corporate package proxy on that laptop (all three packages have ready-made ARM64 wheels, nothing is compiled). Ask teams to run `resources\starter\setup.ps1` (or `setup.sh`) before the session: it does Task 3 and downloads the models, and took 12 minutes end to end with the models already cached.
 - **Pre-cache the models. Verified on the VM.** Sizes on the VM (CPU variants): `phi-4-mini` 4.8 GB, `qwen2.5-1.5b` 1.8 GB, `qwen3-1.7b` 1.3 GB, `qwen3-embedding-0.6b` 0.5 GB. Downloading `phi-4-mini`, `qwen2.5-1.5b` and the embedding model took 92 s, 33 s and 7 s, together 7.6 GB. To build an image with the models already in it:
   1. Download the models once with `foundry model download <alias>`.
   2. Copy the cache folder (`foundry cache location` shows it, `~/.foundry/cache/models`) to a shared folder. `robocopy` copied 7.6 GB in 71 s.

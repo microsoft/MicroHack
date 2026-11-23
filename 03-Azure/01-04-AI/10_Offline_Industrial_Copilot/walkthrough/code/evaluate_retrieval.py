@@ -2,6 +2,7 @@
 
   python evaluate_retrieval.py          fixed pipeline: always retrieve, then answer
   python evaluate_retrieval.py agent    the agent decides whether to call search_sops
+  add --quick                           7 of the 13 answerable questions and both refusals (about half the time)
 """
 import json
 import sys
@@ -9,6 +10,9 @@ import sys
 import agent
 import fl
 import retrieval as r
+
+QUICK = "--quick" in sys.argv
+ARGS = [a for a in sys.argv[1:] if a != "--quick"]
 
 
 REFUSAL_PHRASES = ("could not find", "not find", "not specified", "not available", "not mentioned",
@@ -25,6 +29,9 @@ def evaluate(mode="pipeline"):
     chunks, vectors = r.build_index(client, embed_model)
     search = r.search_tool(client, chat_model, embed_model, chunks, vectors)
     cases = json.loads((fl.DATA / "eval" / "retrieval_eval.json").read_text(encoding="utf-8"))
+    if QUICK:  # every other answerable question, and all the questions it must refuse
+        answerable = [c for c in cases if c["expected_sop"]]
+        cases = answerable[::2] + [c for c in cases if not c["expected_sop"]]
     hit = correct = cited = refused = 0
     for case in cases:
         if mode == "agent":
@@ -46,9 +53,9 @@ def evaluate(mode="pipeline"):
         print(f"{case['id']} facts={facts} cited={cites}")
     n = sum(1 for c in cases if c["expected_sop"])
     label = "retrieval hit" if mode == "pipeline" else "right SOP named"
-    print(f"\n[{mode}] {label} {hit}/{n} | correct facts {correct}/{n} | cites right SOP {cited}/{n} | "
+    print(f"\n[{mode}{' quick' if QUICK else ''}] {label} {hit}/{n} | correct facts {correct}/{n} | cites right SOP {cited}/{n} | "
           f"refused unanswerable {refused}/{len(cases) - n}")
 
 
 if __name__ == "__main__":
-    evaluate(sys.argv[1] if len(sys.argv) > 1 else "pipeline")
+    evaluate(ARGS[0] if ARGS else "pipeline")

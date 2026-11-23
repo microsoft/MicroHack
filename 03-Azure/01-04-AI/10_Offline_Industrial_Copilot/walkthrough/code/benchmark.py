@@ -1,4 +1,8 @@
-"""Challenge 2: compare edge models on speed, memory, tool calling and answer quality."""
+"""Challenge 2: compare edge models on speed, memory, tool calling and answer quality.
+
+  python benchmark.py phi-4-mini qwen2.5-1.5b qwen3-1.7b
+  add --quick    answer quality on 5 of the 13 questions (the tool-calling cases always run in full)
+"""
 import json
 import re
 import sys
@@ -6,6 +10,8 @@ import time
 
 import fl
 from tools import TOOL_SCHEMAS
+
+QUICK = "--quick" in sys.argv
 
 SYSTEM = ("You are a maintenance assistant for technicians. Machine data is only available through your tools. "
           "Never guess a machine reading.")
@@ -60,6 +66,8 @@ def quality(client, model):
     """Give the model the right SOP and check that the answer contains the expected facts."""
     cases = [c for c in json.loads((fl.DATA / "eval" / "retrieval_eval.json").read_text(encoding="utf-8"))
              if c["expected_sop"]]
+    if QUICK:
+        cases = cases[::3]  # 5 of 13, spread over the SOPs
     sops = {p.name.split("_")[0]: p.read_text(encoding="utf-8") for p in (fl.DATA / "sops").glob("*.md")}
     passed = 0
     for case in cases:
@@ -74,7 +82,7 @@ def quality(client, model):
 
 
 if __name__ == "__main__":
-    aliases = sys.argv[1:] or ["phi-4-mini", "qwen2.5-1.5b", "qwen3-1.7b"]
+    aliases = [a for a in sys.argv[1:] if a != "--quick"] or ["phi-4-mini", "qwen2.5-1.5b", "qwen3-1.7b"]
     client = fl.client()
     rows = []
     for alias in aliases:

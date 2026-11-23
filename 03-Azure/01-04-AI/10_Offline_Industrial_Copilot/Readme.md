@@ -49,7 +49,7 @@ The day has six hours of challenges. Each challenge builds on the previous one. 
 
 | Time | Challenge | Duration |
 |------|-----------|----------|
-| 09:00 | Kickoff and scenario | 20 min |
+| 09:00 | Kickoff and scenario ([tech talk](./techtalk/README.md)) | 20 min |
 | 09:20 | 1 - Get set up | 20 min |
 | 09:40 | 2 - Choose your edge model | 45 min |
 | 10:25 | 3 - Build your first local agent | 60 min |

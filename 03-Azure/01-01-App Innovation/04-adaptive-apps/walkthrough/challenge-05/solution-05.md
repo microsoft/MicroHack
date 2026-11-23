@@ -195,7 +195,9 @@ output result object = {
 Discuss why the password belongs in `secrets`, why the developer never supplies the
 Azure resource group, and what changes when a different recipe implements the type.
 
-## Manual tutorial, Stage 2: Publish and register the SQL recipe on AKS
+## Manual tutorial, Stage 2: Publish and register the SQL recipe on AKS and K3S
+
+If your run k3s in a spererate console session, make sure you login to the container registry also in the K3S console session. 
 
 Select AKS and its Radius workspace:
 
@@ -486,14 +488,14 @@ rad deploy iac/aks-env.bicep \
 
 Publish the workshop-owned Kubernetes PostgreSQL recipe to the same ACR. It compiles
 the same `iac/recipes/trading-schema.sql` as the Azure implementation. The portable
-size `L` selects a 2 GiB memory limit in K3s rather than Azure compute. Use the pinned
-workshop tag and publish a new version if the source changes.
+size `L` selects a 2 GiB memory limit in K3s rather than Azure compute.
 
 ```bash
 rad bicep publish \
   --file iac/recipes/postgres-kubernetes.bicep \
   --target "br:${ACR_NAME}.azurecr.io/recipes/postgres-kubernetes:1.0.8"
 ```
+If you get an error like "Failed to publish Bicep file "iac/recipes/postgres-kubernetes.bicep" to "****.azurecr.io/recipes/postgres-kubernetes:1.0.8""connecting the ACR. Follow the steps in section 2 also for the K3S session to make sure you can access the Azure Container registry. 
 
 Switch both kube context and Radius workspace:
 

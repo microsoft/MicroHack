@@ -91,6 +91,7 @@ export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
 kubectl config use-context k3s-azure-vm
 
 export PORTFOLIO=core
+export ADAPTIVE_APPS_REPO="/tmp/adaptive-apps"
 helm upgrade --install "$PORTFOLIO" \
   "$ADAPTIVE_APPS_REPO/charts/adaptive-apps" \
   --values "$ADAPTIVE_APPS_REPO/charts/adaptive-apps/profiles/${PORTFOLIO}.yaml" \

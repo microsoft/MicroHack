@@ -6,8 +6,8 @@ Duration: 30-45 minutes per environment
 
 ## Coach notes
 
-**LAB** means facilitator-provided infrastructure; **BYOS** means bring your own
-subscription. For LAB, use the supplied resource names and **Option A: managed
+**Hosted Lab** means facilitator-provided infrastructure; **BYOS** means bring your own
+subscription. For Hosted Lab, use the supplied resource names and **Option A: managed
 identity** for Azure workload identity.
 
 - The goal is to install, configure, and explore Radius on both default platforms.
@@ -17,12 +17,12 @@ identity** for Azure workload identity.
 - Radius startup can take 5-10 minutes. Inspect pod state before rerunning commands.
 - Always compare `kubectl config current-context` with the active Radius workspace.
 
-## Tutorial: Connect to the lab resources
+## Tutorial: Connect to the Hosted Lab resources
 
-### 1. First-time setup (LAB and BYOS)
+### 1. First-time setup (Hosted Lab and BYOS)
 
 Run in **Bash from the Adaptive Apps MicroHack root** in your devcontainer.
-For **LAB**, use the subscription and resource group supplied by the facilitator.
+For **Hosted Lab**, use the subscription and resource group supplied by the facilitator.
 For **BYOS**, use the subscription and resource group prepared in Challenge 02.
 
 ```bash
@@ -31,12 +31,12 @@ export AZURE_SUBSCRIPTION="<subscription-id>"
 export RESOURCE_GROUP="<resource-group>"
 ```
 
-For LAB, if `artifacts/console-env.sh` already exists, you can source it instead of
+For Hosted Lab, if `artifacts/console-env.sh` already exists, you can source it instead of
 the two exports. For nondefault resource names, also export `AKS_CLUSTER`,
 `K3S_VM_NAME`, and `BASTION_NAME` before continuing.
 
 ```bash
-bash resources/connect-lab.sh && source artifacts/lab-env.sh
+bash resources/connect-Lab.sh && source artifacts/Lab-env.sh
 ```
 
 The helper retrieves both clusters' credentials, refreshes stale K3s credentials,
@@ -49,7 +49,7 @@ Do not continue if connection setup fails. Otherwise, subscription, resource-gro
 region, cluster/context, and K3s kubeconfig variables are ready for the remaining
 steps; do not set them again in each step.
 
-### 2. New terminals and reconnecting (LAB and BYOS)
+### 2. New terminals and reconnecting (Hosted Lab and BYOS)
 
 In EACH Bash terminal, restore the saved variables:
 
@@ -170,7 +170,7 @@ Workstation rad configuration
 
 ### 1. Select and verify AKS
 
-If the `aks-adaptive-apps` context is missing, connect to your lab's AKS cluster:
+If the `aks-adaptive-apps` context is missing, connect to your Hosted Lab's AKS cluster:
 
 ```bash
 export AZURE_SUBSCRIPTION="${AZURE_SUBSCRIPTION:-<subscription-id>}"
@@ -194,7 +194,7 @@ kubectl get namespace radius-system --ignore-not-found
 
 ### 2. Prepare Azure workload identity
 
-The connection setup has already selected the subscription and exported the lab
+The connection setup has already selected the subscription and exported the Hosted Lab
 resource names. Retrieve the identity settings from that AKS cluster:
 
 ```bash
@@ -212,9 +212,9 @@ Choose **one** identity option. Both use AKS OIDC federation with no client secr
 See Microsoft's [AKS workload identity guide](https://learn.microsoft.com/azure/aks/workload-identity-deploy-cluster)
 for the managed identity and federated credential commands.
 
-#### Option A: user-assigned managed identity (required for LAB and MicroHack Console; also supported for BYOS)
+#### Option A: user-assigned managed identity (required for Hosted Lab and MicroHack Console; also supported for BYOS)
 
-Create the identity inside the supplied lab resource group. These are Azure Resource
+Create the identity inside the supplied Hosted Lab resource group. These are Azure Resource
 Manager operations, not tenant app/SP creation. The explicit principal object ID
 in the role assignment below avoids a Microsoft Graph lookup.
 
@@ -251,7 +251,7 @@ at **Grant the identity access**.
 
 #### Option B: Entra application (BYOS with tenant permissions only)
 
-Create an Entra application and service principal. Do not run this option in LAB,
+Create an Entra application and service principal. Do not run this option in Hosted Lab,
 where permissions are limited to the assigned resource group:
 
 ```bash
@@ -293,9 +293,9 @@ az ad app federated-credential create \
 
 #### Grant the identity access (both options)
 
-Grant the Radius identity Owner on the isolated lab resource group only, because
+Grant the Radius identity Owner on the isolated Hosted Lab resource group only, because
 recipes create role assignments. Allow identity/federation/RBAC propagation before
-testing Radius; a newly created principal can take time to become available.
+testing Radius; a newly created principal can take time to become avaiHosted Lable.
 
 ```bash
 az role assignment create \
@@ -438,7 +438,7 @@ The Radius environments `env-azure-prod` and `env-local-prod` are configuration
 objects, not Kubernetes clusters; `rg-trading` is a Radius group, not an Azure
 resource group.
 
-For **LAB**, the facilitator supplies the Kubernetes infrastructure. For **BYOS**,
+For **Hosted Lab**, the facilitator supplies the Kubernetes infrastructure. For **BYOS**,
 prepare it in Challenge 02 first. Both paths use the shared connection setup above
 and `artifacts/lab-env.sh`. Run the following in Bash from the Adaptive Apps
 MicroHack root. One team member installs each shared control plane; each participant
@@ -446,8 +446,8 @@ can rerun with `RADIUS_REINSTALL=false` to configure their own local workspace.
 
 ### AKS
 
-**LAB and BYOS:** use managed identity for Radius workload identity. This is
-required for LAB and also works for BYOS. The helper configures the identity,
+**Hosted Lab and BYOS:** use managed identity for Radius workload identity. This is
+required for Hosted Lab and also works for BYOS. The helper configures the identity,
 federation, role assignment, Radius Azure credential/provider, workspace
 `ws-azure-prod`, group `rg-trading`, and environment `env-azure-prod`.
 
@@ -467,7 +467,7 @@ RADIUS_IDENTITY_MODE=application RADIUS_REINSTALL=false bash resources/deploy-ra
 
 ### K3s
 
-**LAB and BYOS:** use the same commands. The helper installs Radius if missing,
+**Hosted Lab and BYOS:** use the same commands. The helper installs Radius if missing,
 creates missing workspace/group/environment configuration, and validates it.
 It does not register Azure credentials or configure an Azure provider.
 

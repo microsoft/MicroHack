@@ -62,7 +62,7 @@ msrest==0.7.1
     # via azure-monitor-opentelemetry-exporter
 oauthlib==4.0.1
     # via requests-oauthlib
-opentelemetry-api==1.45.1
+opentelemetry-api==1.45.2
     # via
     #   azure-core-tracing-opentelemetry
     #   azure-monitor-opentelemetry-exporter

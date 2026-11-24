@@ -171,6 +171,8 @@ resource project 'Microsoft.CognitiveServices/accounts/projects@2025-04-01-previ
     displayName: 'CLM Microhack'
     description: 'Contract Lifecycle Management multi-agent microhack project.'
   }
+    // Project creation and model deployments share the account's operation lock.
+  dependsOn: [ deployGpt56Sol ]
 }
 
 // Model deployments must be serialized on a single account.

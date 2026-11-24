@@ -232,7 +232,7 @@ rad group switch rg-trading
 Source and verify your supplied values:
 
 ```bash
-source artifacts/console-env.sh
+source artifacts/lab-env.sh
 az acr show --resource-group "$RESOURCE_GROUP" --name "$ACR_NAME" \
   --query '{name:name,location:location,sku:sku.name,anonymousPull:anonymousPullEnabled}'
 ```

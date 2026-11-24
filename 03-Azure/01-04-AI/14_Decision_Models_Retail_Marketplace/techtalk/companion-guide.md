@@ -59,7 +59,7 @@ limits, approval authority), the final action, the definition of acceptable erro
 accountability. In the hack, a probability never publishes a listing on its own. **Your rules
 do**, and anything unsure or failed goes to a reviewer.
 
-## 2. Three question types 🧪 Challenges 1–3
+## 2. Three question types 🧪 Challenges 1 to 3
 
 | Type | Ask | You get | Zava example | Use in code |
 |------|-----|---------|--------------|-------------|
@@ -74,7 +74,7 @@ type.
 > **Type-safe isn't the same as correct.** Fixed answers can't be malformed, but they can still be
 > wrong, badly calibrated or unfair. That's what the rest of this guide is about.
 
-## 3. Questions a model answers well 🧪 Challenges 2–3
+## 3. Questions a model answers well 🧪 Challenges 2 and 3
 
 1. **One idea per question.** Priya's first draft in Challenge 2 asked about three things at once
    and got 46% of the starter set right. Split it.
@@ -122,12 +122,12 @@ threshold on, and is ten times slower. Most accurate isn't the same as safest, o
 
 ## 5. What's new after Microsoft Ignite 2026
 
-Announced 17–18 November 2026 (figures are Microsoft's):
+Announced 17 and 18 November 2026 (figures are Microsoft's):
 
 - **Microsoft-Decision-1.1 is generally available** in Microsoft Foundry, and through OpenRouter and
   Vercel, ready for production. It's the model your gate uses.
 - **More than twice as fast** as Microsoft-Decision-1, at the same price: **$0.042 per million
-  input tokens** (Global Standard; Data Zones $0.046–$0.05). **Output tokens are free.**
+  input tokens** (Global Standard; Data Zones $0.046 to $0.05). **Output tokens are free.**
 - **Better calibrated**: trained to say how sure it is, split its confidence when two answers are
   valid, and abstain when information is missing, so you can set your own lines.
 - **Images**: photos and screenshots can be part of the state, a question or an answer option.
@@ -246,11 +246,11 @@ kind of mistake?
 | **State** | A camera photo of the part (images are new in 1.1); the part spec; the station |
 | **Questions** | *Is there a visible crack?* (yes/no) · Defect type (choice: *scratch · dent · crack · discolouration · none · cannot tell*) · Severity (score) |
 | **In code** | Measurements and tolerances come from sensors, never from the photo · stopping the line needs two cracks in a row |
-| **Lines** | Crack ≥ 0.90 → stop and call the shift lead · 0.10–0.90 → inspector · *cannot tell* → retake the photo, then inspector |
+| **Lines** | Crack ≥ 0.90 → stop and call the shift lead · 0.10 to 0.90 → inspector · *cannot tell* → retake the photo, then inspector |
 
 ## 11. Your Decision Design Card
 
-Fill this in during the hack (the console has a card in Challenges 1–4, and they go into your
+Fill this in during the hack (the console has a card in Challenges 1 to 4, and they go into your
 launch report) and take it home. Keep the first pilot narrow and reversible.
 
 | | |

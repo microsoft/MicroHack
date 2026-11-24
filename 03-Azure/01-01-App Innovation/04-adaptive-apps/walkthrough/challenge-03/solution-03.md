@@ -24,9 +24,9 @@ identity** for Azure workload identity.
 Run in **Bash from the Adaptive Apps MicroHack root** in your devcontainer.
 For **Hosted Lab**, use the subscription and resource group supplied by the facilitator.
 For **BYOS**, use the subscription and resource group prepared in Challenge 02.
+Tip: give your bash shell the name AKS.
 
 ```bash
-az login
 export AZURE_SUBSCRIPTION="<subscription-id>"
 export RESOURCE_GROUP="<resource-group>"
 ```
@@ -49,11 +49,15 @@ Do not continue if connection setup fails. Otherwise, subscription, resource-gro
 region, cluster/context, and K3s kubeconfig variables are ready for the remaining
 steps; do not set them again in each step.
 
-### 2. New terminals and reconnecting (Hosted Lab and BYOS)
+### 2. Start new terminal (Hosted Lab and BYOS)
 
+Tip: give your bash shell the name K3S.
 In EACH Bash terminal, restore the saved variables:
 
 ```bash
+az login
+export AZURE_SUBSCRIPTION="<subscription-id>"
+export RESOURCE_GROUP="<resource-group>"
 source artifacts/lab-env.sh
 ```
 
@@ -68,7 +72,7 @@ If `artifacts/lab-env.sh` is missing, repeat the first-time setup instead.
 The tunnel exposes only the Kubernetes API on localhost. Radius dashboard access still
 uses `kubectl port-forward` through that API connection.
 
-## Control-plane deployment options
+## Control-plane deployment options (read)
 
 ### Federated control planes
 
@@ -134,7 +138,7 @@ A workspace is local CLI configuration stored in `~/.rad/config.yaml`.
 - Switching workspace changes the destination of subsequent `rad` commands.
 - Workspace configuration is per workstation, not stored in Kubernetes.
 
-### Environment
+### Environment (read)
 
 An environment defines how and where applications are deployed:
 

@@ -36,7 +36,7 @@ the two exports. For nondefault resource names, also export `AKS_CLUSTER`,
 `K3S_VM_NAME`, and `BASTION_NAME` before continuing.
 
 ```bash
-bash resources/connect-Lab.sh && source artifacts/Lab-env.sh
+bash resources/connect-lab.sh && source artifacts/lab-env.sh
 ```
 
 The helper retrieves both clusters' credentials, refreshes stale K3s credentials,

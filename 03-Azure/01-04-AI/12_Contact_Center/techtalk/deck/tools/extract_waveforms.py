@@ -1,0 +1,128 @@
+"""Build js/waves.js: the loudness envelope and turn timings of the telco pack's recorded calls.
+
+Run from this folder: python extract_waveforms.py   (needs ffmpeg on PATH and numpy)
+
+For each call it decodes data/packs/telco/calls/<call>.mp3, measures the loudness every STEP seconds,
+finds the pauses between speakers (silences of 1.4 s or more) and pairs each turn with its line in
+<call>.txt, in order. The slides draw these envelopes, so every waveform in the deck is a real recording.
+"""
+import json
+import math
+import pathlib
+import re
+import subprocess
+
+import numpy as np
+
+HERE = pathlib.Path(__file__).resolve().parent
+CALLS = HERE.parents[2] / "data" / "packs" / "telco" / "calls"
+OUT = HERE.parent / "js" / "waves.js"
+RATE, STEP = 8000, 0.1
+
+
+def decode(mp3):
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(mp3), "-ac", "1", "-ar", str(RATE), "-f", "s16le", "-"],
+                         check=True, capture_output=True).stdout
+    return np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768
+
+
+def silences(mp3):
+    log = subprocess.run(["ffmpeg", "-hide_banner", "-nostats", "-i", str(mp3), "-af", "silencedetect=noise=-35dB:d=0.35",
+                          "-f", "null", "-"], capture_output=True, text=True).stderr
+    starts = [float(x) for x in re.findall(r"silence_start: ([\d.]+)", log)]
+    ends = [float(x) for x in re.findall(r"silence_end: ([\d.]+)", log)]
+    return list(zip(starts, ends))
+
+
+def lines(txt):
+    out = []
+    for line in txt.read_text(encoding="utf-8").splitlines():
+        m = re.match(r"(Agent|Customer): (.*)", line)
+        if m:
+            out.append({"who": m.group(1).lower(), "text": m.group(2)})
+    return out
+
+
+def speaker_pauses(inner, said, dur, rate=2.7):
+    """Pick one pause per change of speaker so that every line is spoken at a natural pace.
+
+    Dynamic programming over the detected silences: a line between two chosen pauses costs the squared
+    distance of its words per second from `rate`; longer pauses are slightly preferred as boundaries."""
+    words = [len(s["text"].split()) for s in said]
+    pts = [(0.0, 0.0)] + inner + [(dur, dur)]
+    n, m = len(said), len(pts)
+    inf = float("inf")
+    best = [[inf] * m for _ in range(n + 1)]
+    back = [[-1] * m for _ in range(n + 1)]
+    best[0][0] = 0.0
+    for i in range(1, n + 1):
+        for j in range(1, m):
+            for k in range(j):
+                if best[i - 1][k] == inf:
+                    continue
+                span = pts[j][0] - pts[k][1]
+                if span <= 0.3:
+                    continue
+                cost = 10 * math.log(words[i - 1] / span / rate) ** 2 - (pts[j][1] - pts[j][0]) * 0.8
+                if best[i - 1][k] + cost < best[i][j]:
+                    best[i][j], back[i][j] = best[i - 1][k] + cost, k
+    if best[n][m - 1] == inf:
+        raise SystemExit("could not align the transcript with the pauses")
+    chosen, j = [], m - 1
+    for i in range(n, 0, -1):
+        j = back[i][j]
+        chosen.append(j)
+    return [pts[j] for j in reversed(chosen) if j != 0]
+
+
+def build(call):
+    mp3, txt = CALLS / f"{call}.mp3", CALLS / f"{call}.txt"
+    pcm = decode(mp3)
+    dur = len(pcm) / RATE
+    n = int(np.ceil(dur / STEP))
+    hop = int(RATE * STEP)
+    rms = np.array([np.sqrt(np.mean(pcm[i * hop:(i + 1) * hop] ** 2) + 1e-12) for i in range(n)])
+    env = np.sqrt(rms / rms.max())
+    env[rms < rms.max() * 0.02] = 0
+    said = lines(txt)
+    inner = [(s, e) for s, e in silences(mp3) if s > 0.5]
+    # a blip of sound shorter than half a second between two silences is not speech: merge them
+    merged = []
+    for s, e in inner:
+        if merged and s - merged[-1][1] < 0.5:
+            merged[-1] = (merged[-1][0], e)
+        else:
+            merged.append((s, e))
+    inner = [(s, e) for s, e in merged if e < dur - 0.2]
+    if merged and merged[-1][1] >= dur - 0.2:
+        dur_speech = merged[-1][0]
+    else:
+        dur_speech = dur
+    gaps = speaker_pauses(inner, said, dur_speech)
+    bounds = [0.0] + [v for g in gaps for v in g] + [dur_speech]
+    spans = [(bounds[i], bounds[i + 1]) for i in range(0, len(bounds), 2)]
+    turns = []
+    for (t0, t1), s in zip(spans, said):
+        # trim the leading and trailing quiet inside the turn
+        a, b = int(t0 / STEP), max(int(t0 / STEP) + 1, int(np.ceil(t1 / STEP)))
+        loud = [i for i in range(a, min(b, n)) if env[i] > 0]
+        if loud:
+            t0, t1 = max(t0, loud[0] * STEP), min(t1, (loud[-1] + 1) * STEP)
+        turns.append({"who": s["who"], "t0": round(t0, 2), "t1": round(t1, 2), "text": s["text"]})
+    return {"file": f"data/packs/telco/calls/{call}.mp3", "duration": round(dur, 2), "step": STEP,
+            "env": [round(float(v), 2) for v in env], "turns": turns}
+
+
+def main():
+    waves = {c: build(c) for c in ("KC-CALL-01", "KC-CALL-02", "KC-CALL-03")}
+    OUT.write_text(
+        "/* Generated by tools/extract_waveforms.py from the telco pack's recorded calls\n"
+        "   (data/packs/telco/calls/KC-CALL-0n.mp3 and .txt). Loudness every 0.1 s, 0 to 1, and the\n"
+        "   speaker turns found from the pauses. Do not edit by hand. */\n"
+        f"window.WAVES = {json.dumps(waves, separators=(',', ':'))};\n", encoding="utf-8")
+    for c, w in waves.items():
+        print(c, w["duration"], "s,", len(w["turns"]), "turns")
+
+
+if __name__ == "__main__":
+    main()

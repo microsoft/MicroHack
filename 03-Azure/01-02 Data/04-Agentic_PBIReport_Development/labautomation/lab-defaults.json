@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/MicroHack/refs/heads/main/lab-defaults-schema.json",
+  "groups": ["GHCPUsers", "M365-E5-Users"],
+  "deploymentType": "resourcegroup",
+  "preferredLocation": "switzerlandnorth",
+  "Quality": "Testing",
+  "contentPreparation": {
+    "alwaysRemove": {
+      "challenges": ["README.md", "tests", "CONTRIBUTING.md", ".gitignore"],
+      "solutions": ["README.md", "tests", "CONTRIBUTING.md", ".gitignore"]
+    },
+    "studentZipExclusions": ["tests", "CONTRIBUTING.md", ".gitignore"],
+    "coachZipExclusions": ["tests", "CONTRIBUTING.md", ".gitignore"],
+    "banners": {
+      "challenges": {"download": true, "parentReadme": false},
+      "solutions": {"download": true, "parentReadme": false}
+    }
+  }
+}

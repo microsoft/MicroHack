@@ -1,0 +1,40 @@
+// Execute against the deployed semantic model; compare to independent CSV controls.
+EVALUATE
+ROW(
+    "Transactions", COUNTROWS('FactTransactions'),
+    "TransactionCents", SUM('FactTransactions'[AmountCents]),
+    "FeeCents", SUM('FactTransactions'[FeeCents]),
+    "SnapshotRows", COUNTROWS('FactLoanMonthlySnapshot'),
+    "AsOf", [As-of Date],
+    "BalanceCHF", [Outstanding Loan Balance],
+    "ActiveLoans", [Active Loans],
+    "NPLRatio", [Nonperforming Balance Ratio],
+    "WeightedRate", [Weighted Average Loan Rate]
+)
+
+EVALUATE
+SUMMARIZECOLUMNS(
+    'DimDate'[Year], 'DimDate'[MonthKey],
+    "BalanceCHF", [Outstanding Loan Balance],
+    "PriorYearCHF", [Prior-Year Loan Balance],
+    "YoY", [Loan Balance YoY %],
+    "TransactionCHF", [Transaction Amount],
+    "AsOf", [As-of Date]
+)
+ORDER BY 'DimDate'[MonthKey]
+
+// Expect snapshot values blank, not an apparently channel-filtered portfolio.
+EVALUATE
+SUMMARIZECOLUMNS(
+    'DimChannel'[ChannelName],
+    "BalanceMustBeBlank", [Outstanding Loan Balance],
+    "ActivityValid", [Transaction Amount],
+    "Reason", [Scope Status]
+)
+
+// Leap-day prior-year comparator must be February 29, 2024, not February 28.
+EVALUATE
+CALCULATETABLE(
+    ROW("Balance", [Outstanding Loan Balance], "PY", [Prior-Year Loan Balance]),
+    'DimDate'[MonthKey] = 202502
+)

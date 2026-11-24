@@ -1,0 +1,9 @@
+# Same dependencies as pyproject.toml, for environments without uv: the lab's web app
+# (App Service builds from this file) and Azure Cloud Shell (pip install -r requirements.txt).
+openai>=3.26.0,<4
+azure-identity>=1.19.0,<2
+httpx>=0.27.0,<1
+fastapi>=0.115.0,<1
+uvicorn[standard]>=0.30.0,<1
+python-dotenv>=1.0.1,<2
+azure-ai-evaluation>=1.18.11,<2

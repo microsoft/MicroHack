@@ -7,6 +7,8 @@ agents run a complete planning cycle for a retail company: they detect a change 
 demand, plan how much stock to order, and submit a purchase order after a person
 approves it.
 
+> **Tech talk:** open the day with [Three agents and a yes](techtalk/README.md), a 22-minute animated talk for this hack.
+
 - [**Introduction**](#introduction)
 - [**Learning objectives**](#learning-objectives)
 - [**Scenario**](#scenario)

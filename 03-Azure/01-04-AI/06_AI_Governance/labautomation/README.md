@@ -18,7 +18,7 @@ Adapted from the Citadel workshop (`azd up`), the lab deploys:
 | **Event Hub** | Event streaming for usage pipeline |
 | **Key Vault** | Hub secrets (API keys, Foundry credentials) |
 | **Storage Account** | Logic App workflow state |
-| **Logic App** | Usage ingestion workflow (if deployed) |
+| **Logic App (Standard)** | Usage ingestion: Event Hub → Cosmos DB (`ai-usage-container`, `pii-usage-container`); workflows in `logicapp/` are zip-deployed by `deploy-lab.ps1` |
 
 ### Spoke Resources (Folded into Same RG)
 | Resource | Purpose |

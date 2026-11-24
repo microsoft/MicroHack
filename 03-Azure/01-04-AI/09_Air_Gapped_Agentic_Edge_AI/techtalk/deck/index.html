@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nothing crosses the line: Air-Gapped Agentic Edge AI</title>
+  <meta name="author" content="Digvijay Chauhan">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23F4F1E8'/%3E%3Cpath d='M13 4v24M19 4v24' stroke='%231D4F9C' stroke-width='2.4'/%3E%3Cpath d='M4 16h24' stroke='%23D3202A' stroke-width='2.4'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="vendor/reveal.js-6.0.2/reset.css">
+  <link rel="stylesheet" href="vendor/reveal.js-6.0.2/reveal.css">
+  <link rel="stylesheet" href="css/motion.css">
+  <link rel="stylesheet" href="css/theme.css">
+</head>
+<body>
+<!-- Shared pattern and markers. Kept in the document (not display:none) so every sheet can use them. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="7" stroke="#1D4F9C" stroke-width="1.1" stroke-opacity="0.7"/></pattern>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0 1 L10 5 L0 9 Z" fill="#1D4F9C"/></marker>
+    <marker id="ahr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0 1 L10 5 L0 9 Z" fill="#D3202A"/></marker>
+  </defs>
+</svg>
+
+<div class="reveal"><div class="slides">
+
+<!-- ===================================================================== 1 COVER -->
+<section id="cover" class="scene cover" data-scene="cover" data-noctl>
+  <p class="cv-event k-wipe">MicroHack · Air-Gapped Agentic Edge AI</p>
+  <h1 class="k-wipe" style="--d:150ms">Nothing crosses<br><span class="ink">the line.</span></h1>
+  <p class="cv-sub k-rise" style="--d:600ms">An AI agent that keeps deciding inside an air gap, and a strict answer to what is allowed in.</p>
+  <svg class="art" viewBox="0 0 1280 720" aria-label="A drawing of an air gap: two red requests from the inside stop at the line, and one approved bundle crosses through the gate once and is stamped as checked.">
+    <text class="side-tag k-fade cv-l" x="760" y="150">OUTSIDE</text>
+    <text class="side-tag k-fade cv-l" x="1000" y="150">INSIDE</text>
+    <g class="gapline" data-x="960" data-y1="176" data-y2="530" data-gate="340"></g>
+    <path class="ln red k-draw cv-r" pathLength="1" d="M1196 214 H976"/>
+    <path class="xmark k-pop cv-x" d="M962 206 l12 16 M974 206 l-12 16"/>
+    <text class="svgt r k-fade cv-rt" x="1000" y="202">telemetry out</text>
+    <path class="ln red k-draw cv-r" pathLength="1" d="M1196 470 H976"/>
+    <path class="xmark k-pop cv-x" d="M962 462 l12 16 M974 462 l-12 16"/>
+    <text class="svgt r k-fade cv-rt" x="1000" y="458">unchecked call</text>
+    <rect class="ln soft dash k-fade cv-start" x="758" y="328" width="34" height="24"/>
+    <path class="ln thin soft k-draw cv-route" pathLength="1" d="M792 340 H1108"/>
+    <path class="ln thin k-draw cv-lead" pathLength="1" d="M944 316 L900 280 H760"/>
+    <circle class="lead-dot k-fade cv-lead" cx="944" cy="316" r="3"/>
+    <text class="svgt k-fade cv-lead" x="760" y="272">gate: opens once</text>
+    <g class="k-pop cv-bundle"><rect class="fillw ln" x="1110" y="326" width="40" height="28"/><path class="ln" d="M1127 326 V354"/></g>
+  </svg>
+  <div class="travel parcel cv-travel" style="offset-path:path('M775 340 H1130');--dur:2200ms"></div>
+  <div class="stamp k-drop cv-stamp" style="left:1018px;top:368px">Checked<small>crossed once</small></div>
+  <div class="cv-block k-rise cv-tb">
+    <div><p class="l">Drawn by</p><p class="v" style="font-size:19px">Digvijay Chauhan, Solution Engineer, Microsoft</p></div>
+    <div><p class="l">Project</p><p class="v s">Air-Gapped Agentic Edge AI</p></div>
+    <div><p class="l">Type</p><p class="v s">Tech talk</p></div>
+    <div><p class="l">Drawing</p><p class="v ink">AG-09</p></div>
+    <div><p class="l">Rev</p><p class="v ink">A</p></div>
+  </div>
+  <aside class="notes">
+    <p><b>[0:00, 1 minute]</b> I let the sheet draw itself before I say anything: the line, the two red arrows that stop, and the one bundle that crosses.</p>
+    <p>Good morning, and welcome. I'm Digvijay Chauhan, Solution Engineer at Microsoft. Today we build an AI agent for a place where, by design, nothing gets out and nothing gets in.</p>
+    <p>That vertical line on the drawing is the air gap. The two red arrows are things that try to leave the plant, and they stop at the line. And that one little box is the only thing we allow to cross: once, approved, and checked.</p>
+    <p>That's the whole talk, really. Over the next twenty minutes I want to show you what has to cross before you close the gap, and then prove, with the hack's own recordings, that the agent keeps working once it's closed.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 2 CHAPTER 1 -->
+<section class="scene chapter" data-scene="chapter" data-noctl data-sheet="2">
+  <p class="ch-label k-wipe">Sheet 1 of 3</p>
+  <h1 class="k-wipe" style="--d:150ms">The line</h1>
+  <p class="ch-sub k-rise" style="--d:500ms">What an air gap stops, and what it cannot.</p>
+  <div class="idx">
+    <p class="ih k-fade">DRAWING INDEX</p>
+    <div class="row cur k-rise" style="--d:300ms"><span class="no">01</span><span class="t">The line</span><span class="st">THIS SHEET</span></div>
+    <div class="row k-rise" style="--d:420ms"><span class="no">02</span><span class="t">What crosses, once</span><span class="st"></span></div>
+    <div class="row k-rise" style="--d:540ms"><span class="no">03</span><span class="t">Seal it</span><span class="st"></span></div>
+  </div>
+  <svg class="idx-art" viewBox="0 0 1280 720" aria-hidden="true"><g class="idxbox" data-row="0"></g></svg>
+  <aside class="notes">
+    <p><b>[1:00, 20 seconds]</b> I wait for the index to box sheet one.</p>
+    <p>Three sheets today. Sheet one: the line itself, and what it actually stops.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 3 THE LINE -->
+<section class="scene gap" data-scene="gap" data-sheet="3">
+  <p class="kicker k-wipe">Sheet 1 / The line</p>
+  <h2 class="title k-wipe" style="--d:120ms">An air gap stops everything by default</h2>
+  <p class="subtitle k-rise" style="--d:400ms">Contoso's regulated line: raw machine telemetry may not stream to a public cloud model.</p>
+  <svg class="art" viewBox="0 0 1280 720" aria-label="Three requests from the plant try to reach the outside and stop at the line. Then a parts list on the outside shows five things the agent needs from outside, with a question mark at the gate.">
+    <text class="side-tag k-fade sides" x="92" y="196">OUTSIDE · INTERNET, PUBLIC AZURE</text>
+    <text class="side-tag k-fade sides" x="684" y="196">INSIDE · THE PLANT</text>
+    <g class="gapline" data-x="640" data-y1="176" data-y2="588" data-gate="482"></g>
+    <g class="redset">
+      <path class="ln red k-draw r0" pathLength="1" d="M978 232 H656"/>
+      <path class="xmark k-pop x0" d="M658 224 l12 16 M670 224 l-12 16"/>
+      <text class="svgt r k-fade t0" x="690" y="222">raw telemetry to a cloud model</text>
+      <text class="svgt m k-fade u0" x="604" y="236" text-anchor="end">public cloud model endpoint</text>
+      <path class="ln red k-draw r1" pathLength="1" d="M978 318 H656"/>
+      <path class="xmark k-pop x1" d="M658 310 l12 16 M670 310 l-12 16"/>
+      <text class="svgt r k-fade t1" x="690" y="308">control call to management.azure.com</text>
+      <text class="svgt m k-fade u1" x="604" y="322" text-anchor="end">Azure Resource Manager</text>
+      <path class="ln red k-draw r2" pathLength="1" d="M978 346 H656"/>
+      <path class="xmark k-pop x2" d="M658 338 l12 16 M670 338 l-12 16"/>
+      <text class="svgt r k-fade t2" x="690" y="368">pip install paho-mqtt</text>
+      <text class="svgt m k-fade u2" x="604" y="350" text-anchor="end">pypi.org</text>
+    </g>
+    <path class="ln dash k-fade inq" d="M546 482 H626" marker-end="url(#ah)"/>
+    <text class="svgt k-fade inq-t" x="666" y="486">how do these get in?</text>
+  </svg>
+  <div class="part inside-part k-pop m0" style="left:980px;top:206px"><p class="n">CNC-EXTRUDER-01</p><p class="d">sensors and PLC, line 1</p></div>
+  <div class="part inside-part k-pop m1" style="left:980px;top:300px"><p class="n">Edge triage agent</p><p class="d">decides on anomalies</p></div>
+  <div class="plist k-rise">
+    <p class="ph">PARTS THE AGENT NEEDS FROM OUTSIDE</p>
+    <div class="pr"><span class="i">1</span><span>Model weights</span><span class="q">?</span></div>
+    <div class="pr"><span class="i">2</span><span>Container images</span><span class="q">?</span></div>
+    <div class="pr"><span class="i">3</span><span>Python packages</span><span class="q">?</span></div>
+    <div class="pr"><span class="i">4</span><span>The runbook it reasons over</span><span class="q">?</span></div>
+    <div class="pr"><span class="i">5</span><span>An identity to call the model</span><span class="q">?</span></div>
+  </div>
+  <p class="moral k-land" style="top:602px">An air gap is a decision about <span class="ink">what may cross, and when.</span></p>
+  <p class="foot k-fade">Scenario from the hack's Readme: Contoso Precision Manufacturing, a regulated CNC and extrusion line.</p>
+  <span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[1:20, 2 minutes]</b> I let the line and the two boxes on the inside settle, then talk as each red arrow tries to leave.</p>
+    <p>Here is the scenario from the hack. Contoso Precision Manufacturing runs a CNC and extrusion line in a regulated facility. The WAN link is unreliable, and there's a sovereignty rule: raw high-frequency machine telemetry is not allowed to stream to a public cloud model.</p>
+    <p>So the first arrow, telemetry to a cloud model, stops at the line. The second one, a control call to Azure Resource Manager, stops too. And the third one is the one people forget: a container that does <i>pip install</i> on startup. That also stops at the line.</p>
+    <p>An air gap is very good at saying no. That's the easy half.</p>
+    <p><b>[click]</b> The hard half is this list. Our agent needs a model, container images, Python packages, the runbook it reasons over, and an identity so it's allowed to call the model. All of that lives outside today. <i>(I point at the question mark at the gate.)</i> So how does it get in?</p>
+    <p>That is what I mean by: an air gap is a decision about what may cross, and when.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 4 PLAN -->
+<section class="scene plan" data-scene="plan" data-sheet="4">
+  <p class="kicker k-wipe">Sheet 1 / The line</p>
+  <h2 class="title k-wipe" style="--d:120ms">Everything that decides runs inside</h2>
+  <p class="subtitle k-rise" style="--d:400ms">One K3s node, four namespaces, and a loop that never leaves the cluster.</p>
+  <svg class="art" viewBox="0 0 1280 720" aria-label="Plan of the edge node: rooms for the namespaces edge-agents, azure-iot-operations, istio-system and foundry-local-operator. A numbered loop goes from the simulator to the broker, the dataflow, the agent, the gateway and the model, and a command goes back. Azure Arc sits outside, used only to install extensions.">
+    <g class="gapline" data-x="271" data-y1="176" data-y2="588" data-gate="278" data-notag="1"></g>
+    <path class="ln dash k-fade arcl" d="M252 278 H290"/>
+    <rect class="ln k-draw node" pathLength="1" x="290" y="168" width="934" height="420"/>
+    <rect class="ln thin k-draw room" pathLength="1" x="310" y="200" width="300" height="368"/>
+    <rect class="ln thin k-draw room" pathLength="1" x="640" y="200" width="260" height="180" style="--d:150ms"/>
+    <rect class="ln thin k-draw room" pathLength="1" x="640" y="410" width="260" height="158" style="--d:300ms"/>
+    <rect class="ln thin k-draw room" pathLength="1" x="930" y="200" width="274" height="368" style="--d:450ms"/>
+    <g class="loop">
+      <path class="ln k-draw lp lp1" pathLength="1" d="M590 262 H656" marker-end="url(#ah)"/>
+      <path class="ln k-draw lp lp2" pathLength="1" d="M770 286 V302" marker-end="url(#ah)"/>
+      <path class="ln k-draw lp lp3" pathLength="1" d="M660 331 L594 396" marker-end="url(#ah)"/>
+      <path class="ln k-draw lp lp4" pathLength="1" d="M590 414 L656 469" marker-end="url(#ah)"/>
+      <path class="ln k-draw lp lp5" pathLength="1" d="M880 471 H946" marker-end="url(#ah)"/>
+      <path class="ln k-draw lp lp6" pathLength="1" d="M460 380 V290" marker-end="url(#ah)"/>
+      <g class="k-pop nb nb1"><circle class="fillw ln thin" cx="623" cy="262" r="9"/><text class="rtri-n" x="623" y="266">1</text></g>
+      <g class="k-pop nb nb2"><circle class="fillw ln thin" cx="770" cy="296" r="9" /><text class="rtri-n" x="770" y="300">2</text></g>
+      <g class="k-pop nb nb3"><circle class="fillw ln thin" cx="627" cy="364" r="9"/><text class="rtri-n" x="627" y="368">3</text></g>
+      <g class="k-pop nb nb4"><circle class="fillw ln thin" cx="623" cy="442" r="9"/><text class="rtri-n" x="623" y="446">4</text></g>
+      <g class="k-pop nb nb5"><circle class="fillw ln thin" cx="915" cy="471" r="9"/><text class="rtri-n" x="915" y="475">5</text></g>
+      <g class="k-pop nb nb6"><circle class="fillw ln thin" cx="460" cy="334" r="9"/><text class="rtri-n" x="460" y="338">6</text></g>
+    </g>
+  </svg>
+  <div class="travel pen loop-pen" style="offset-path:path('M590 262 L660 262 L770 286 L770 306 L660 331 L590 398 L590 414 L660 471 L880 471 L950 471');--dur:4200ms"></div>
+  <div class="travel pen cmd-pen" style="offset-path:path('M460 380 V286');--dur:900ms"></div>
+  <p class="room-tag k-fade rt" style="left:304px;top:178px">NODE edgeai-host · Ubuntu 24.04 + K3s · Standard_D16s_v5, 16 vCPU, 64 GiB</p>
+  <p class="room-tag k-fade rt" style="left:320px;top:208px">edge-agents</p>
+  <p class="room-tag k-fade rt" style="left:650px;top:208px">azure-iot-operations</p>
+  <p class="room-tag k-fade rt" style="left:650px;top:418px">istio-system</p>
+  <p class="room-tag k-fade rt" style="left:940px;top:208px">foundry-local-operator</p>
+  <div class="part k-pop pp" style="left:56px;top:250px;width:196px"><p class="n">Azure Arc</p><p class="d">control plane</p></div>
+  <p class="note k-fade arcn" style="left:56px;top:316px">used to install the<br>extensions, challenges<br>1 to 3</p>
+  <div class="legend"></div>
+  <div class="part k-pop pp" style="left:330px;top:236px;width:260px"><p class="n">Telemetry simulator</p><p class="d">CNC-EXTRUDER-01 and its PLC</p></div>
+  <div class="part k-pop pp" style="left:330px;top:380px;width:260px"><p class="n">Edge triage agent</p><p class="d">subscribes to anomalies</p></div>
+  <div class="part small k-pop pp" style="left:330px;top:470px;width:125px"><p class="n">SOP-CNC-042</p><p class="d">ConfigMap</p></div>
+  <div class="part small k-pop pp" style="left:465px;top:470px;width:125px"><p class="n">SAT token</p><p class="d">projected</p></div>
+  <div class="part k-pop pp" style="left:660px;top:236px;width:220px"><p class="n">MQTT broker</p><p class="d">aio-broker-internal</p></div>
+  <div class="part k-pop pp" style="left:660px;top:306px;width:220px"><p class="n">Dataflow</p><p class="d">cnc-anomaly-router</p></div>
+  <div class="part k-pop pp" style="left:660px;top:446px;width:220px"><p class="n">Internal gateway</p><p class="d">Gateway API on Istio</p></div>
+  <div class="part k-pop pp" style="left:950px;top:236px;width:234px"><p class="n">Foundry Local operator</p><p class="d">Microsoft.Foundry extension</p></div>
+  <div class="part k-pop pp" style="left:950px;top:306px;width:234px"><p class="n">Model store</p><p class="d">StoreModel cache on a PVC</p></div>
+  <div class="part k-pop pp" style="left:950px;top:446px;width:234px"><p class="n">phi-4-mini</p><p class="d">compute: cpu, onnx-genai</p></div>
+  <p class="moral k-land" style="top:602px">Sense, filter, reason, actuate: <span class="ink">all inside the line.</span></p>
+  <p class="foot k-fade">Names from the hack's manifests. In the lab, one Azure VM plays the factory host.</p>
+  <span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[3:20, 2 minutes]</b> I let the node and its four rooms draw, and name each room as its parts appear.</p>
+    <p>This is the plan of what you'll build, drawn like a floor plan. The big outline is one node: Ubuntu 24.04 with K3s, on a Standard_D16s_v5, so 16 vCPUs and 64 gigs. In the lab it's an Azure VM pretending to be a factory host.</p>
+    <p>Each room is a Kubernetes namespace. On the left, edge-agents: the telemetry simulator that plays our CNC extruder and its PLC, the agent, its runbook and its token. Then Azure IoT Operations with the MQTT broker and a dataflow. Istio with the internal gateway. And Foundry Local: the operator, the model store, and phi-4-mini running on CPU.</p>
+    <p>Outside the line, on the far left, there's Azure Arc. We use it to install the extensions in challenges one to three, and that's it.</p>
+    <p><b>[click]</b> Now let me trace one decision. One, the machine publishes telemetry. Two, the dataflow filters it. Three, only an anomaly reaches the agent. Four, the agent calls the gateway with its local token. Five, phi-4-mini reasons over it. And six, a command goes back to the PLC, through the broker.</p>
+    <p>Six steps, and not one of them leaves the cluster: sense, filter, reason, actuate, all inside the line.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 5 CHAPTER 2 -->
+<section class="scene chapter" data-scene="chapter" data-noctl data-sheet="5">
+  <p class="ch-label k-wipe">Sheet 2 of 3</p>
+  <h1 class="k-wipe" style="--d:150ms;font-size:74px">What crosses, once</h1>
+  <p class="ch-sub k-rise" style="--d:500ms">Everything the agent needs is carried in before the seal.</p>
+  <div class="idx">
+    <p class="ih k-fade">DRAWING INDEX</p>
+    <div class="row done k-rise" style="--d:300ms"><span class="no">01</span><span class="t">The line</span><span class="st">DONE</span></div>
+    <div class="row cur k-rise" style="--d:420ms"><span class="no">02</span><span class="t">What crosses, once</span><span class="st">THIS SHEET</span></div>
+    <div class="row k-rise" style="--d:540ms"><span class="no">03</span><span class="t">Seal it</span><span class="st"></span></div>
+  </div>
+  <svg class="idx-art" viewBox="0 0 1280 720" aria-hidden="true"><g class="idxbox" data-row="1"></g></svg>
+  <aside class="notes">
+    <p><b>[5:20, 20 seconds]</b> I let the box move down to sheet two.</p>
+    <p>Sheet two: the list of what crosses. This is where most air-gapped projects actually fail.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 6 MANIFEST -->
+<section class="scene manifest" data-scene="manifest" data-sheet="6">
+  <p class="kicker k-wipe">Sheet 2 / What crosses, once</p>
+  <h2 class="title k-wipe" style="--d:120ms">Five things cross, through one gate</h2>
+  <p class="subtitle k-rise" style="--d:400ms">Each item is carried in once, checked, and stored inside. Nothing fetches later.</p>
+  <p class="mh k-fade">TRANSFER MANIFEST 001 · OUTSIDE</p>
+  <p class="sh k-fade">STORED INSIDE</p>
+  <svg class="art" viewBox="0 0 1280 720" aria-label="A transfer manifest of five items on the outside. Each item travels through a single gate in the air gap and is stored inside, with the check it passed. Then two attempts that are not on the manifest stop at the line.">
+    <g class="gapline" data-x="580" data-y1="176" data-y2="588" data-gate="365" data-notag="1"></g>
+    <g class="routes"></g>
+    <path class="ln red k-draw ra" pathLength="1" d="M330 566 H566"/>
+    <path class="xmark k-pop xa" d="M554 558 l12 16 M566 558 l-12 16"/>
+    <text class="svgt r k-fade ta" x="330" y="556">later: pip install from PyPI</text>
+    <path class="ln red k-draw rb" pathLength="1" d="M900 566 H594"/>
+    <path class="xmark k-pop xb" d="M594 558 l12 16 M606 558 l-12 16"/>
+    <text class="svgt r k-fade tb" x="640" y="556">raw telemetry to a cloud model</text>
+  </svg>
+  <div class="mrows"></div>
+  <div class="travels"></div>
+  <p class="moral k-land" style="top:602px">If it is not on the manifest, <span class="ink">it does not cross.</span></p>
+  <p class="foot k-fade">Items from the manifests, cloud-init and challenge 3. The checks are what each file pins or verifies.</p>
+  <span class="fragment beat"></span><span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[5:40, 2 minutes 30 seconds]</b> I let the manifest and the line draw, then follow the first parcel through the gate.</p>
+    <p>On the left is what I call the transfer manifest. It isn't a file in the hack; it's what you get when you read every manifest and ask: what does this need from outside?</p>
+    <p>The biggest item goes first: the model. Phi-4-mini, the CPU build, 5.15 gigabytes of ONNX INT4 weights. It goes through the gate, the StoreModel job verifies the hashes, and it lands in the model store inside the cluster.</p>
+    <p><b>[click]</b> Then the rest. The container images, python 3.12 slim and mosquitto, with pinned tags and pull policy IfNotPresent, so they come from the node's cache. The MQTT client wheel, which cloud-init downloads into /opt/edge-wheels at bootstrap. The runbook, SOP-CNC-042, as a ConfigMap. And the platform itself: the Gateway API CRDs, Istio, and the Arc extensions, all at pinned versions.</p>
+    <p>Notice there's one gate. Everything converges on it. That's deliberate: one place where you check.</p>
+    <p><b>[click]</b> Now, what is <i>not</i> on the list stops. And here's a detail from the agent's start command that I love: it tries the local wheel first, and if that fails, it falls back to pip install from the internet. Connected, you'd never notice. Sealed, that fallback hits the line. Same for anyone who wants raw telemetry in a cloud model.</p>
+    <p>So the rule is simple: if it isn't on the manifest, it does not cross.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 7 MODEL STORE -->
+<section class="scene store7" data-scene="store7" data-sheet="7">
+  <p class="kicker k-wipe">Sheet 2 / What crosses, once</p>
+  <h2 class="title k-wipe" style="--d:120ms">The model crosses once, as an artifact</h2>
+  <p class="subtitle k-rise" style="--d:400ms">Foundry Local caches the weights in the cluster. Pods never pull them from the internet.</p>
+  <svg class="art" viewBox="0 0 1280 720" aria-label="The 177 models of the local catalog as dots; one is picked, phi-4-mini. Its weights cross the air gap once into a StoreModel job, are verified, pushed as an artifact into the in-cluster model store, and served by the phi-4-mini pod. After that the gate is sealed and restarts read the store.">
+    <text class="svgt k-fade cat-h" x="64" y="192">foundry-local-catalog · <tspan class="cat-n">177</tspan> models</text>
+    <g class="dots"></g>
+    <path class="ln thin k-draw pick-l" pathLength="1" d="M238 254 H420 V466"/>
+    <text class="svgt k-fade pick-t" x="430" y="300">spec.model.catalog.name</text>
+    <text class="svgt k-fade pick-t" x="430" y="316">: phi-4-mini</text>
+    <g class="gapline" data-x="770" data-y1="176" data-y2="588" data-gate="228"></g>
+    <path class="ln k-draw xin" pathLength="1" d="M744 228 H808" marker-end="url(#ah)"/>
+    <path class="ln k-draw sa" pathLength="1" d="M1008 256 V278" marker-end="url(#ah)"/>
+    <path class="ln k-draw sa" pathLength="1" d="M1008 336 V358" marker-end="url(#ah)"/>
+    <path class="ln k-draw sa" pathLength="1" d="M1008 416 V438" marker-end="url(#ah)"/>
+    <path class="ln k-draw sa" pathLength="1" d="M1008 496 V518" marker-end="url(#ah)"/>
+    <path class="ln k-draw loopb" pathLength="1" d="M1206 548 C1240 548 1240 468 1210 468" marker-end="url(#ah)"/>
+  </svg>
+  <div class="resolve k-rise">
+    <b>alias</b> phi-4-mini<br>
+    <b>compute</b> cpu &nbsp; <b>runtime</b> onnx-genai<br>
+    <b>resolves to</b> <span class="mid"></span><br>
+    <b>weights</b> <span class="msize"></span>, ONNX INT4
+  </div>
+  <div class="part k-pop src7" style="left:560px;top:200px;width:180px"><p class="n">Model source</p><p class="d">weights, outside</p></div>
+  <p class="note k-fade sealn" style="left:600px;top:268px">sealed once the<br>store is Available</p>
+  <div class="part stage k-pop st0" style="top:200px"><p class="n">StoreModel job: download once</p><p class="d s0d"></p></div>
+  <div class="part stage k-pop st1" style="top:280px"><p class="n">Verify hashes and manifest</p><p class="d">before anything is stored</p></div>
+  <div class="part stage k-pop st2" style="top:360px"><p class="n">Push as an OCI artifact</p><p class="d s2d"></p></div>
+  <div class="part stage k-pop st3" style="top:440px"><p class="n">PHASE Available</p><p class="d s3d"></p></div>
+  <div class="part stage k-pop st4" style="top:520px"><p class="n">phi-4-mini pod</p><p class="d">STATE Running, READY true</p></div>
+  <p class="moral k-land" style="top:602px">After that, restarts read the store, <span class="ink">not the internet.</span></p>
+  <p class="foot k-fade">Challenge 3 and solution 3; the challenge also quotes 5.38 GB for the download. Dot positions illustrative.</p>
+  <span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[8:10, 2 minutes]</b> I let the catalog fill with dots and wait for one of them to be picked.</p>
+    <p>Let's zoom into the biggest item. When you install Foundry Local as an Arc extension, it syncs a catalog into the cluster: 177 models, as a ConfigMap. You pick one by alias in a ModelDeployment. We ask for phi-4-mini, compute CPU, runtime onnx-genai, and that resolves to Phi-4-mini-instruct-generic-cpu, version 5.</p>
+    <p>Then the operator does the part that matters for an air gap. A StoreModel job downloads the weights once, about six to seven minutes for 5.15 gigabytes. It verifies hashes and the manifest. It pushes the model as an OCI artifact into a registry that runs inside the cluster. And when the phase says Available, the pod serves from there.</p>
+    <p><b>[click]</b> That's the moment you can close the gate. <i>(I wait for the gate to seal.)</i> From now on, if the pod restarts or you scale it out, it reads the local store. It never goes back to the internet for its weights.</p>
+    <p>So the model is not a download your app does at runtime. It's an artifact that crossed once.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 8 IDENTITY -->
+<section class="scene sat" data-scene="sat" data-sheet="8">
+  <p class="kicker k-wipe">Sheet 2 / What crosses, once</p>
+  <h2 class="title k-wipe" style="--d:120ms">Identity is minted inside the line</h2>
+  <p class="subtitle k-rise" style="--d:400ms">A Kubernetes service account token, checked by Foundry Local, with no call to Entra ID.</p>
+  <svg class="art" viewBox="0 0 1280 720" aria-label="The decoded projected service account token with leaders to its fields: audience, issuer, subject, lifetime. Then a request with the token is checked by the auth sidecar of the model and answered, and no validation call goes outside the line.">
+    <g class="gapline" data-x="300" data-y1="176" data-y2="600"></g>
+    <g class="leads"></g>
+    <path class="ln red dash k-fade rq" d="M396 228 H316"/>
+    <path class="xmark k-pop xq" d="M310 220 l12 16 M322 220 l-12 16"/>
+    <path class="ln k-draw bnd" pathLength="1" d="M702 533 H754" marker-end="url(#ah)"/>
+    <path class="ln k-draw bnd" pathLength="1" d="M982 533 H1012" marker-end="url(#ah)"/>
+  </svg>
+  <div class="part k-pop entra" style="left:56px;top:200px;width:224px"><p class="n">Microsoft Entra ID</p><p class="d">not used here</p></div>
+  <p class="note k-fade cfg" style="left:56px;top:272px">entraAuth.enabled=false<br>satAuth.enabled=true<br>satAuth.audience=foundry-local</p>
+  <p class="note r k-fade rqn" style="left:56px;top:360px">validation never<br>leaves the cluster</p>
+  <div class="card k-rise"><p class="ch">PROJECTED TOKEN, DECODED</p></div>
+  <div class="fields"></div>
+  <svg class="art" viewBox="0 0 1280 720" aria-hidden="true">
+    <path class="ln thin k-draw dimv" pathLength="1" d="M660 362 V402"/>
+    <path class="ln thin k-fade dimv" d="M654 362 H666 M654 402 H666"/>
+    <text class="svgt k-fade dimt" x="672" y="386">3600 s</text>
+  </svg>
+  <div class="notes8"></div>
+  <div class="part band k-pop b0" style="left:400px;width:302px"><p class="n">POST /phi-4-mini/v1/chat/completions</p><p class="d">Authorization: Bearer &lt;SAT&gt;</p></div>
+  <div class="part band k-pop b1" style="left:756px;width:226px"><p class="n">Auth sidecar on phi-4-mini</p><p class="d">aud ✓ &nbsp;sub ✓ &nbsp;role ✓</p></div>
+  <div class="part band k-pop b2" style="left:1014px;width:206px"><p class="n">200 chat.completion</p><p class="d b2d"></p></div>
+  <p class="foot k-fade">Token decoded and the call made in challenge 4 (img/bastion-challenge-04-sat-and-inference.png).</p>
+  <span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[10:10, 2 minutes]</b> I let the token card fill in, field by field, and read the leaders as they draw.</p>
+    <p>The fifth item on our list was an identity. In the cloud you'd reach for Entra ID. Inside an air gap, you can't. So in challenge four you turn Entra auth off on the Foundry Local extension and turn on service account tokens instead.</p>
+    <p>This is the real token from the hack, decoded. The audience is foundry-local. The issuer is the cluster's own API server: kubernetes dot default. The subject is one service account, inference-client in edge-agents, and only that subject is listed in the model's authorized subjects, with the role GeneralInferenceUser. And the lifetime, expiry minus issued-at, is exactly 3600 seconds. The agent re-reads the file on every request, so rotation just works.</p>
+    <p><b>[click]</b> Then the agent calls the gateway with that token. The auth sidecar on the model checks audience, subject and role, and answers: a real completion, 54 prompt tokens and 29 back. <i>(I point at the red arrow on the left.)</i> And the validation never leaves the cluster.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 9 CHAPTER 3 -->
+<section class="scene chapter" data-scene="chapter" data-noctl data-sheet="9">
+  <p class="ch-label k-wipe">Sheet 3 of 3</p>
+  <h1 class="k-wipe" style="--d:150ms">Seal it</h1>
+  <p class="ch-sub k-rise" style="--d:500ms">Close the line, break the machine, and watch what decides.</p>
+  <div class="idx">
+    <p class="ih k-fade">DRAWING INDEX</p>
+    <div class="row done k-rise" style="--d:300ms"><span class="no">01</span><span class="t">The line</span><span class="st">DONE</span></div>
+    <div class="row done k-rise" style="--d:420ms"><span class="no">02</span><span class="t">What crosses, once</span><span class="st">DONE</span></div>
+    <div class="row cur k-rise" style="--d:540ms"><span class="no">03</span><span class="t">Seal it</span><span class="st">THIS SHEET</span></div>
+  </div>
+  <svg class="idx-art" viewBox="0 0 1280 720" aria-hidden="true"><g class="idxbox" data-row="2"></g></svg>
+  <aside class="notes">
+    <p><b>[12:10, 20 seconds]</b> I let the box reach sheet three.</p>
+    <p>Everything has crossed. Sheet three: we seal it, and then we break something.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 10 FILTER -->
+<section class="scene filter" data-scene="filter" data-sheet="10">
+  <p class="kicker k-wipe">Sheet 3 / Seal it</p>
+  <h2 class="title k-wipe" style="--d:120ms">The model only sees what crosses a threshold</h2>
+  <p class="subtitle k-rise" style="--d:400ms">An Azure IoT Operations dataflow drops normal readings before any inference runs.</p>
+  <svg class="art" viewBox="0 0 1280 720" aria-label="A strip chart of recorded bearing temperatures. Readings at or below 85 degrees are dropped by the dataflow; the three above it pass to the anomalies topic.">
+    <text class="svgt k-fade ax" x="96" y="180">bearing temperature, °C</text>
+    <path class="ln k-draw ax" pathLength="1" d="M96 190 V540 H800"/>
+    <g class="ylabels"></g>
+    <path class="ln k-fade ax brk" d="M462 532 l6 -8 l6 16 l6 -8"/>
+    <path class="ln dash k-fade th" d="M96 365 H770"/>
+    <text class="svgt k-fade th" x="778" y="362">85.0 °C</text>
+    <text class="svgt m k-fade th" x="778" y="376">dataflow</text>
+    <path class="ln thin soft dash k-fade th" d="M96 265 H770"/>
+    <text class="svgt k-fade th" x="778" y="262">105 °C</text>
+    <text class="svgt m k-fade th" x="778" y="276">SOP critical</text>
+    <polyline class="ln thin soft k-draw trace" pathLength="1" points=""/>
+    <g class="pts"></g>
+  </svg>
+  <div class="topic k-rise"><p class="th">factory/line1/anomalies</p><div class="rows"></div></div>
+  <p class="note k-fade drop-n" style="left:904px;top:350px">dropped when<br><b>$1 &lt;= 85.0 &amp;&amp; $2 &lt;= 7.5</b><br>(temperature and vibration)</p>
+  <p class="note k-fade cost-h" style="left:904px;top:436px">CPU inference per anomaly, recorded</p>
+  <div class="costs"></div>
+  <p class="note k-fade cost-n" style="left:904px;top:540px">an anomaly every 30 s: 6 ticks x 5 s</p>
+  <p class="moral k-land" style="top:602px">Filter at the broker. <span class="ink">Think only when it matters.</span></p>
+  <p class="foot k-fade">Ticks recorded in challenges 2 and 5 (ticks 334 and 335 not captured). Latencies from challenge 5.</p>
+  <span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[12:30, 2 minutes]</b> I let the chart axes draw, then the pen plots the recorded readings one by one.</p>
+    <p>Before we seal anything, one design choice that makes the whole thing work on a CPU. The simulator publishes a reading every five seconds. These are real ticks from the hack's recordings.</p>
+    <p>The dashed line is the dataflow's threshold. In Azure IoT Operations, a filter that evaluates to true drops the message. So the expression says: temperature at or below 85 and vibration at or below 7.5, drop it. <i>(I wait while the normal readings fall away.)</i> Six of these nine never reach the agent. Only three cross the threshold and land on the anomalies topic.</p>
+    <p><b>[click]</b> Why does this matter? Because each one that passes costs a real inference on CPU. In the recording, about 8.7 seconds each. You do not want to spend that on a reading that says everything is fine.</p>
+    <p>So: filter at the broker, and think only when it matters.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 11 WALL -->
+<section class="scene wall" data-scene="wall" data-sheet="11">
+  <p class="kicker k-wipe">Sheet 3 / Seal it</p>
+  <h2 class="title k-wipe" style="--d:120ms">Four doors, all facing inward</h2>
+  <p class="subtitle k-rise" style="--d:400ms">The NetworkPolicy denies all egress from edge-agents except four in-cluster destinations.</p>
+  <svg class="art" viewBox="0 0 1280 720" aria-label="The edge-agents namespace drawn as a room with hatched walls. Four doors on the right lead to DNS, the MQTT broker, the model gateway and the namespace itself. The left wall, toward the internet, has no door. A revision cloud marks the DNS door.">
+    <text class="side-tag k-fade wl" x="60" y="196">0.0.0.0/0 · INTERNET, AZURE</text>
+    <g class="walls"></g>
+    <path class="ln red k-draw wr" pathLength="1" d="M470 296 H408"/>
+    <path class="xmark k-pop wx" d="M398 288 l12 16 M410 288 l-12 16"/>
+    <text class="svgt r k-fade wrt" x="372" y="300" text-anchor="end">no rule: denied</text>
+    <g class="doors"></g>
+    <path class="rcloud k-draw cl" pathLength="1" d=""/>
+    <g class="k-pop tri"><path class="rtri" d="M1242 241 l11 19 h-22 z"/><text class="rtri-n" x="1242" y="257">1</text></g>
+    <g class="k-pop tri"><path class="rtri" d="M70 418 l11 19 h-22 z"/><text class="rtri-n" x="70" y="434">1</text></g>
+  </svg>
+  <p class="room-tag k-fade rm" style="left:404px;top:226px">namespace edge-agents</p>
+  <p class="room-tag k-fade rm" style="left:404px;top:242px;color:var(--muted)">podSelector: {} · policyTypes: Egress</p>
+  <div class="part k-pop ch" style="left:470px;top:270px;width:200px"><p class="n">Edge triage agent</p><p class="d">MQTT, model calls</p></div>
+  <div class="part k-pop ch" style="left:470px;top:350px;width:200px"><p class="n">Telemetry simulator</p><p class="d">MQTT</p></div>
+  <div class="part k-pop ch" style="left:470px;top:430px;width:200px"><p class="n">Fault injector job</p><p class="d">MQTT</p></div>
+  <div class="dests"></div>
+  <p class="note k-fade wn" style="left:90px;top:412px">Why port 53? Once an egress<br>policy selects a pod, all else<br>is denied, DNS included.<br>Without rule 1 the agent<br>cannot resolve its broker.</p>
+  <p class="moral k-land" style="top:602px">Allow-list inward. <span class="ink">Outward has no door.</span></p>
+  <p class="foot k-fade">resources/manifests/04-airgap-policy/deny-external-egress.yaml and solution 5.</p>
+  <span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[14:30, 1 minute 30 seconds]</b> I let the room's walls draw, then each door opens with its rule.</p>
+    <p>Now the seal itself. In the lab, the line is a Kubernetes NetworkPolicy called enforce-airgap-sovereign-mode, on the edge-agents namespace. Read it as a room. It selects every pod in the namespace and says: egress is denied unless a rule allows it.</p>
+    <p>There are four doors, and all of them face inward. One, DNS to kube-system on port 53. Two, the MQTT broker on 1883 and 18883. Three, the Foundry Local and Istio namespaces on 80, 443 and 8080. Four, the namespace itself. <i>(I point at the left wall.)</i> And toward the internet: no door. No rule means denied.</p>
+    <p><b>[click]</b> One door people get wrong is the first one. Why would a policy that's all in-cluster need DNS? Because once any egress policy selects a pod, everything else is denied, DNS included. Leave out rule one and your agent can't even resolve the broker's name. That's one of the grounding questions in challenge five.</p>
+    <p>So: allow-list inward. Outward has no door.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 12 SEALED (the wow) -->
+<section class="scene seal" data-scene="seal" data-sheet="12" data-rev="B">
+  <p class="kicker k-wipe">Sheet 3 / Seal it</p>
+  <h2 class="title k-wipe" style="--d:120ms">Rev B: sealed. Now break the machine.</h2>
+  <p class="subtitle k-rise" style="--d:400ms">Recorded in challenge 5, with the policy applied to edge-agents.</p>
+  <svg class="art" viewBox="0 0 1280 720" aria-label="With the namespace sealed, a probe to management.azure.com stops at the line with Network is unreachable. Then a critical fault is injected inside; it flows through the broker, the dataflow and the agent to phi-4-mini, which decides in 8011.3 milliseconds to trigger the safety interlock, and the spindle drops from 4200 to 1680 rpm.">
+    <text class="side-tag k-fade so" x="60" y="196">OUTSIDE</text>
+    <g class="gapline" data-x="300" data-y1="176" data-y2="580" data-gate="346" data-seal="1" data-notag="1"></g>
+    <path class="ln k-draw ar" pathLength="1" d="M462 279 H486" marker-end="url(#ah)"/>
+    <path class="ln k-draw ar" pathLength="1" d="M612 279 H636" marker-end="url(#ah)"/>
+    <path class="ln k-draw ar" pathLength="1" d="M762 279 H786" marker-end="url(#ah)"/>
+    <path class="ln k-draw ar" pathLength="1" d="M912 279 H936" marker-end="url(#ah)"/>
+    <path class="ln k-draw ar" pathLength="1" d="M1062 279 H1086" marker-end="url(#ah)"/>
+    <path class="ln red dash k-fade probe" d="M851 308 V346 H318"/>
+    <path class="xmark k-pop px" d="M306 338 l12 16 M318 338 l-12 16"/>
+    <text class="svgt r k-fade pt" x="330" y="336">urlopen('https://management.azure.com', timeout=4)</text>
+    <path class="ln thin k-draw dim12" pathLength="1" d="M851 232 H1001"/>
+    <path class="ln thin k-fade dim12" d="M851 224 V240 M1001 224 V240"/>
+    <text class="dimv k-fade dim12" x="926" y="222"><tspan class="lat">0.0</tspan> ms</text>
+  </svg>
+  <div class="travel pen red probe-pen" style="offset-path:path('M851 308 V346 H318');--dur:1500ms"></div>
+  <div class="travel pen fault-pen" style="offset-path:path('M401 279 H1151');--dur:3600ms"></div>
+  <div class="stamp k-drop st12" style="left:340px;top:162px">Rev B · sealed<small>enforce-airgap-sovereign-mode</small></div>
+  <div class="part k-pop tgt" style="left:56px;top:236px;width:220px"><p class="n">management.azure.com</p><p class="d">Azure Resource Manager</p></div>
+  <p class="err k-fade"></p>
+  <div class="part node k-pop nd" style="left:340px"><p class="n">Fault injector</p><p class="d">Job</p></div>
+  <div class="part node k-pop nd" style="left:490px"><p class="n">MQTT broker</p><p class="d">AIO</p></div>
+  <div class="part node k-pop nd" style="left:640px"><p class="n">Dataflow filter</p><p class="d">AIO</p></div>
+  <div class="part node k-pop nd" style="left:790px"><p class="n">Edge agent</p><p class="d">SOP-CNC-042</p></div>
+  <div class="part node k-pop nd" style="left:940px"><p class="n">phi-4-mini</p><p class="d">CPU, ONNX</p></div>
+  <div class="part node k-pop nd" style="left:1090px"><p class="n">PLC</p><p class="d">simulator</p></div>
+  <div class="card12 k-rise cA" style="left:340px;width:280px"><p class="h">FAULT INJECTED, INSIDE</p><span class="fA"></span></div>
+  <div class="card12 k-rise cB" style="left:640px;width:280px"><p class="h">SOP-CNC-042, RULE 2</p><span class="fB"></span></div>
+  <div class="card12 k-rise cC" style="left:940px;width:280px"><p class="h">DECISION, PHI-4-MINI</p><span class="fC"></span></div>
+  <div class="rpm k-rise"><p class="l">SPINDLE, RPM</p><p class="big"><span class="rv">4200</span><small>rpm</small></p></div>
+  <p class="was k-fade"></p>
+  <div class="stamp k-drop hold" style="left:930px;top:516px;font-size:22px">SAFE_HOLD<small>PLC actuated, coolant boost on</small></div>
+  <p class="moral k-land" style="top:602px">Sealed off from Azure, <span class="ink">it still decided in 8 seconds.</span></p>
+  <p class="foot k-fade">img/bastion-challenge-05-cut-the-cord.png. Inference on CPU, on the lab's 16-vCPU VM.</p>
+  <span class="fragment beat"></span><span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[16:00, 3 minutes]</b> I let the revision stamp land and the loop draw, then let the probe go out and hit the line before I speak.</p>
+    <p>This is revision B of our drawing. The policy is applied. Same loop as before, from the fault injector to the PLC, and every box is inside the line.</p>
+    <p>First, prove the seal. From inside the agent's pod, we try to open management.azure.com. <i>(I wait for the probe to reach the line.)</i> And that's the real error from the recording: Network is unreachable. Nothing gets out.</p>
+    <p><b>[click]</b> Now the bad day. A fiber cut outside the plant, and at the same moment coolant pump B fails. The fault injector publishes what that looks like: bearing at 114.6 degrees, vibration at 15.2, coolant flow at 1.4 litres a minute. All three are past the critical limits in SOP-CNC-042.</p>
+    <p>Watch it travel. The broker takes it, the dataflow lets it through, the agent reads the runbook from its ConfigMap, calls phi-4-mini with its local token, and the model picks the tool: trigger_safety_interlock, minus 60 percent, SAFE_HOLD. <i>(I wait for the dimension line to finish counting.)</i> 8011 milliseconds, on a CPU.</p>
+    <p><b>[click]</b> And the PLC acts. The spindle drops from 4200 to 1680 rpm, coolant boost on, safe hold. That line comes straight from the simulator's log.</p>
+    <p>So: sealed off from Azure, it still decided in 8 seconds. That's the moment you'll reproduce in challenge five.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 13 GUARD -->
+<section class="scene guard" data-scene="guard" data-sheet="13" data-rev="B">
+  <p class="kicker k-wipe">Sheet 3 / Seal it</p>
+  <h2 class="title k-wipe" style="--d:120ms">The model reasons. A rule guarantees.</h2>
+  <p class="subtitle k-rise" style="--d:400ms">Recorded decisions: the right tool and numbers, with some fields left empty.</p>
+  <svg class="art" viewBox="0 0 1280 720" aria-label="Three recorded decisions with empty fields marked by revision clouds. On the right, the agent's design: the model decides, and if the call fails a deterministic guard applies the runbook thresholds instead.">
+    <path class="ln k-draw gl gm" pathLength="1" d="M840 221 H896" marker-end="url(#ah)"/>
+    <path class="ln k-draw gl gm" pathLength="1" d="M1200 221 H1218 V461 H1204" marker-end="url(#ah)"/>
+    <path class="ln dash k-fade gl gg" d="M750 246 V341 H896" marker-end="url(#ah)"/>
+    <path class="ln dash k-fade gl gg" d="M1050 366 V432" marker-end="url(#ah)"/>
+    <text class="svgt k-fade gl exc" x="762" y="332">on error</text>
+  </svg>
+  <div class="logs"></div>
+  <svg class="art" viewBox="0 0 1280 720" aria-hidden="true"><g class="clouds"></g></svg>
+  <p class="note k-fade nn" style="left:56px;top:470px">The prompt asks for a string. The model picked the right<br>tool and numbers, and left <b>these fields</b> empty or missing.</p>
+  <div class="part gpart k-pop gp" style="left:660px;top:196px;width:180px"><p class="n">Anomaly arrives</p><p class="d">factory/line1/anomalies</p></div>
+  <div class="part gpart k-pop gp gmod" style="left:900px;top:196px;width:300px"><p class="n">phi-4-mini decides</p><p class="d">Foundry Local call, timeout 60 s</p></div>
+  <div class="part gpart k-pop gp" style="left:900px;top:316px;width:300px"><p class="n">Deterministic guard</p><p class="d">local-sop-deterministic-guard</p></div>
+  <div class="part gpart k-pop gp" style="left:900px;top:436px;width:300px"><p class="n">PLC command</p><p class="d">factory/line1/commands</p></div>
+  <div class="travel pen guard-pen" style="offset-path:path('M750 246 V341 H900 M1050 366 V436');--dur:2400ms"></div>
+  <p class="note k-fade grule" style="left:660px;top:512px">guard: <b>&gt;= 105 °C or &gt;= 13.0 mm/s or &lt; 2.0 LPM</b><br>gives -60 % SAFE_HOLD, otherwise -25 %</p>
+  <div class="stamp k-drop ill" style="left:660px;top:390px;font-size:12px">Illustrative<small>the model call fails</small></div>
+  <p class="moral k-land" style="top:602px">Let the model reason. <span class="ink">Let a rule guarantee the stop.</span></p>
+  <p class="foot k-fade">Logs from challenge 5. The failure is illustrative: the guard runs only when the model call raises an error.</p>
+  <span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[19:00, 1 minute 30 seconds]</b> I let the three recorded decisions appear, and wait for the clouds to mark the empty fields.</p>
+    <p>I want to be honest about what the model actually returned. These are the three decisions from the same recording. The tool is right every time. The numbers are right: minus 25 for a warning, minus 60 for the critical one. But look at the clouds. For the warnings, interlock mode and priority came back as null. For the critical one, priority is just missing.</p>
+    <p>A small model on a CPU, under a strict prompt, mostly does the right thing. Mostly.</p>
+    <p><b>[click]</b> So the agent doesn't bet the machine on the model alone. If the call to Foundry Local fails or times out, the agent catches the error and a deterministic guard applies the runbook's thresholds itself: past 105 degrees, 13 millimetres a second, or under 2 litres of coolant, it's minus 60 and safe hold. <i>(I point at the stamp.)</i> This failure is illustrative; we didn't break the model in the recording. And to be precise: the guard runs when the call errors, not when a field is empty.</p>
+    <p>Let the model reason. Let a rule guarantee the stop.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 14 LAB AND PLANT -->
+<section class="scene real" data-scene="real" data-sheet="14" data-rev="B">
+  <p class="kicker k-wipe">Sheet 3 / Seal it</p>
+  <h2 class="title k-wipe" style="--d:120ms">In the lab the line is a policy. In a plant, it is the site.</h2>
+  <p class="subtitle k-rise" style="--d:400ms">What this hack proves, and what a permanently disconnected site adds.</p>
+  <div class="tbl">
+    <div class="tr hd k-rise"><div></div><div>Lab, this hack</div><div>Plant, production</div></div>
+    <div class="tr k-rise rr"><div>Host</div><div>Azure VM <span class="m">Standard_D16s_v5</span>, Ubuntu 24.04, K3s</div><div>Azure Local hardware, or rugged Ubuntu K3s appliances</div></div>
+    <div class="tr k-rise rr"><div>The line</div><div>A NetworkPolicy on the edge-agents namespace</div><div>The site has no route out, from day zero</div></div>
+    <div class="tr k-rise rr cross"><div>How it crosses</div><div>Pulled while connected, in challenges 1 to 3</div><div>Azure Local Disconnected Operations and the Foundry Local Expansion Pack, into the local edgeartifacts registry</div></div>
+    <div class="tr k-rise rr"><div>Model compute</div><div><span class="m">compute: cpu</span>, <span class="m">runtime: onnx-genai</span></div><div>Optional NVIDIA L4 or A2 GPUs: <span class="m">compute: gpu</span>, <span class="m">runtime: vllm</span></div></div>
+    <div class="tr k-rise rr"><div>Workloads</div><div>Arc extensions and standard CRDs</div><div>The same manifests, unchanged</div></div>
+  </div>
+  <svg class="art" viewBox="0 0 1280 720" aria-hidden="true">
+    <path class="rcloud k-draw cl14" pathLength="1" d=""/>
+    <g class="k-pop tri14"><path class="rtri" d="M70 476 l11 19 h-22 z"/><text class="rtri-n" x="70" y="492">B</text></g>
+  </svg>
+  <p class="note k-fade n14" style="left:92px;top:479px">Your transfer manifest becomes a release process: <b>what crosses, who checks it, and when.</b></p>
+  <p class="moral k-land" style="top:602px">Same manifests, same loop. <span class="ink">Only the line gets harder.</span></p>
+  <p class="foot k-fade">Sources: the hack's Readme (production topologies) and finish.md (moving to physical edge production).</p>
+  <span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[20:30, 1 minute]</b> I let the table rule itself, row by row.</p>
+    <p>One honest caveat before you start. In the lab, our line is a NetworkPolicy on one namespace, in an Azure VM. That proves the agent's loop needs nothing outside. It doesn't make the VM a disconnected site.</p>
+    <p>In a real plant, the host is Azure Local hardware or a rugged K3s box, and the site has no route out from day zero. The workloads don't change: the hack's Readme says the same manifests run unchanged on Azure Local.</p>
+    <p><b>[click]</b> What changes is how things cross. For a permanently disconnected site, Azure Local Disconnected Operations and the Foundry Local Expansion Pack bring Istio, the Gateway API CRDs, cert-manager and the model artifacts into a local registry. That's our transfer manifest, grown up: a release process that says what crosses, who checks it, and when.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 15 SIGN-OFF -->
+<section class="scene signoff" data-scene="signoff" data-noctl data-sheet="15">
+  <p class="so-h k-wipe">Sheet 15 · Issued</p>
+  <h2 class="k-wipe" style="--d:150ms">Decide what crosses.<br><span class="ink">Then seal the line.</span></h2>
+  <svg class="art" viewBox="0 0 1280 720" aria-hidden="true">
+    <g class="gapline" data-x="1000" data-y1="120" data-y2="290" data-gate="205" data-notag="1"></g>
+    <path class="ln red k-draw so-r" pathLength="1" d="M1150 150 H1016"/>
+    <path class="xmark k-pop so-x" d="M1012 142 l12 16 M1024 142 l-12 16"/>
+    <g class="k-pop so-b"><rect class="fillw ln" x="1080" y="191" width="40" height="28"/><path class="ln" d="M1097 191 V219"/></g>
+    <path class="ln thin soft k-draw so-l" pathLength="1" d="M900 205 H1078"/>
+  </svg>
+  <div class="big-block k-rise">
+    <div class="bb">
+      <p class="l">Challenges in this hack · machine wait</p>
+      <div class="sheets"></div>
+    </div>
+    <div class="bb">
+      <p class="l">Drawn by</p>
+      <p class="who k-fade w1">Digvijay Chauhan, Solution Engineer, Microsoft</p>
+      <p class="who2 k-fade w2">Tech talk for the Air-Gapped Agentic Edge AI MicroHack</p>
+      <p class="sentence k-fade w3">Your turn: draw the line.</p>
+    </div>
+  </div>
+  <div class="stamp k-drop iss" style="left:880px;top:574px;font-size:20px">Issued for build<small>drawing AG-09, rev B</small></div>
+  <aside class="notes">
+    <p><b>[21:30, 1 minute]</b> I let the sheet list fill in and wait for the stamp before I close.</p>
+    <p>So here is the drawing you'll build today, five sheets. The Readme puts the machine waits at about 40 to 45 minutes in total; the rest of the time is you, thinking about the line.</p>
+    <p>If you remember one thing: decide what crosses, then seal the line. Write the manifest first. Make everything on it cross once, checked. And then prove, like we just did, that the loop still runs when nothing else can get through.</p>
+    <p>Your turn: draw the line. Have a great hack.</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="vendor/reveal.js-6.0.2/reveal.js"></script>
+<script src="vendor/reveal.js-6.0.2/plugin/notes.js"></script>
+<script src="js/data.js"></script>
+<script src="js/scenes.js"></script>
+<script src="js/beat-engine.js"></script>
+<script>startDeck();</script>
+</body>
+</html>

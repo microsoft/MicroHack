@@ -1,0 +1,17 @@
+[
+  {"id": "Q01", "question": "At what vibration level must a CNC spindle be stopped?", "expected_sop": "SOP-CNC-001", "must_include": ["7.1"]},
+  {"id": "Q02", "question": "What torque do I use for the spindle bearing cartridge bolts?", "expected_sop": "SOP-CNC-001", "must_include": ["45 Nm"]},
+  {"id": "Q03", "question": "Who is allowed to replace the spindle bearing?", "expected_sop": "SOP-CNC-001", "must_include": ["spindle-certified"]},
+  {"id": "Q04", "question": "What does error E-CLT-042 mean and what do I do first?", "expected_sop": "SOP-CNC-002", "must_include": ["coolant", "level"]},
+  {"id": "Q05", "question": "What coolant mixing ratio should the CNC machines use?", "expected_sop": "SOP-CNC-002", "must_include": ["8 percent"]},
+  {"id": "Q06", "question": "Which oil does the hydraulic press use and how often is it changed?", "expected_sop": "SOP-HYD-001", "must_include": ["ISO VG 46", "4000"]},
+  {"id": "Q07", "question": "At what oil temperature does the hydraulic press shut down?", "expected_sop": "SOP-HYD-001", "must_include": ["75"]},
+  {"id": "Q08", "question": "How often must the compressor oil be replaced?", "expected_sop": "SOP-CMP-001", "must_include": ["2000"]},
+  {"id": "Q09", "question": "The compressor shows E-CMP-107. What is the temperature limit?", "expected_sop": "SOP-CMP-001", "must_include": ["100"]},
+  {"id": "Q10", "question": "What motor current triggers the conveyor overload error?", "expected_sop": "SOP-CNV-001", "must_include": ["14 A"]},
+  {"id": "Q11", "question": "How often should the welding contact tip be replaced?", "expected_sop": "SOP-ROB-001", "must_include": ["8 hours"]},
+  {"id": "Q12", "question": "What is the first response time for a high-priority ticket?", "expected_sop": "SOP-GEN-001", "must_include": ["1 hour"]},
+  {"id": "Q13", "question": "What do I do before I open any machine cover for maintenance?", "expected_sop": "SOP-SAF-001", "must_include": ["lock"]},
+  {"id": "U01", "question": "What is the cafeteria menu on Friday?", "expected_sop": null, "must_include": [], "unanswerable": true},
+  {"id": "U02", "question": "What torque do I use for the wheel bolts on the forklift?", "expected_sop": null, "must_include": [], "unanswerable": true}
+]

@@ -1,0 +1,15 @@
+{
+  "features": [
+    "vibration_mm_s",
+    "temperature_c",
+    "load_pct",
+    "current_a",
+    "hours_since_service"
+  ],
+  "labels": [
+    "normal",
+    "bearing_wear",
+    "overheating",
+    "low_lubrication"
+  ]
+}

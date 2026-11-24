@@ -1,0 +1,157 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.1.0/schema.json",
+  "name": "4e580b09ddfe2ed2efea",
+  "displayName": "Portfolio and channel detail",
+  "displayOption": "FitToPage",
+  "height": 720,
+  "width": 1280,
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "Filter85434a726fc8630e70130000",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "DimDate"
+              }
+            },
+            "Property": "Year"
+          }
+        },
+        "type": "Categorical",
+        "filter": {
+          "Version": 2,
+          "From": [
+            {
+              "Name": "d",
+              "Entity": "DimDate",
+              "Type": 0
+            }
+          ],
+          "Where": [
+            {
+              "Condition": {
+                "In": {
+                  "Expressions": [
+                    {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Source": "d"
+                          }
+                        },
+                        "Property": "Year"
+                      }
+                    }
+                  ],
+                  "Values": [
+                    [
+                      {
+                        "Literal": {
+                          "Value": "2025L"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "visualInteractions": [
+    {
+      "source": "f1673744e24c2771577e",
+      "target": "74a756b880ea72c973e3",
+      "type": "NoFilter"
+    },
+    {
+      "source": "f1673744e24c2771577e",
+      "target": "a59a025ea947ae4390f8",
+      "type": "NoFilter"
+    },
+    {
+      "source": "f1673744e24c2771577e",
+      "target": "e2192c9e1a76f658944f",
+      "type": "NoFilter"
+    },
+    {
+      "source": "f1673744e24c2771577e",
+      "target": "34326776e3719d6abdc9",
+      "type": "NoFilter"
+    },
+    {
+      "source": "f1673744e24c2771577e",
+      "target": "b6367976ac5e236d7feb",
+      "type": "NoFilter"
+    },
+    {
+      "source": "f1673744e24c2771577e",
+      "target": "c3bfd2f8472c548ea4fb",
+      "type": "NoFilter"
+    },
+    {
+      "source": "f1673744e24c2771577e",
+      "target": "8283160998820cdd1228",
+      "type": "NoFilter"
+    },
+    {
+      "source": "f1673744e24c2771577e",
+      "target": "cce0c697d35bf5b22a0a",
+      "type": "NoFilter"
+    },
+    {
+      "source": "c3bfd2f8472c548ea4fb",
+      "target": "74a756b880ea72c973e3",
+      "type": "NoFilter"
+    },
+    {
+      "source": "c3bfd2f8472c548ea4fb",
+      "target": "a59a025ea947ae4390f8",
+      "type": "NoFilter"
+    },
+    {
+      "source": "c3bfd2f8472c548ea4fb",
+      "target": "e2192c9e1a76f658944f",
+      "type": "NoFilter"
+    },
+    {
+      "source": "c3bfd2f8472c548ea4fb",
+      "target": "34326776e3719d6abdc9",
+      "type": "NoFilter"
+    },
+    {
+      "source": "c3bfd2f8472c548ea4fb",
+      "target": "b6367976ac5e236d7feb",
+      "type": "NoFilter"
+    },
+    {
+      "source": "c3bfd2f8472c548ea4fb",
+      "target": "25f53f1820470671d655",
+      "type": "NoFilter"
+    },
+    {
+      "source": "c3bfd2f8472c548ea4fb",
+      "target": "f1673744e24c2771577e",
+      "type": "NoFilter"
+    },
+    {
+      "source": "c3bfd2f8472c548ea4fb",
+      "target": "d92bf4bb851615b52023",
+      "type": "NoFilter"
+    },
+    {
+      "source": "c3bfd2f8472c548ea4fb",
+      "target": "8283160998820cdd1228",
+      "type": "NoFilter"
+    },
+    {
+      "source": "c3bfd2f8472c548ea4fb",
+      "target": "cce0c697d35bf5b22a0a",
+      "type": "NoFilter"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+[
+  {"id": "C01", "question": "What torque do I use for the spindle bearing cartridge bolts, and what must I do before I start work on the spindle?", "expected_sops": ["SOP-CNC-001", "SOP-SAF-001"], "must_include": ["45 Nm", "lock"]},
+  {"id": "C02", "question": "How often is the hydraulic press oil changed, and what is the first response time for a high priority ticket?", "expected_sops": ["SOP-HYD-001", "SOP-GEN-001"], "must_include": ["4000", "1 hour"]},
+  {"id": "C03", "question": "What coolant mixing ratio do the CNC machines use, and how often is the compressor oil replaced?", "expected_sops": ["SOP-CNC-002", "SOP-CMP-001"], "must_include": ["8 percent", "2000"]}
+]

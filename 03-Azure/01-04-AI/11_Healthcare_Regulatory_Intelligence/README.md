@@ -15,6 +15,8 @@ In one day, you crawl regulator and payer websites into a regulatory lake and bu
 
 Everything happens in the browser: the agents in the **Microsoft Foundry portal**, the supplied tools in **Azure Cloud Shell**. You don't write code. The optional last challenge runs the agents automatically from GitHub Codespaces.
 
+To open the day, a facilitator can present the 23-minute tech talk [**Follow the paragraph**](techtalk/README.md).
+
 > [!TIP]
 > The same approach suits contracts, tenders, standards and internal policies: anywhere outside documents change and people have to act on them.
 

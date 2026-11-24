@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Follow the paragraph: Healthcare Regulatory Intelligence</title>
+  <meta name="author" content="Digvijay Chauhan">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='6' y='3' width='20' height='26' rx='2' fill='%23ffffff' stroke='%230B5D62' stroke-width='2'/%3E%3Crect x='10' y='10' width='12' height='3' fill='%23FCE2D9'/%3E%3Cpath d='M10 17h12M10 21h8' stroke='%230B5D62' stroke-width='2'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="vendor/reveal.js-6.0.2/reset.css">
+  <link rel="stylesheet" href="vendor/reveal.js-6.0.2/reveal.css">
+  <link rel="stylesheet" href="css/motion.css">
+  <link rel="stylesheet" href="css/theme.css">
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+<!-- ===================================================================== 1 COVER -->
+<section class="scene cover" data-scene="cover" data-noctl>
+  <p class="cv-kicker k-wipe">MicroHack · Microsoft Foundry · Tech talk</p>
+  <h1 class="k-wipe" style="--d:150ms">Follow the<br><em>paragraph.</em></h1>
+  <p class="cv-sub k-rise" style="--d:700ms">Regulatory intelligence with Foundry agents: from a published notice to a signed-off plan, with a citation for every step.</p>
+  <div class="cv-rule k-growx" style="--d:1100ms"></div>
+  <p class="cv-name k-rise" style="--d:1200ms">Digvijay Chauhan, Solution Engineer, Microsoft</p>
+  <p class="cv-meta k-rise" style="--d:1350ms">Healthcare Regulatory Intelligence MicroHack</p>
+
+  <div class="paper under k-fade" style="--d:500ms" aria-hidden="true"></div>
+  <div class="paper sheet k-rise" style="--d:600ms" role="img" aria-label="A fictional EU safety alert, EU-SA-2027-004, with paragraph 2 highlighted and a margin note naming the two EU labels it changes.">
+    <p class="pub" style="left:50px;top:26px">EU medicines regulator · Safety alert</p>
+    <p class="docid" style="left:50px;top:44px">EU-SA-2027-004 v1</p>
+    <p class="dtitle" style="left:50px;top:62px">Caldivex: new warning on liver injury</p>
+    <div class="hair" style="left:50px;top:98px;width:330px"></div>
+    <p class="pp cp1 k-fade" style="left:50px;top:112px;width:336px"><span class="pl">p1</span>The EU medicines regulator has reviewed reports of raised liver enzymes and rare cases of serious liver injury in patients taking Caldivex tablets and the Caldivex injection pen.</p>
+    <p class="pp cp2 k-fade" style="left:50px;top:196px;width:336px"><span class="pl">p2</span>Marketing authorisation holders must update the product information. <span class="hl">Add a warning to section 4.4 (special warnings)</span>, add liver injury to section 4.8 (undesirable effects) and update the package leaflet. Doctors should check liver function before starting treatment and again after 3 months.</p>
+    <p class="pp cp3 k-fade" style="left:50px;top:322px;width:336px"><span class="pl">p3</span>The marketing authorisation holder must submit a variation with the updated product information by 15 March 2027.</p>
+    <p class="pp cp4 k-fade" style="left:50px;top:388px;width:336px"><span class="pl">p4</span>A Direct Healthcare Professional Communication (DHPC) must be agreed with the regulator and sent to prescribers by 1 March 2027.</p>
+    <p class="pp cp5 k-fade" style="left:50px;top:454px;width:336px"><span class="pl">p5</span>Liver injury must be added as an important identified risk in the risk management plan and discussed in the next periodic safety update report (PSUR).</p>
+  </div>
+  <svg class="art" viewBox="0 0 1280 720" aria-hidden="true">
+    <path class="thread dash k-draw cv-lead" pathLength="1" d="M1062 300 H1100"/>
+    <circle class="knot coral k-pop cv-knot" cx="1062" cy="300" r="4"/>
+  </svg>
+  <div class="balloon cv-note k-pop">
+    <p class="bh">Changes</p>
+    <p class="nid">LBL-EU-TAB v7</p>
+    <p class="nid">LBL-EU-PEN v4</p>
+    <p class="nt">Section 4.4. Labelling Lead.</p>
+  </div>
+  <aside class="notes">
+    <p><b>[0:00, 1 minute]</b> I let the cover build: the alert lands, the second paragraph is highlighted and the margin note appears. Then I start.</p>
+    <p>Good morning. I'm Digvijay Chauhan, Solution Engineer at Microsoft, and today we're going to follow a paragraph.</p>
+    <p>On the right is a safety alert from a regulator. It's fictional, like everything in this lab. Look at the highlighted sentence: add a warning to section 4.4. Somewhere inside the company that sentence becomes work: two labels have to change, someone owns that change, and it has a date. The note in the margin says exactly that.</p>
+    <p>That's the whole hack in one picture. By the end of today, your agents will take a notice from a website to a signed-off plan, and every step will point back to a paragraph like this one.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 2 MONDAY -->
+<section class="scene monday" data-scene="monday">
+  <p class="kicker k-wipe">The story · Caldova Health Services</p>
+  <h2 class="title k-wipe" style="--d:120ms">Monday: ten pages appear overnight</h2>
+  <p class="subtitle k-rise" style="--d:400ms">Five portals, nine new publications. One company, Caldova, and one medicine, Caldivex. All fictional.</p>
+
+  <div class="card paper c0 k-rise" style="left:80px;top:182px;rotate:-1deg"><p class="ty">Safety alert</p><p class="cid">EU-SA-2027-004</p><p class="ct">Caldivex: new warning on liver injury</p><p class="rg">EU</p></div>
+  <div class="card paper mirror c1 k-rise" style="left:302px;top:182px;rotate:0.8deg"><p class="ty">News</p><p class="cid">EU-SA-2027-004</p><p class="ct">News: liver safety review of Caldivex concluded</p><p class="rg">EU</p><p class="flag k-pop f1">Same text, second address</p></div>
+  <div class="card paper c2 k-rise" style="left:524px;top:182px;rotate:-0.6deg"><p class="ty">Guidance</p><p class="cid">EU-GD-2027-011</p><p class="ct">Clinical trial results: plain-language summaries</p><p class="rg">EU</p></div>
+  <div class="card paper c3 k-rise" style="left:746px;top:182px;rotate:1.1deg"><p class="ty">Guidance</p><p class="cid">EU-GD-2027-019</p><p class="ct">Labelling of veterinary medicines for pets</p><p class="rg">EU</p><p class="flag k-pop f2">Not for Caldova</p></div>
+  <div class="card paper c4 k-rise" style="left:968px;top:182px;rotate:-0.9deg"><p class="ty">Safety alert</p><p class="cid">UK-SA-2027-002</p><p class="ct">Caldivex: liver injury warning for UK product information</p><p class="rg">UK</p></div>
+  <div class="card paper c5 k-rise" style="left:80px;top:346px;rotate:0.7deg"><p class="ty">Regulation</p><p class="cid">UK-REG-2027-001</p><p class="ct">Pharmacovigilance amendment: periodic safety report timelines</p><p class="rg">UK</p></div>
+  <div class="card paper c6 k-rise" style="left:302px;top:346px;rotate:-1.2deg"><p class="ty">Pricing rule</p><p class="cid">UK-PR-2027-001</p><p class="ct">Branded medicines pricing scheme: 2027 payment rate</p><p class="rg">UK</p></div>
+  <div class="card paper c7 k-rise" style="left:524px;top:346px;rotate:0.9deg"><p class="ty">Enforcement letter</p><p class="cid">US-EL-2027-007</p><p class="ct">Warning letter to contract manufacturer CMO-17</p><p class="rg">US</p><p class="flag k-pop f3">Never names Caldivex</p></div>
+  <div class="card paper c8 k-rise" style="left:746px;top:346px;rotate:-0.7deg"><p class="ty">Regulation</p><p class="cid">US-REG-2027-003</p><p class="ct">Nitrosamine impurities: acceptable intake limits</p><p class="rg">US</p></div>
+  <div class="card paper c9 k-rise" style="left:968px;top:346px;rotate:1deg"><p class="ty">Coverage decision</p><p class="cid">US-CD-2027-015</p><p class="ct">Coverage policy: preventive migraine medicines</p><p class="rg">US</p><p class="flag k-pop f4">Revised on Tuesday</p></div>
+
+  <p class="q k-rise q1" style="left:80px"><span>1</span>Does it apply to us?</p>
+  <p class="q k-rise q2" style="left:440px"><span>2</span>Who acts?</p>
+  <p class="q k-rise q3" style="left:700px"><span>3</span>By when?</p>
+  <p class="moral k-land" style="top:596px">Reading the notice is easy. <span class="t">Knowing who acts, and by when,</span> is the work.</p>
+  <p class="foot">Source: hack README (The story) and data/portals/monday. Every regulator, publication, product and date is fictional.</p>
+  <span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[1:00, 2 minutes]</b> I let the ten pages drop onto the desk while I set the scene.</p>
+    <p>Meet Caldova Health Services, a fictional UK life-sciences company. It sells one medicine, Caldivex, as tablets in the UK, the EU and the US, and as an injection pen in the EU and the US. Only two names matter today: Caldova, the company, and Caldivex, the medicine.</p>
+    <p>On Monday the eleventh of January 2027, five websites that Caldova is supposed to watch publish these. A safety alert, guidance, regulations, a pricing rule, a warning letter, a payer's coverage decision. Today the team hears about this late, copies text into spreadsheets, argues about which version is current, and sends every question to the same two experts.</p>
+    <p>Before we read a single one, I want to show you that the pile is full of traps. <b>[click]</b> One of them is the same alert published twice. One has nothing to do with Caldova: it's about veterinary medicines. One, the warning letter, never mentions Caldivex, and it's the most dangerous page on the desk. And one of them will change tomorrow.</p>
+    <p>And for every page, the questions are always the same three: does it apply to us, who acts, and by when. Reading the notice is the easy part. Today you build the part that does the rest.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 3 CHAPTER I -->
+<section class="scene chapter" data-scene="chapter" data-noctl>
+  <div class="paper page k-rise">
+    <p class="rh-l k-fade" style="--d:300ms">Part I of III</p>
+    <p class="rh-r k-fade" style="--d:300ms">From notice to action</p>
+    <div class="rh-line k-growx" style="--d:450ms"></div>
+    <h1 class="k-wipe" style="--d:600ms">Code is <em>exact.</em></h1>
+    <div class="cbar k-growy" style="--d:1300ms;height:122px"></div>
+    <p class="quote k-rise" style="--d:1500ms">“Crawling, de-duplication, versioning and recording a decision are ordinary code: they must give the same answer every time.”<sup>1</sup></p>
+    <div class="fn-line k-fade" style="--d:2100ms"></div>
+    <p class="fn k-fade" style="--d:2200ms"><b>1</b>Hack README, What each Azure service does here</p>
+  </div>
+  <aside class="notes">
+    <p><b>[3:00, 20 seconds]</b> I let the page settle and the change bar draw beside the quote.</p>
+    <p>The hack is built on one split, and I'll use it to structure this talk. Part one: code is exact. The boring, must-be-exact work never goes to a language model.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 4 TRACING -->
+<section class="scene tracing" data-scene="tracing">
+  <p class="kicker k-wipe">Part I · The change monitor</p>
+  <h2 class="title k-wipe" style="--d:120ms">Two addresses, one document</h2>
+  <p class="subtitle k-rise" style="--d:400ms">The monitor normalises the page, then fingerprints the text. Menus and footers are not the notice.</p>
+
+  <div class="paper sheet sa k-rise" role="img" aria-label="The safety alert page: navigation, the alert text and a footer.">
+    <p class="nav chrome"><span>Home | Safety | Guidance | News</span></p>
+    <div class="body" style="top:54px">
+      <p class="bt">Caldivex: new warning on liver injury</p>
+      <p class="bl">The EU medicines regulator has reviewed reports of raised liver enzymes…</p>
+      <p class="bl">Marketing authorisation holders must update the product information…</p>
+      <p class="bl">The marketing authorisation holder must submit a variation…</p>
+      <p class="bl">A Direct Healthcare Professional Communication (DHPC) must be agreed…</p>
+      <p class="bl">Liver injury must be added as an important identified risk…</p>
+    </div>
+    <p class="footer chrome"><span>Fictional training portal. Page generated 11 January 2027 08:00.</span></p>
+  </div>
+  <div class="paper sheet sb k-rise" data-overlap-ok role="img" aria-label="The news mirror: a different menu, a related link and a different footer around the same text.">
+    <div class="skin"></div>
+    <p class="nav chrome"><span>Home | News | Press office | Share</span></p>
+    <div class="body" style="top:54px">
+      <p class="bt">Caldivex: new warning on liver injury</p>
+      <p class="bl">The EU medicines regulator has reviewed reports of raised liver enzymes…</p>
+      <p class="bl">Marketing authorisation holders must update the product information…</p>
+      <p class="bl">The marketing authorisation holder must submit a variation…</p>
+      <p class="bl">A Direct Healthcare Professional Communication (DHPC) must be agreed…</p>
+      <p class="bl">Liver injury must be added as an important identified risk…</p>
+    </div>
+    <p class="footer chrome"><span>News mirror. Page generated 11 January 2027 09:30.</span></p>
+  </div>
+  <p class="lab la k-fade" style="left:80px">…/safety/EU-SA-2027-004.html</p>
+  <p class="lab lb k-fade" style="left:400px">…/news/2027-01-11-caldivex.html</p>
+  <div class="balloon dup k-pop" style="left:412px;top:300px;width:272px;box-sizing:border-box">
+    <p class="bh">Duplicates ignored: 1</p>
+    <p style="font:400 13px/1.35 var(--sans);color:var(--ink)">EU-SA-2027-004 v1: same content at another address. One document, two addresses.</p>
+  </div>
+
+  <div class="paper ledger k-rise">
+    <p class="lh">lake-raw/reports/monitor-monday-run1.txt</p>
+    <p class="lf">Regulatory Web and Change Monitor, monday</p>
+    <p class="col k-fade c1" style="left:246px">Run 1</p>
+    <p class="col k-fade c2" style="left:346px">Run 2</p>
+    <div class="row k-rise r0" style="top:94px"><p class="k">Pages crawled <small>(5 index pages)</small></p><p class="v v1"><span class="n" data-to="pages">0</span></p></div>
+    <div class="row k-rise r1" style="top:132px"><p class="k">Links not followed <small>(outside)</small></p><p class="v v1"><span class="n" data-to="linksNotFollowed">0</span></p></div>
+    <div class="row k-rise r2" style="top:170px"><p class="k">New documents</p><p class="v v1"><span class="n" data-to="newDocs">0</span></p><p class="v v2 k-pop w2">0</p></div>
+    <div class="row k-rise r3" style="top:208px"><p class="k">Duplicates ignored</p><p class="v v1"><span class="n" data-to="duplicates">0</span></p><p class="v v2 k-pop w3">10</p></div>
+    <div class="row k-rise r4" style="top:246px"><p class="k">Change events written</p><p class="v v1"><span class="n" data-to="events">0</span></p><p class="v v2 k-pop w4">0</p></div>
+    <p class="nothing k-rise">“Nothing changed since the last crawl, so no new change events were raised.”</p>
+  </div>
+  <p class="moral k-land" style="top:604px">Run it every hour: <span class="t">a change is raised once.</span></p>
+  <p class="foot">Source: walkthrough/challenge-01/solution-01.md (expected monitor output) and data/portals/monday/eu-medicines-regulator.</p>
+  <span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[3:20, 2 minutes]</b> I let both pages appear and talk about what the monitor does before anything moves.</p>
+    <p>Here are two pages from the EU regulator's site. On the left, the safety alert. On the right, a news page. Different address, different menu, different footer, a different time stamp.</p>
+    <p>The Regulatory Web and Change Monitor crawls each allowlisted portal, follows links inside the portal only, and then normalises every page. <i>(I wait for the menus and footers to strike out.)</i> Menus, footers and extra whitespace go. What's left is the notice.</p>
+    <p>Then it fingerprints that text with a hash. <i>(I let the news page slide over the alert.)</i> And the two pages line up exactly: it's one document with two addresses. Not a new change, and not a model's opinion. A hash.</p>
+    <p>That's run one on Monday: fifteen pages crawled, five of them index pages, two links not followed because they leave the allowlist, nine new documents, one duplicate, nine change events.</p>
+    <p><b>[click]</b> Now the important part: you run exactly the same command again. Zero new, ten duplicates, zero events. A monitor that runs every hour must not raise the same change twice, and this one doesn't.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 5 REDLINE -->
+<section class="scene redline" data-scene="redline">
+  <p class="kicker k-wipe">Part I · Versions</p>
+  <h2 class="title k-wipe" style="--d:120ms">Tuesday: the payer revises its policy</h2>
+  <p class="subtitle k-rise" style="--d:400ms">New text under the same document ID becomes version 2. Version 1 is kept, and marked superseded.</p>
+
+  <div class="paper doc k-rise" role="img" aria-label="US-CD-2027-015 with tracked changes from version 1 to version 2.">
+    <p class="pub">US health plan · Coverage decision</p>
+    <p class="docid">US-CD-2027-015</p>
+    <p class="vbadge" data-v1="v1" data-v2="v2">v1</p>
+    <p class="dtitle">Coverage policy: preventive migraine medicines</p>
+    <div class="hair"></div>
+    <p class="rp" style="top:128px"><span class="pl" data-v1="v1 p1" data-v2="v2 p1">v1 p1</span>The health plan has reviewed its coverage of medicines that prevent migraine.<span class="ins i1">This revision replaces the version published on 11 January 2027.</span></p>
+    <p class="rp" style="top:198px"><span class="pl" data-v1="v1 p2" data-v2="v2 p2">v1 p2</span>From <span class="del d2">1 March</span><span class="ins i2">1 April</span> 2027, Caldivex tablets move from tier 2 to tier 3 of the formulary. Patients will pay a higher share of the cost.</p>
+    <p class="rp p3" style="top:266px"><span class="pl" data-v1="v1 p3" data-v2="v2 p3">v1 p3</span>Prior authorisation will require documented failure of <span class="del d3">two other preventive treatments</span><span class="ins i3"><span class="hl h3">one other preventive treatment</span></span>.</p>
+    <p class="rp" style="top:336px"><span class="pl" data-v1="v1 p4" data-v2="v2 p4">v1 p4</span>Manufacturers may submit new clinical or economic evidence by <span class="del d4">15 February</span><span class="ins i4">1 March</span> 2027 for the plan to consider.</p>
+  </div>
+
+  <div class="paper vcard v1c k-rise" style="top:170px">
+    <p class="vid">US-CD-2027-015 v1</p>
+    <p class="vd">published 2027-01-11 · effective 2027-03-01</p>
+    <p class="vs cur s1">Current</p>
+  </div>
+  <div class="paper vcard v2c k-rise" style="top:274px">
+    <p class="vid">US-CD-2027-015 v2</p>
+    <p class="vd">published 2027-01-12 · effective 2027-04-01</p>
+    <p class="vs cur">Current</p>
+  </div>
+  <p class="run3 k-fade">Tuesday, run 3: 1 updated, 9 duplicates, 1 change event</p>
+
+  <div class="balloon coral agent k-rise">
+    <p class="bh">What the agent wrote in a test run</p>
+    <p class="said">“Prior authorisation is now stricter.” <span class="chip">[US-CD-2027-015 v2 p3]</span></p>
+    <p class="ver k-rise vr"><b class="ok">Citation right.</b> <b class="no">Reading wrong:</b> one failed treatment instead of two is easier. What got worse is the tier and the date.</p>
+  </div>
+  <p class="moral k-land" style="top:610px">A correct citation is not <span class="c">a correct reading.</span></p>
+  <p class="foot">Source: data/portals/monday and tuesday (US-CD-2027-015), walkthrough/challenge-02/solution-02.md. The agent's wording is paraphrased.</p>
+  <span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[5:20, 2 minutes]</b> I let the Monday version of the payer's policy settle, with its version card saying Current.</p>
+    <p>This is the US health plan's coverage policy as it was on Monday. Caldivex tablets move to a more expensive tier, prior authorisation needs two failed treatments, and manufacturers can send evidence by the fifteenth of February.</p>
+    <p>On Tuesday the payer quietly changes it. No announcement, same address, same document ID. <i>(I let the tracked changes write themselves.)</i> The monitor sees new text under a known ID, and that's version 2: the effective date moves to the first of April, two failed treatments become one, the evidence deadline moves to the first of March. Every paragraph label flips from v1 to v2, and version 1 is kept, marked superseded on the twelfth.</p>
+    <p>That's why citations in this lab say document, version and paragraph. A version never changes after it's written, so a citation stays valid even after the website changes.</p>
+    <p><b>[click]</b> Now a warning that comes straight from our test runs. We asked the agent what changed. It cited v2 paragraph 3, correctly, and said prior authorisation got stricter. It's the opposite: one failed treatment instead of two is easier. What got worse for Caldova is the tier and the date.</p>
+    <p>A correct citation is not a correct reading. Keep that in mind for the rest of the day.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 6 CHAPTER II -->
+<section class="scene chapter" data-scene="chapter" data-noctl>
+  <div class="paper page k-rise">
+    <p class="rh-l k-fade" style="--d:300ms">Part II of III</p>
+    <p class="rh-r k-fade" style="--d:300ms">From notice to action</p>
+    <div class="rh-line k-growx" style="--d:450ms"></div>
+    <h1 class="k-wipe" style="--d:600ms;font-size:76px">Agents <em>read and reason.</em></h1>
+    <div class="cbar k-growy" style="--d:1300ms;height:82px"></div>
+    <p class="quote k-rise" style="--d:1500ms">“Reading, linking, explaining and summarising are agent jobs.”<sup>1</sup></p>
+    <div class="fn-line k-fade" style="--d:2100ms"></div>
+    <p class="fn k-fade" style="--d:2200ms"><b>1</b>Hack README, What each Azure service does here</p>
+  </div>
+  <aside class="notes">
+    <p><b>[7:20, 20 seconds]</b> I let the second page settle.</p>
+    <p>Part two. Once the lake holds clean, versioned documents with stable paragraph labels, the agents can do what they are good at: read, link, explain and summarise.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 7 CITATION -->
+<section class="scene citation" data-scene="citation">
+  <p class="kicker k-wipe">Part II · Document &amp; Citation Agent</p>
+  <h2 class="title k-wipe" style="--d:120ms">Every statement ends in a paragraph</h2>
+  <p class="subtitle k-rise" style="--d:400ms">A Foundry prompt agent with no tools and one knowledge source: Foundry IQ over the regulatory lake.</p>
+
+  <p class="ask k-rise"><b>You</b>Create the citation card for EU-SA-2027-004.</p>
+  <div class="paper ccard k-rise">
+    <p class="ch">CITATION CARD</p>
+    <p class="chr">EU-SA-2027-004 v1 · <span>Current</span></p>
+    <p class="lb k-fade r1" style="top:56px">Source</p>
+    <p class="vl k-fade r1" style="top:52px">EU medicines regulator, safety alert. Also published at …/news/2027-01-11-caldivex.html</p>
+    <p class="lb k-fade r2" style="top:104px">Dates</p>
+    <p class="vl k-fade r2" style="top:100px">Published and effective 2027-01-11</p>
+    <p class="lb k-fade r3" style="top:145px">What it says</p>
+    <p class="st s1" style="top:140px" data-text="Liver injury reported with tablets and pen."></p>
+    <p class="cc k-pop c1" style="top:140px"><span class="chip">[EU-SA-2027-004 v1 p1]</span></p>
+    <p class="st s2" style="top:172px" data-text="Warn in 4.4, list in 4.8, update the leaflet."></p>
+    <p class="cc k-pop c2" style="top:172px"><span class="chip">[EU-SA-2027-004 v1 p2]</span></p>
+    <p class="st s3" style="top:204px" data-text="Submit a variation by 15 March 2027."></p>
+    <p class="cc k-pop c3" style="top:204px"><span class="chip">[EU-SA-2027-004 v1 p3]</span></p>
+    <p class="st s4" style="top:236px" data-text="Agree and send a DHPC by 1 March 2027."></p>
+    <p class="cc k-pop c4" style="top:236px"><span class="chip">[EU-SA-2027-004 v1 p4]</span></p>
+    <p class="st s5" style="top:268px" data-text="Add liver injury to the RMP and next PSUR."></p>
+    <p class="cc k-pop c5" style="top:268px"><span class="chip">[EU-SA-2027-004 v1 p5]</span></p>
+    <p class="lb k-fade r4" style="top:312px">Tags</p>
+    <p class="vl k-fade r4" style="top:308px">labelling, vigilance · CDX-TAB, CDX-PEN</p>
+  </div>
+
+  <div class="paper src k-rise" role="img" aria-label="The source document EU-SA-2027-004 v1 with paragraphs p1 to p5.">
+    <p class="pub">regulatory-knowledge/documents</p>
+    <p class="docid">EU-SA-2027-004-v1.md</p>
+    <p class="dtitle">Caldivex: new warning on liver injury</p>
+    <div class="hair"></div>
+    <p class="pp q1" style="top:88px"><span class="pl">p1</span>The EU medicines regulator has reviewed reports of raised liver enzymes and rare cases of serious liver injury in patients taking Caldivex tablets and the Caldivex injection pen.</p>
+    <p class="pp q2" style="top:152px"><span class="pl">p2</span>Marketing authorisation holders must update the product information. Add a warning to section 4.4 (special warnings), add liver injury to section 4.8 (undesirable effects) and update the package leaflet. Doctors should check liver function before starting treatment and again after 3 months.</p>
+    <p class="pp q3" style="top:249px"><span class="pl">p3</span>The marketing authorisation holder must submit a variation with the updated product information by 15 March 2027.</p>
+    <p class="pp q4" style="top:296px"><span class="pl">p4</span>A Direct Healthcare Professional Communication (DHPC) must be agreed with the regulator and sent to prescribers by 1 March 2027.</p>
+    <p class="pp q5" style="top:360px"><span class="pl">p5</span>Liver injury must be added as an important identified risk in the risk management plan and discussed in the next periodic safety update report (PSUR).</p>
+  </div>
+  <svg class="art" viewBox="0 0 1280 720" aria-hidden="true">
+    <path class="thread k-draw t1" pathLength="1" d="M700 364 C750 364 750 327 800 327"/>
+    <path class="thread k-draw t2" pathLength="1" d="M700 396 C750 396 750 408 800 408"/>
+    <path class="thread k-draw t3" pathLength="1" d="M700 428 C750 428 750 480 800 480"/>
+    <path class="thread k-draw t4" pathLength="1" d="M700 460 C750 460 750 535 800 535"/>
+    <path class="thread k-draw t5" pathLength="1" d="M700 492 C750 492 750 599 800 599"/>
+  </svg>
+
+  <div class="nf">
+    <p class="ask k-rise n1"><b>New chat</b>What does EU-SA-2027-099 say?</p>
+    <p class="ans n2" data-text="Not found in the regulatory lake."></p>
+  </div>
+  <p class="moral k-land" style="top:626px">If it is not in the lake, <span class="t">the agent says so.</span></p>
+  <p class="foot">Source: challenges/challenge-02.md and walkthrough/challenge-02/solution-02.md. Facts and labels as expected there; the answer wording is illustrative.</p>
+  <span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[7:40, 2 minutes]</b> I let the question and the empty card appear, then talk while the answer streams and the beams connect.</p>
+    <p>Your first agent is the Document and Citation Agent. It's a Foundry prompt agent: a model, instructions, and knowledge. No tools at all: you remove web search on purpose. Its only knowledge is Foundry IQ, a knowledge base over the regulatory lake.</p>
+    <p>You ask for the citation card of the EU safety alert, and it answers in sections: the source, both addresses, the dates, and what it says. Watch the end of each statement. Every one finishes with a paragraph label, document, version, paragraph, and each label lands on exactly one paragraph of the source on the right.</p>
+    <p>You'll also see numbered markers in the portal. Those are Foundry IQ's references to the passage it retrieved. The paragraph labels were written into the lake by the monitor, and they're the citations Caldova's records and sign-offs use.</p>
+    <p><b>[click]</b> Then the guard rail. New chat: what does EU-SA-2027-099 say? That document doesn't exist. A good agent says it's not in the regulatory lake, points at the change log it checked, and doesn't make one up.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 8 LETTER -->
+<section class="scene letter-slide" data-scene="letter">
+  <p class="kicker k-wipe">Part II · Obligation &amp; Impact Extractor</p>
+  <h2 class="title k-wipe" style="--d:120ms">The warning letter never says Caldivex</h2>
+  <p class="subtitle k-rise" style="--d:400ms">It applies anyway. The link is in Caldova's own records, and the agent has to search both sides of the lake.</p>
+
+  <div class="paper letter k-rise" style="height:430px" role="img" aria-label="Warning letter US-EL-2027-007 to contract manufacturer CMO-17. A search for Caldivex finds no matches.">
+    <p class="pub">US medicines regulator · Enforcement letter</p>
+    <p class="docid">US-EL-2027-007 v1</p>
+    <p class="dtitle">Warning letter to contract manufacturer CMO-17</p>
+    <div class="find k-rise fb"><p class="fl">Find in document</p><p class="fq">Caldivex</p><p class="fr k-pop fres">0 matches</p></div>
+    <div class="hair"></div>
+    <p class="pp" style="top:156px"><span class="pl">p1</span>The US medicines regulator inspected contract manufacturer <span class="ul u1">CMO-17</span>, a fill-finish site for prefilled injection pens, and found significant deviations from current good manufacturing practice.</p>
+    <p class="pp" style="top:230px"><span class="pl">p2</span>Finding 1: investigations into <span class="ul u2">particles</span> found in prefilled injection pens were not completed and the root cause was not identified.</p>
+    <p class="pp" style="top:280px"><span class="pl">p3</span>Finding 2: cleaning validation of the pen filling line was incomplete.</p>
+    <p class="pp" style="top:334px"><span class="pl">p4</span>CMO-17 must reply <span class="del d4">within 15 working days</span> with a corrective action plan. <span class="ul u4">Companies whose products are filled at CMO-17 should assess the impact on product quality and supply.</span></p>
+    <p class="notours k-fade" style="top:402px;left:56px">15 working days: CMO-17's reply, not Caldova's deadline</p>
+    <div class="scan"></div>
+  </div>
+
+  <div class="paper xcard k-rise x1" style="top:170px"><p class="xf">quality-records.md</p><p class="xid">CMO-17</p><p class="xt">Fills all EU and US CDX-PEN supply. No second approved fill-finish site.</p></div>
+  <div class="paper xcard k-rise x2" style="top:260px"><p class="xf">quality-records.md</p><p class="xid">DEV-2026-114</p><p class="xt">Visible particles found in pen lot P-2611. Investigation not yet closed.</p></div>
+  <div class="paper xcard k-rise x3" style="top:350px"><p class="xf">task-register.md</p><p class="xid">TASK-2026-044</p><p class="xt">Schedule re-audit of CMO-17. Due 2026-12-15, still open.</p><p class="stamp k-drop rsk">At risk</p></div>
+  <div class="paper xcard k-rise x4" style="top:440px"><p class="xf">sops.md</p><p class="xid">SOP-QA-010</p><p class="xt">Assess any regulator finding at a CMO within 14 calendar days.</p></div>
+  <svg class="art" viewBox="0 0 1280 720" aria-hidden="true">
+    <path class="thread k-draw l1" pathLength="1" d="M600 356 C640 356 640 208 680 208"/>
+    <path class="thread k-draw l2" pathLength="1" d="M600 420 C640 420 640 298 680 298"/>
+    <path class="thread coral k-draw l3" pathLength="1" d="M1200 208 H1222 V388 H1200"/>
+    <path class="thread k-draw l4" pathLength="1" d="M600 534 C640 534 640 478 680 478"/>
+  </svg>
+  <div class="paper verdict k-rise" style="position:absolute">
+    <p class="v1">Applies to CDX-PEN, through CMO-17</p>
+    <p class="v2">Impact assessment: Quality Head, due 2027-01-26 (SOP-QA-010: 12 Jan plus 14 days)</p>
+  </div>
+  <p class="moral k-land" style="top:626px">Relevance lives in <span class="t">your own records</span>, not in the notice.</p>
+  <p class="foot">Source: data/portals/monday (US-EL-2027-007), data/internal, data/tracking/tasks.json, walkthrough/challenge-03/solution-03.md.</p>
+  <span class="fragment beat"></span><span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[9:40, 2 minutes 30 seconds]</b> I let the letter appear and wait for the search to come back empty.</p>
+    <p>This is the page I said was the most dangerous on the desk. A warning letter from the US regulator to a contract manufacturer called CMO-17: particles in prefilled pens, incomplete cleaning validation.</p>
+    <p>Search it for Caldivex. Zero matches. A keyword filter, or a tired human, files this as somebody else's problem.</p>
+    <p><b>[click]</b> The Obligation and Impact Extractor is told to search both sides of the lake: the regulatory document and Caldova's internal records. CMO-17 leads to the quality records: CMO-17 fills every Caldivex pen for the EU and the US, and there's no second fill-finish site. The particles lead to an open deviation, DEV-2026-114, particles in pen lot P-2611. And CMO-17 leads to an existing task in the register: the re-audit of CMO-17, due the fifteenth of December, still open. That one is already at risk. Finally, the last sentence of the letter meets Caldova's procedure, SOP-QA-010: assess any regulator finding at a contract manufacturer within fourteen calendar days.</p>
+    <p><b>[click]</b> So the verdict: it applies to the pen, through CMO-17. Quality Head, due the twenty-sixth of January. And notice what the agent must not do: the fifteen working days belong to CMO-17's reply. That's not Caldova's deadline.</p>
+    <p>Relevance lives in your own records, not in the notice. This is the hardest test in the hack, and it's the one you'll measure.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 9 LADDER -->
+<section class="scene ladder" data-scene="ladder">
+  <p class="kicker k-wipe">Part II · Internal due dates</p>
+  <h2 class="title k-wipe" style="--d:120ms">Four rules. The first one that fits wins.</h2>
+  <p class="subtitle k-rise" style="--d:400ms">Caldova's rules from internal/owners.md. The agent applies them and writes the arithmetic next to every date.</p>
+
+  <div class="paper rules k-rise">
+    <p class="rh">internal/owners.md</p>
+    <p class="today k-pop"><span class="chip">Today 2027-01-12</span></p>
+    <div class="rule k-rise g1" style="top:40px"><p class="rn">1</p><p class="rt">A Caldova SOP sets a time limit: today plus that limit.</p><p class="rm"></p></div>
+    <div class="sep" style="top:127px"></div>
+    <div class="rule k-rise g2" style="top:130px"><p class="rn">2</p><p class="rt">The document gives a deadline: 14 days before it.</p><p class="rm"></p></div>
+    <div class="sep" style="top:217px"></div>
+    <div class="rule k-rise g3" style="top:220px"><p class="rn">3</p><p class="rt">It takes effect after today: 30 days before that date.</p><p class="rm"></p></div>
+    <div class="sep" style="top:307px"></div>
+    <div class="rule k-rise g4" style="top:310px"><p class="rn">4</p><p class="rt">None of these: today plus 30 days.</p><p class="rm"></p></div>
+  </div>
+
+  <div class="paper act k-rise a1" style="top:210px"><p class="an">Assess the warning letter's impact</p><p class="as">US-EL-2027-007 · SOP-QA-010: 14 calendar days</p><p class="ar k-rise">Rule 1: 12 Jan plus 14 days</p><p class="ad k-land">2027-01-26</p><p class="ao k-fade">Quality Head</p></div>
+  <div class="paper act k-rise a2" style="top:300px"><p class="an">Submit the EU label variation</p><p class="as">EU-SA-2027-004 v1 p3 · by 15 March 2027</p><p class="ar k-rise">Rule 2: 15 Mar minus 14 days</p><p class="ad k-land">2027-03-01</p><p class="ao k-fade">Regulatory Affairs Lead</p></div>
+  <div class="paper act k-rise a3" style="top:390px"><p class="an">Change SOP-PV-003 to 60 days</p><p class="as">UK-REG-2027-001 · takes effect 1 July 2027</p><p class="ar k-rise">Rule 3: 1 Jul minus 30 days</p><p class="ad k-land">2027-06-01</p><p class="ao k-fade">Pharmacovigilance Lead</p></div>
+  <div class="paper act k-rise a4" style="top:480px"><p class="an">Add liver injury to the RMP and PSUR</p><p class="as">EU-SA-2027-004 v1 p5 · no deadline, already in effect</p><p class="ar k-rise">Rule 4: 12 Jan plus 30 days</p><p class="ad k-land">2027-02-11</p><p class="ao k-fade">Pharmacovigilance Lead</p></div>
+
+  <p class="moral k-land" style="top:604px">Every date shows <span class="t">its rule and its arithmetic</span>, so a person can check it.</p>
+  <p class="foot">Source: data/internal/owners.md, data/internal/sops.md and the expected dates in walkthrough/challenge-03/solution-03.md.</p>
+  <span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[12:10, 2 minutes]</b> I let the four rules and the four actions settle, and read the rules aloud before I click.</p>
+    <p>An obligation is not a plan until it has an owner and a date. Caldova doesn't let the agent invent dates. It has four rules in owners.md, and the first one that fits wins: an SOP time limit, then fourteen days before a deadline, then thirty days before an effective date in the future, and otherwise today plus thirty days. Today, in the lab, is the twelfth of January.</p>
+    <p>On the right, four real actions from this week. <b>[click]</b> The warning letter: SOP-QA-010 gives fourteen days, rule one fits straight away, the twenty-sixth of January. The EU variation: no SOP limit, but the document says by the fifteenth of March, so rule two, the first of March. The UK procedure change: no deadline, but the amendment takes effect on the first of July, so rule three, the first of June. And the risk management plan: no deadline, already in effect, so it falls all the way through to rule four, the eleventh of February.</p>
+    <p>The agent writes the rule and the arithmetic in the answer. That's not decoration: it's what lets the approver check a date in five seconds instead of redoing the work.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 10 RUNSHEET -->
+<section class="scene runsheet" data-scene="runsheet">
+  <p class="kicker k-wipe">Part II · Measure the agent</p>
+  <h2 class="title k-wipe" style="--d:120ms">Same questions, three settings</h2>
+  <p class="subtitle k-rise" style="--d:400ms">impact-agent on EU-SA-2027-004 (3 runs), US-EL-2027-007 (2) and UK-REG-2027-001 (2): runs with every due date right.</p>
+
+  <div class="paper sheet k-rise">
+    <p class="hd" style="left:28px">Setting</p>
+    <p class="hd" style="left:440px">Seven runs</p>
+    <p class="hd" style="left:820px">Every date right</p>
+    <p class="hd" style="left:960px">Tokens per answer</p>
+  </div>
+  <p class="note k-rise">Seven runs prove little. Real evaluation is a fixed set of questions with expected answers, run many times.</p>
+  <p class="moral k-land" style="top:590px">Temperature 0 makes an answer <span class="t">repeatable</span>, not <span class="c">right</span>.</p>
+  <p class="foot">Source: walkthrough/challenge-03/solution-03.md (Model settings). Which runs missed is not recorded: passes are drawn first.</p>
+  <span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[14:10, 1 minute 45 seconds]</b> I let the run sheet fill box by box. The numbers are from the hack's own test runs.</p>
+    <p>One good answer tells you very little about an agent. So we asked the same questions seven times per setting and counted the runs where every due date was right.</p>
+    <p>With reasoning switched off and temperature at zero, three of seven. With the portal's default, low reasoning, six of seven. With medium reasoning, seven of seven, at the cost of about four times the output tokens, and about a minute per answer instead of twenty seconds. That's why the impact agent and the briefing agent run on medium.</p>
+    <p><b>[click]</b> And here's the lesson people find surprising. Temperature zero makes an answer repeatable. It doesn't make it right: a model that doesn't reason gives you the same wrong date every time. What reduced the errors was letting it think, and giving it clear rules and findable records.</p>
+    <p>And seven runs prove very little. In challenge three your team scores repeated runs against a checklist, and you'll discuss how many runs you'd want before trusting it every week.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 11 PROVENANCE -->
+<section class="scene provenance" data-scene="provenance">
+  <p class="kicker k-wipe">Part II · Regulatory Q&amp;A Assistant</p>
+  <h2 class="title k-wipe" style="--d:120ms">Find the sentence nobody wrote</h2>
+  <p class="subtitle k-rise" style="--d:400ms">Drafts stay drafts. Every sentence of a label update has to trace back to the regulator's text.</p>
+
+  <div class="paper draft k-rise">
+    <p class="dh">DRAFT - FOR HUMAN REVIEW</p>
+    <p class="dl">Label update · <span>LBL-EU-TAB</span> section 4.4</p>
+    <p class="cur">Current wording (labels.md): <i>Hypersensitivity; pregnancy</i></p>
+    <p class="pw">Proposed addition</p>
+    <p class="s s1 k-rise" style="top:136px"><span class="sn">S1</span>Liver injury: raised liver enzymes and rare cases of serious liver injury have been reported.</p>
+    <p class="s s2 k-rise" style="top:200px"><span class="sn">S2</span>Check liver function before starting treatment and again after 3 months.</p>
+    <p class="s s3 k-rise" style="top:264px"><span class="sn">S3</span>Patients should be monitored for signs and symptoms of liver injury.</p>
+    <p class="rq">Requires medical and regulatory review</p>
+  </div>
+  <div class="paper src2 k-rise" role="img" aria-label="Source paragraphs p1 and p2 of EU-SA-2027-004 v1.">
+    <p class="pub">Source</p>
+    <p class="docid">EU-SA-2027-004 v1</p>
+    <div class="hair"></div>
+    <p class="pp" style="top:78px"><span class="pl">p1</span>The EU medicines regulator has reviewed reports of <span class="hl teal h1">raised liver enzymes and rare cases of serious liver injury</span> in patients taking Caldivex tablets and the Caldivex injection pen.</p>
+    <p class="pp" style="top:174px"><span class="pl">p2</span>Marketing authorisation holders must update the product information. Add a warning to section 4.4 (special warnings), add liver injury to section 4.8 (undesirable effects) and update the package leaflet. <span class="hl teal h2">Doctors should check liver function before starting treatment and again after 3 months.</span></p>
+  </div>
+  <svg class="art" viewBox="0 0 1280 720" aria-hidden="true">
+    <path class="thread k-draw t1" pathLength="1" d="M620 327 C650 327 650 268 680 268"/>
+    <path class="thread k-draw t2" pathLength="1" d="M620 391 C650 391 650 427 680 427"/>
+  </svg>
+  <div class="scan2"></div>
+  <div class="balloon coral cmt k-rise">
+    <p class="bh">Comment on S3</p>
+    <p class="ct"><b>Not in EU-SA-2027-004 v1 p1 or p2.</b> Plausible, and invented. Remove it, or ask the medical reviewer.</p>
+  </div>
+  <p class="moral k-land" style="top:604px">Plausible additions are <span class="c">the hardest errors to spot.</span></p>
+  <p class="foot">Source: challenges/challenge-04.md, walkthrough/challenge-04/solution-04.md. S3 is quoted from the hack's test run; S1 and S2 are illustrative.</p>
+  <span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[15:55, 1 minute 45 seconds]</b> I let the draft and its source settle side by side, and give the room a few seconds to read the three sentences.</p>
+    <p>The third agent is the Regulatory Q and A Assistant. Staff ask it questions, and it drafts the paperwork: emails, change requests, notices, label updates. Every draft is marked for human review, and it never claims anything was sent.</p>
+    <p>Here's a label update for section 4.4 of the EU tablets label. It reads well. Which sentence would you remove? <i>(I wait a moment.)</i></p>
+    <p><b>[click]</b> Let's check each sentence against the source. The first one traces to paragraph 1. The second traces to paragraph 2, almost word for word. The third looks for its source and finds nothing. The regulator never said patients should be monitored for signs and symptoms of liver injury. Our test run added exactly this sentence.</p>
+    <p>It's plausible, it's medically reasonable, and it's invented. Plausible additions are the hardest errors to spot, and that's why every draft goes to a medical and regulatory reviewer.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 12 CHAPTER III -->
+<section class="scene chapter" data-scene="chapter" data-noctl>
+  <div class="paper page k-rise">
+    <p class="rh-l k-fade" style="--d:300ms">Part III of III</p>
+    <p class="rh-r k-fade" style="--d:300ms">From notice to action</p>
+    <div class="rh-line k-growx" style="--d:450ms"></div>
+    <h1 class="k-wipe" style="--d:600ms">People <em>decide.</em></h1>
+    <div class="cbar k-growy" style="--d:1300ms;height:122px"></div>
+    <p class="quote k-rise" style="--d:1500ms">“The agent proposes. A person decides. Ordinary code records the decision, so that nobody, and no agent, can quietly change it afterwards.”<sup>1</sup></p>
+    <div class="fn-line k-fade" style="--d:2100ms"></div>
+    <p class="fn k-fade" style="--d:2200ms"><b>1</b>Challenge 5, Context</p>
+  </div>
+  <aside class="notes">
+    <p><b>[17:40, 20 seconds]</b> I let the last page settle.</p>
+    <p>Part three. The agent proposes, a person decides, and ordinary code records the decision. Let's see all three at once, on one alert.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 13 RIPPLE (wow) -->
+<section class="scene ripple" data-scene="ripple">
+  <p class="kicker k-wipe">Part III · From notice to action</p>
+  <h2 class="title k-wipe" style="--d:120ms">One alert, exactly the right records</h2>
+  <p class="subtitle k-rise" style="--d:400ms">EU-SA-2027-004 v1 against seven of Caldova's records. Which of them does it change?</p>
+
+  <div class="paper alert k-rise" role="img" aria-label="The EU safety alert EU-SA-2027-004 v1 with paragraphs p1 to p5.">
+    <p class="pub">EU medicines regulator · Safety alert</p>
+    <p class="docid">EU-SA-2027-004 v1</p>
+    <p class="dtitle">Caldivex: new warning on liver injury</p>
+    <div class="hair"></div>
+    <p class="pp e1" style="top:96px"><span class="pl">p1</span>The EU medicines regulator has reviewed reports of raised liver enzymes and rare cases of serious liver injury in patients taking Caldivex tablets and the Caldivex injection pen.</p>
+    <p class="pp e2" style="top:164px"><span class="pl">p2</span>Marketing authorisation holders must update the product information. Add a warning to section 4.4 (special warnings), add liver injury to section 4.8 (undesirable effects) and update the package leaflet. Doctors should check liver function before starting treatment and again after 3 months.</p>
+    <p class="pp e3" style="top:268px"><span class="pl">p3</span>The marketing authorisation holder must submit a variation with the updated product information by 15 March 2027.</p>
+    <p class="pp e4" style="top:318px"><span class="pl">p4</span>A Direct Healthcare Professional Communication (DHPC) must be agreed with the regulator and sent to prescribers by 1 March 2027.</p>
+    <p class="pp e5" style="top:386px"><span class="pl">p5</span>Liver injury must be added as an important identified risk in the risk management plan and discussed in the next periodic safety update report (PSUR).</p>
+  </div>
+
+  <div class="rec k-rise r1" style="top:160px"><p class="rid">LBL-EU-TAB v7</p><p class="rsub">EU label · CDX-TAB</p><p class="rtx"><span class="lead">4.4</span>Hypersensitivity; pregnancy<span class="ins n1">; liver injury warning</span></p><p class="rdue k-rise d1">2027-03-01</p><p class="rown k-fade o1">Labelling Lead</p></div>
+  <div class="rec k-rise r2" style="top:218px"><p class="rid">LBL-EU-PEN v4</p><p class="rsub">EU label · CDX-PEN</p><p class="rtx"><span class="lead">4.4</span>Hypersensitivity; injection-site reactions<span class="ins n2">; liver injury warning</span></p><p class="rdue k-rise d2">2027-03-01</p><p class="rown k-fade o2">Labelling Lead</p></div>
+  <div class="rec k-rise r3" style="top:276px"><p class="rid">SOP-PV-005</p><p class="rsub">sops.md · DHPCs</p><p class="rtx">The regulator approves the DHPC text; Medical Affairs sends it.</p><p class="rdue k-rise d3">2027-02-15</p><p class="rown k-fade o3">Pharmacovigilance Lead</p></div>
+  <div class="rec k-rise r4" style="top:334px"><p class="rid">SUB-2027-003</p><p class="rsub">submissions.md · EU RMP</p><p class="rtx">RMP update, no date set<span class="ins n4">; liver injury risk</span></p><p class="rdue k-rise d4">2027-02-11</p><p class="rown k-fade o4">Pharmacovigilance Lead</p></div>
+  <div class="rec k-rise r5" style="top:392px"><p class="rid">LBL-UK-TAB v5</p><p class="rsub">UK label · CDX-TAB</p><p class="rtx"><span class="lead">4.4</span>Hypersensitivity; pregnancy</p><p class="rno k-fade m5">Not required by<br>this EU alert</p></div>
+  <div class="rec k-rise r6" style="top:450px"><p class="rid">LBL-US-TAB v4</p><p class="rsub">US label · CDX-TAB</p><p class="rtx"><span class="lead">4.4</span>Hypersensitivity</p><p class="rno k-fade m6">Not required by<br>this EU alert</p></div>
+  <div class="rec k-rise r7" style="top:508px"><p class="rid">LBL-US-PEN v3</p><p class="rsub">US label · CDX-PEN</p><p class="rtx"><span class="lead">4.4</span>Hypersensitivity; injection-site reactions</p><p class="rno k-fade m7">Not required by<br>this EU alert</p></div>
+
+  <svg class="art" viewBox="0 0 1280 720" aria-hidden="true">
+    <path class="bracket k-draw bk" pathLength="1" d="M698 166 H690 V262 H698"/>
+    <path class="thread coral k-draw w2" pathLength="1" d="M504 369 C600 369 600 207 690 207"/>
+    <path class="thread coral k-draw w3" pathLength="1" d="M504 446 C612 446 612 221 690 221"/>
+    <path class="thread coral k-draw w4" pathLength="1" d="M504 505 C604 505 604 302 700 302"/>
+    <path class="thread coral k-draw w5" pathLength="1" d="M504 573 C604 573 604 360 700 360"/>
+    <circle class="knot coral k-pop k2" cx="504" cy="369" r="4"/>
+    <circle class="knot coral k-pop k3" cx="504" cy="446" r="4"/>
+    <circle class="knot coral k-pop k4" cx="504" cy="505" r="4"/>
+    <circle class="knot coral k-pop k5" cx="504" cy="573" r="4"/>
+    <rect class="burst bs" x="700" y="566" width="516" height="56" rx="3" style="color:var(--teal)"/>
+  </svg>
+
+  <div class="paper sign k-rise">
+    <p class="sg k-wipe">APPROVE Alex Example</p>
+    <p class="sr k-fade">Regulatory Affairs Lead</p>
+    <p class="tk k-pop">TASK-2027-001 · 002 · 003</p>
+    <p class="sha k-fade">audit-log.jsonl, SHA-256 of the JSON</p>
+  </div>
+  <p class="moral k-land" style="top:630px">Every consequence has <span class="t">an owner, a date and a paragraph.</span></p>
+  <p class="foot">Source: data/internal, walkthrough/challenge-03/solution-03.md and challenge-05/solution-05.md (expected plan and sign-off; the approver's name is the example there).</p>
+  <span class="fragment beat"></span><span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[18:00, 2 minutes 30 seconds]</b> I let the alert and the seven records settle and ask the question on the slide out loud. I wait before I click.</p>
+    <p>This is the moment the whole day builds towards. On the left, the EU safety alert we started with. On the right, seven of Caldova's records: four labels, a procedure, a planned submission. Which of these does this alert change? Look for a moment. Is it all the labels?</p>
+    <p>Let's follow the paragraphs. <b>[click]</b> Paragraph 2 says: a warning in section 4.4. That reaches both EU labels, the tablets and the pen, and each gets the change it needs. Paragraph 3 gives the date: variation by the fifteenth of March, so rule two, the first of March, owned by the Labelling Lead. Paragraph 4, the DHPC, reaches the procedure SOP-PV-005: the fifteenth of February. Paragraph 5, the risk management plan, reaches the planned submission SUB-2027-003, which had no date. Now it has one: rule four, the eleventh of February.</p>
+    <p>And the three that stay quiet matter just as much. The UK label is handled by the UK alert, not this one. The US labels are not required by an EU alert. Updating everything together is a question for an expert, not a reflex.</p>
+    <p><b>[click]</b> Then a person decides. The Regulatory Affairs Lead types APPROVE with their own name. The sign-off tool checks the record, creates three tasks with IDs, owners and due dates, and writes the decision to the audit trail with a SHA-256 of exactly the JSON that was approved.</p>
+    <p>Every consequence has an owner, a date and a paragraph. That's what from notice to action means.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 14 REFUSALS -->
+<section class="scene refusals" data-scene="refusals">
+  <p class="kicker k-wipe">Part III · Human sign-off</p>
+  <h2 class="title k-wipe" style="--d:120ms">The record refuses what it cannot trust</h2>
+  <p class="subtitle k-rise" style="--d:400ms">The sign-off tool checks every field before it creates a task. These rules live in code, not in a prompt.</p>
+
+  <div class="paper json k-rise" style="height:430px">
+    <p class="jh">signoff.json, written by briefing-agent</p>
+<pre class="k-fade" style="--d:300ms">{
+  <span class="k">"change"</span>: <span class="del x1">"EU-SA-2027-004 v1"</span><span class="ins y1">"US-CD-2027-015 v1"</span>,
+  <span class="k">"decision"</span>: "approved",
+  <span class="k">"approver_role"</span>: "Regulatory Affairs Lead",
+  <span class="k">"approved_by"</span>: <span class="del x2">"Alex Example"</span><span class="ins y2">"briefing-agent"</span>,
+  <span class="k">"note"</span>: "Approved with DHPC brought forward",
+  <span class="k">"tasks"</span>: [{
+    <span class="k">"title"</span>: "Agree DHPC with the regulator and send to prescribers",
+    <span class="k">"domain"</span>: <span class="del x3">"vigilance"</span><span class="ins y3">"regulatory submissions"</span>,
+    <span class="k">"region"</span>: "EU",
+    <span class="k">"owner_role"</span>: "Pharmacovigilance Lead",
+    <span class="k">"due"</span>: "2027-02-15",
+    <span class="k">"citation"</span>: <span class="del x4">"EU-SA-2027-004 v1 p4"</span><span class="ins y4">"EU-SA-2027-004 v1 p9"</span>
+  }]
+}</pre>
+    <p class="cmd k-fade" style="--d:600ms">$ python3 -m regintel signoff signoff.json</p>
+    <p class="again k-fade">The same command, a second time</p>
+  </div>
+
+  <div class="slip k-rise s1" style="top:170px"><p class="tried">Tried: <code>change</code> US-CD-2027-015 v1</p><p class="err">US-CD-2027-015 v1 was superseded on 2027-01-12. Re-assess the current version before sign-off.</p><p class="stamp">Refused</p></div>
+  <div class="slip k-rise s2" style="top:248px"><p class="tried">Tried: <code>approved_by</code> briefing-agent</p><p class="err">'approved_by' must be the person who made the decision, not an agent.</p><p class="stamp">Refused</p></div>
+  <div class="slip k-rise s3" style="top:326px"><p class="tried">Tried: <code>domain</code> regulatory submissions</p><p class="err">Task 'Agree DHPC with the regulator and send to prescribers': unknown domain 'regulatory submissions'.</p><p class="stamp">Refused</p></div>
+  <div class="slip k-rise s4" style="top:404px"><p class="tried">Tried: <code>citation</code> EU-SA-2027-004 v1 p9</p><p class="err">…citation 'EU-SA-2027-004 v1 p9' is not a paragraph in the lake (format: EU-SA-2027-004 v1 p3).</p><p class="stamp">Refused</p></div>
+  <div class="slip k-rise s5" style="top:482px"><p class="tried">Tried: the same sign-off twice</p><p class="err">EU-SA-2027-004 v1 already has a recorded decision. Update task status with 'regintel task' instead.</p><p class="stamp">Refused</p></div>
+
+  <p class="moral k-land" style="top:616px">Instructions guide a model. <span class="t">Code enforces the rule, every time.</span></p>
+  <p class="foot">Source: regintel/lake.py (error messages), walkthrough/challenge-05/solution-05.md (expected refusals), tests/test_signoff.py.</p>
+  <span class="fragment beat"></span><span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[20:30, 1 minute 45 seconds]</b> I let the sign-off record settle: this is the JSON the briefing agent prepares after APPROVE.</p>
+    <p>The briefing agent writes the sign-off record, but it doesn't record anything. Nothing exists until a person runs the sign-off command, and that command doesn't trust anyone, including the agent.</p>
+    <p><b>[click]</b> Let's tamper with it. Point it at the payer policy's version 1: refused, it was superseded on the twelfth. Put the agent's name as the approver: refused, a decision needs a person. Use a domain that isn't one of Caldova's five, which our agent really did in a test run: refused, unknown domain.</p>
+    <p><b>[click]</b> Cite paragraph 9 of a five-paragraph alert: refused, it's not a paragraph in the lake. And run the same sign-off twice: refused, there is already a recorded decision.</p>
+    <p>Why in code and not in the agent's instructions? Instructions guide a model, and a model can ignore or misread them. Code enforces the rule every time, and an auditor can read it and test it. The hack ships those tests.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 15 CONTENTS (sign-off) -->
+<section class="scene contents" data-scene="contents" data-noctl>
+  <div class="paper page k-rise">
+    <p class="motto"><span class="k-wipe m1">Code is <span class="t">exact</span>. Agents <span class="t">read and reason</span>.</span><br><span class="k-wipe m2">People <span class="t">decide</span>.</span></p>
+    <p class="toc-h k-fade">Your day</p>
+    <div class="toc" style="top:206px"><p class="n k-fade">1</p><p class="tt k-rise">Monitor the portals and build the regulatory lake</p><div class="dots k-growx"></div><p class="dur k-fade">60 min</p></div>
+    <div class="toc" style="top:242px"><p class="n k-fade">2</p><p class="tt k-rise">Document &amp; Citation Agent</p><div class="dots k-growx"></div><p class="dur k-fade">45 min</p></div>
+    <div class="toc" style="top:278px"><p class="n k-fade">3</p><p class="tt k-rise">Obligation &amp; Impact Extractor</p><div class="dots k-growx"></div><p class="dur k-fade">75 min</p></div>
+    <div class="toc" style="top:314px"><p class="n k-fade">4</p><p class="tt k-rise">Regulatory Q&amp;A Assistant</p><div class="dots k-growx"></div><p class="dur k-fade">45 min</p></div>
+    <div class="toc" style="top:350px"><p class="n k-fade">5</p><p class="tt k-rise">Executive Briefing and human sign-off</p><div class="dots k-growx"></div><p class="dur k-fade">60 min</p></div>
+    <div class="toc" style="top:386px"><p class="n k-fade">6</p><p class="tt k-rise">Event-driven assistant with Microsoft Agent Framework <i>(stretch)</i></p><div class="dots k-growx"></div><p class="dur k-fade">30 or 50 min</p></div>
+    <div class="toc" style="top:422px"><p class="n k-fade">F</p><p class="tt k-rise">Finish: measure the impact and clean up</p><div class="dots k-growx"></div><p class="dur k-fade">20 min</p></div>
+    <p class="sigtxt k-wipe">Your turn.</p>
+    <div class="sigline k-growx"></div>
+    <p class="who k-rise">Digvijay Chauhan, Solution Engineer, Microsoft</p>
+    <p class="path k-rise">03-Azure/01-04-AI/11_Healthcare_Regulatory_Intelligence</p>
+    <p class="stamp teal seal k-drop">Pending human sign-off</p>
+  </div>
+  <aside class="notes">
+    <p><b>[22:15, 1 minute 15 seconds]</b> I let the page write itself: the principle, the contents of the day, the signature line.</p>
+    <p>So that's the split you'll build today. Code is exact: crawling, de-duplication, versions and the record of a decision. Agents read and reason: citations, impact, answers and briefings. People decide.</p>
+    <p>Six challenges, all in the browser: the Foundry portal and Cloud Shell, no code to write. If you finish early, challenge six runs the three agents automatically for every change event with the Microsoft Agent Framework, and leaves each briefing in the lake with the status you see in the corner: pending human sign-off.</p>
+    <p>And at the end, you'll estimate what this would save Caldova, honestly, against the evidence your agents produced. Thank you. Let's go and follow some paragraphs.</p>
+  </aside>
+</section>
+
+</div></div>
+<script src="vendor/reveal.js-6.0.2/reveal.js"></script>
+<script src="vendor/reveal.js-6.0.2/plugin/notes.js"></script>
+<script src="js/data.js"></script>
+<script src="js/scenes.js"></script>
+<script src="js/beat-engine.js"></script>
+<script>startDeck();</script>
+</body>
+</html>

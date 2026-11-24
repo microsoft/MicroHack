@@ -589,7 +589,7 @@ kubectl port-forward service/dashboard \
   --namespace radius-system 7007:80
 ```
 
-Open <http://localhost:7007>, navigate to the environment, and inspect **Recipes**.
+Open <http://localhost:7007>, navigate to the environment, and inspect **Recipes** (select the environment in the UI - default does not have recipies).
 
 
 ## Optional automation

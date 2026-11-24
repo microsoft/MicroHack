@@ -299,7 +299,7 @@ az ad app federated-credential create \
 
 Grant the Radius identity Owner on the isolated Hosted Lab resource group only, because
 recipes create role assignments. Allow identity/federation/RBAC propagation before
-testing Radius; a newly created principal can take time to become avaiHosted Lable.
+testing Radius; a newly created principal can take time to become available.
 
 ```bash
 az role assignment create \

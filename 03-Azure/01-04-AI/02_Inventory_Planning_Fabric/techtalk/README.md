@@ -18,6 +18,10 @@ questions and a look at your own Data Agent in the Fabric portal.
 
 ## Present the talk
 
+> **To see the animations:** On Windows 11, turn on **Animation effects** in
+> **Settings > Accessibility > Visual effects**, then reload the deck. If reduced motion is enabled
+> in your operating system, each step appears immediately instead of animating.
+
 1. Get the talk, then open `deck/index.html` in Edge or Chrome. Everything is in the folder:
    no server, no install, no internet needed. To download only this hack:
    ```bash
@@ -35,8 +39,6 @@ questions and a look at your own Data Agent in the Fabric portal.
 5. Slide 12, **The guess and the count**, is the moment of the talk. The purchase order first prints with
    the $20 fallback cost; ask the room "Does this look right?" and wait before you click. The first click
    looks the costs up in the Lakehouse, the second plays the planner's MODIFY and YES and refills the shelf.
-
-With reduced motion turned on in the operating system, every step appears at once.
 
 **PDF of the slides:** open `deck/index.html?print-pdf` in Edge or Chrome and print to PDF
 (landscape, no margins, background graphics on). Every slide prints in its final state.

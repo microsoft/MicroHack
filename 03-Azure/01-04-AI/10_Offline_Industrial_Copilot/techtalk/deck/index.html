@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pull the cable: the Offline Industrial Copilot</title>
+  <meta name="author" content="Digvijay Chauhan">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2306090E'/%3E%3Cpath d='M16 6 26 11 16 16 6 11Z' fill='%23FFB547'/%3E%3Cpath d='M6 11v9l10 6V16Z' fill='%23A9701F'/%3E%3Cpath d='M26 11v9l-10 6V16Z' fill='%23D08A2A'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="vendor/reveal.js-6.0.2/reset.css">
+  <link rel="stylesheet" href="vendor/reveal.js-6.0.2/reveal.css">
+  <link rel="stylesheet" href="css/theme.css">
+</head>
+<body>
+<!-- Shared gradients and filters. Kept in the document (not display:none) so every slide can use them. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="g-box-top" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2A2F38"/><stop offset="1" stop-color="#151A22"/></linearGradient>
+    <linearGradient id="g-box-left" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#141921"/><stop offset="1" stop-color="#0A0D12"/></linearGradient>
+    <linearGradient id="g-box-right" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1C222C"/><stop offset="1" stop-color="#0E1219"/></linearGradient>
+    <linearGradient id="g-chip" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFD58A"/><stop offset="1" stop-color="#FF8A3D"/></linearGradient>
+    <radialGradient id="g-halo"><stop offset="0" stop-color="#FFB547" stop-opacity="0.34"/><stop offset="1" stop-color="#FFB547" stop-opacity="0"/></radialGradient>
+    <radialGradient id="g-halo-green"><stop offset="0" stop-color="#3EE08F" stop-opacity="0.34"/><stop offset="1" stop-color="#3EE08F" stop-opacity="0"/></radialGradient>
+    <radialGradient id="g-floor"><stop offset="0" stop-color="#000" stop-opacity="0.75"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+    <radialGradient id="g-core" cx="0.4" cy="0.35"><stop offset="0" stop-color="#3A2A10"/><stop offset="1" stop-color="#120E07"/></radialGradient>
+    <linearGradient id="g-sheen" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="0.5" stop-color="#FFE3B0" stop-opacity="0.55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    <linearGradient id="g-cord" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="var(--accent)"/><stop offset="0.7" stop-color="#ffffff" stop-opacity="0.45"/><stop offset="1" stop-color="var(--accent)"/></linearGradient>
+    <linearGradient id="g-link" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3CD3F2"/><stop offset="1" stop-color="#FFB547"/></linearGradient>
+    <filter id="f-glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+</svg>
+
+<div class="reveal"><div class="slides">
+
+<!-- ===================================================================== 1 COVER -->
+<section id="cover" class="scene cover" data-scene="cover" data-noctl>
+  <div class="cv-copy">
+    <p class="cv-event k-wipe">MicroHack · Foundry Local</p>
+    <h1 class="k-wipe" style="--d:150ms">Pull the<br><span class="cv-hot">cable.</span></h1>
+    <p class="cv-sub k-rise" style="--d:600ms">An AI copilot that keeps working on the factory floor when the network does not.</p>
+  </div>
+  <svg class="cv-art" viewBox="0 0 1280 720" aria-hidden="true"><g class="edge"></g></svg>
+  <div class="cv-foot k-rise" style="--d:900ms">
+    <div><p class="cv-name">Digvijay Chauhan</p><p class="cv-role">Solution Engineer, Microsoft</p></div>
+    <div class="cv-meta"><p class="l">Tech talk</p><p class="v">Offline Industrial Copilot</p></div>
+  </div>
+  <aside class="notes">
+    <p><b>[0:00, 1 minute]</b> I let the cover build and settle before I start.</p>
+    <p>Good morning, and welcome. I'm Digvijay Chauhan, I'm a Solution Engineer at Microsoft, and today we are going to build something a bit unusual: an AI copilot that is designed to lose its internet connection.</p>
+    <p>The little box on the right is the hero of the day. It's a laptop or a small industrial PC that sits next to the machines. Those blue pulses on the cable are the internet. By the end of the day, you will pull that cable out, and your copilot will keep answering.</p>
+    <p>Before you start, I want to give you twenty minutes of why, and show you what we measured when we ran this hack end to end.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 2 CHAPTER 1 -->
+<section class="scene chapter c1" data-scene="chapter" data-noctl>
+  <p class="num" aria-hidden="true">01</p>
+  <div class="ch-copy">
+    <p class="ch-label k-wipe">Part 1</p>
+    <h1 class="k-wipe" style="--d:150ms">The night shift</h1>
+    <p class="ch-sub k-rise" style="--d:500ms">Where the copilot has to work.</p>
+  </div>
+  <svg class="cord k-fade" style="--d:700ms" viewBox="0 0 420 24" aria-hidden="true">
+    <rect class="cord-line" x="0" y="11" width="392" height="2" rx="1"/><rect class="cord-plug" x="392" y="6" width="20" height="12" rx="2"/><circle class="cord-pulse" cx="10" cy="12" r="4"/>
+  </svg>
+  <aside class="notes">
+    <p><b>[1:00, 20 seconds]</b> Let me start where this copilot has to live.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 3 02:14 -->
+<section class="scene q214" data-scene="q214">
+  <p class="kicker k-wipe">Part 1 / The night shift</p>
+  <h2 class="title k-wipe" style="--d:120ms">A question at 02:14</h2>
+  <p class="subtitle k-rise" style="--d:400ms">Hall 3. One technician. The machine has stopped itself.</p>
+
+  <svg class="path" viewBox="0 0 1280 720" aria-label="The question travels from the hall to a cloud model. The internet link drops. Then it goes to a device next to the machine and comes back with an answer.">
+    <g class="cloudside">
+      <path class="link k-draw" pathLength="1" d="M592 330 H670"/>
+      <path class="link k-draw" pathLength="1" d="M730 330 H810" style="--d:150ms"/>
+      <path class="link k-draw" pathLength="1" d="M870 330 H950" style="--d:300ms"/>
+      <path class="link k-draw link-last" pathLength="1" d="M1010 330 H1110" style="--d:450ms"/>
+      <g class="hops">
+        <g class="k-pop"><circle class="hop" cx="700" cy="330" r="30"/><path class="hop-icon" d="M688 336h24M692 328h16M696 320h8"/></g>
+        <g class="k-pop" style="--d:150ms"><circle class="hop" cx="840" cy="330" r="30"/><path class="hop-icon" d="M826 320h28v20h-28zM826 330h28M840 320v10M833 330v10M847 330v10"/></g>
+        <g class="k-pop" style="--d:300ms"><circle class="hop" cx="980" cy="330" r="30"/><circle class="hop-icon" cx="980" cy="330" r="13"/><path class="hop-icon" d="M967 330h26M980 317c-6 7-6 19 0 26M980 317c6 7 6 19 0 26"/></g>
+        <g class="k-pop" style="--d:450ms"><circle class="hop cloud" cx="1140" cy="330" r="30"/><path class="hop-icon" style="stroke:var(--cyan)" d="M1128 340a8 8 0 0 1 0-16 11 11 0 0 1 21 2 7 7 0 0 1 0 14Z"/></g>
+        <text class="hop-label k-fade" x="700" y="384" style="--d:200ms">Plant network</text>
+        <text class="hop-label k-fade" x="840" y="384" style="--d:350ms">Firewall</text>
+        <text class="hop-label k-fade" x="980" y="384" style="--d:500ms">Internet</text>
+        <text class="hop-label b k-fade" x="1140" y="384" style="--d:650ms">Cloud model</text>
+      </g>
+      <path class="link dead k-fade dead-link" d="M1010 330 H1110"/>
+      <text class="fail-tag k-pop" x="1060" y="300">LINK DOWN</text>
+    </g>
+    <g class="devside">
+      <path class="link dev k-draw" pathLength="1" d="M592 470 C640 470 650 520 690 520"/>
+      <g class="k-bloom dev-hop"><circle class="hop dev" cx="720" cy="520" r="30"/><path class="hop-icon" style="stroke:var(--amber)" d="M708 514l12-6 12 6-12 6zM708 514v9l12 6v-9M732 514v9l-12 6"/></g>
+      <circle class="ring" cx="720" cy="520" r="30" style="color:var(--amber)"/>
+      <text class="hop-label b k-fade dev-label" x="800" y="514" style="text-anchor:start">On the device, next to the machine</text>
+      <text class="hop-label k-fade dev-label" x="800" y="534" style="text-anchor:start">Foundry Local · phi-4-mini</text>
+    </g>
+  </svg>
+  <div class="travel t-cloud" style="offset-path:path('M592 330 H1030');--dur:1800ms"></div>
+  <div class="travel t-dev" style="offset-path:path('M592 470 C640 470 650 520 690 520');--dur:1800ms"></div>
+
+  <div class="panel tablet k-rise" style="height:450px">
+    <div class="hdr"><span>Technician · Hall 3</span><span>02:14</span></div>
+    <div class="status k-rise">CNC-07 · FAULT · vibration 9.4 mm/s · E-SPN-214</div>
+    <div class="bubble q k-rise"><span class="who">Technician</span><span class="stream" data-text="At what vibration level must a CNC spindle be stopped?"></span></div>
+    <div class="bubble wait k-rise"><span class="waitdots"><span>●</span><span>●</span><span>●</span></span></div>
+    <div class="bubble a k-rise"><span class="who">Copilot · offline</span><span class="stream" data-text="The CNC spindle must be stopped if the vibration level reaches 7.1 mm/s RMS or higher. Create a high-priority ticket and do not restart the machine until the cause is fixed."></span><span class="src k-fade">Source: SOP-CNC-001 rev C / Vibration limits · 14.4 s</span></div>
+  </div>
+  <p class="moral k-land">The answer has to live <span class="amber">next to the machine.</span></p>
+  <p class="foot">The cloud path is illustrative. The answer is a recorded offline run: phi-4-mini on a laptop GPU, Foundry Local 0.14.</p>
+  <span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[1:20, 2 minutes]</b> I let the tablet and the question appear, then talk over the path to the cloud as it builds.</p>
+    <p>Picture hall 3, at 02:14. There's one technician on the night shift, and a CNC milling machine has just stopped itself. The controller says error E-SPN-214, spindle vibration 9.4 millimetres per second.</p>
+    <p>So the technician asks the obvious question: at what vibration level must this spindle be stopped? Normally that question goes from the tablet, through the plant network, through the firewall, out to the internet and up to a big model in the cloud.</p>
+    <p>And on a factory floor, that last link is the weak one. Plants have firewalls that say no, connections that drop, sites in the middle of nowhere, and sometimes a rule that production data does not leave the building. <i>(I pause while the link flickers and goes down.)</i> When that happens, the technician is left looking at three dots.</p>
+    <p><b>[click]</b> So we move the model. The question goes a few metres, to a device next to the machine, and comes back with an answer from the plant's own procedure, with the source. That is a real answer, recorded with the network blocked. It took 14 seconds on a laptop. Not instant, but it's there at 02:14, and it cites SOP-CNC-001.</p>
+    <p>That's the whole idea of today: the answer has to live next to the machine.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 4 ARCHITECTURE -->
+<section class="scene arch" data-scene="arch">
+  <p class="kicker k-wipe">Part 1 / The night shift</p>
+  <h2 class="title k-wipe" style="--d:120ms">Everything runs on the device</h2>
+  <p class="subtitle k-rise" style="--d:400ms">One small model, four local tools, one endpoint on 127.0.0.1.</p>
+  <svg class="art" viewBox="0 0 1280 720" aria-label="Architecture: on the device, Foundry Local serves a small model, the agent, which calls four tools: machine status, maintenance tickets, SOP search and a fault classifier. The classifier was trained in Azure Machine Learning and exported once.">
+    <rect class="bound k-draw" pathLength="1" x="230" y="175" width="700" height="465" rx="22"/>
+    <text class="bound-label k-fade" x="254" y="204">Laptop or VM · no internet needed</text>
+
+    <path class="fn-line k-draw f0" pathLength="1" d="M580 392 L380 255"/>
+    <path class="fn-line k-draw f1" pathLength="1" d="M580 392 L780 255"/>
+    <path class="fn-line k-draw f2" pathLength="1" d="M580 392 L380 507"/>
+    <path class="fn-line k-draw f3" pathLength="1" d="M580 392 L780 507"/>
+    <path class="fn-flow" pathLength="1" d="M580 392 L380 255" style="--d:0s"/>
+    <path class="fn-flow" pathLength="1" d="M580 392 L780 255" style="--d:0.7s"/>
+    <path class="fn-flow" pathLength="1" d="M580 392 L380 507" style="--d:1.4s"/>
+    <path class="fn-flow" pathLength="1" d="M580 392 L780 507" style="--d:2.1s"/>
+
+    <g class="k-growx flbar"><rect class="fl-bar" x="270" y="572" width="620" height="50" rx="12"/>
+      <text class="fl-text" x="580" y="593">Foundry Local</text><text class="fl-sub" x="580" y="612">OpenAI-compatible endpoint · 127.0.0.1 · GPU, NPU or CPU</text></g>
+
+    <circle class="core-halo k-fade core" cx="580" cy="392" r="160"/>
+    <g class="k-bloom core"><circle class="core-disc" cx="580" cy="392" r="64"/><text class="core-t" x="580" y="390">Agent</text><text class="core-s" x="580" y="412">phi-4-mini</text></g>
+    <circle class="ring core-ring" cx="580" cy="392" r="64" style="color:var(--amber)"/>
+
+    <g class="tool k-pop t0"><rect class="tb" x="270" y="222" width="220" height="66" rx="12"/>
+      <path class="ti" d="M290 262v-12M298 262v-18M306 262v-8M314 262v-14"/><text class="tn" x="330" y="251">Machine status</text><text class="ts" x="330" y="271">local JSON</text></g>
+    <g class="tool k-pop t1"><rect class="tb" x="670" y="222" width="220" height="66" rx="12"/>
+      <path class="ti" d="M690 244h22v24h-22zM695 252h12M695 259h8"/><text class="tn" x="728" y="251">Maintenance tickets</text><text class="ts" x="728" y="271">local file</text></g>
+    <g class="badge-approve k-rise t1b"><rect x="734" y="298" width="156" height="24" rx="12"/><text x="812" y="314" text-anchor="middle">A PERSON APPROVES</text></g>
+    <g class="tool k-pop t2"><rect class="tb" x="270" y="474" width="220" height="66" rx="12"/>
+      <path class="ti" d="M290 494h16l6 6v18h-22zM295 506h12M295 512h9"/><text class="tn" x="330" y="503">SOP search</text><text class="ts" x="330" y="523">local embeddings</text></g>
+    <g class="tool k-pop t3"><rect class="tb" x="670" y="474" width="220" height="66" rx="12"/>
+      <path class="ti" d="M690 520l8-14 7 9 7-17 8 22"/><text class="tn" x="732" y="503">Fault classifier</text><text class="ts" x="732" y="523">ONNX model</text></g>
+    <circle class="ring r0" cx="380" cy="255" r="40" style="color:var(--amber)"/>
+    <circle class="ring r1" cx="780" cy="255" r="40" style="color:var(--amber)"/>
+    <circle class="ring r2" cx="380" cy="507" r="40" style="color:var(--amber)"/>
+    <circle class="ring r3" cx="780" cy="507" r="40" style="color:var(--cyan)"/>
+
+    <g class="cloudgrp">
+      <g class="cloud-card k-bloom"><rect x="990" y="180" width="232" height="100" rx="14"/>
+        <path class="ci" d="M1012 236a9 9 0 0 1 0-18 12 12 0 0 1 23 2 8 8 0 0 1 0 16Z"/>
+        <text class="ct" x="1050" y="222">Azure Machine</text><text class="ct" x="1050" y="242">Learning</text><text class="cs" x="1012" y="266">training in the cloud</text></g>
+      <path class="export k-draw" pathLength="1" d="M1105 284 C1105 420 1000 507 896 507"/>
+      <text class="export-label k-fade" x="1114" y="372">trained once,</text><text class="export-label k-fade" x="1114" y="388">exported to ONNX</text>
+    </g>
+    <text class="gone-note k-rise" x="990" y="160">not needed at run time</text>
+  </svg>
+  <div class="onnx-chip" style="offset-path:path('M1105 284 C1105 420 1000 507 896 507')">.onnx</div>
+  <p class="foot">The agent calls the tools with function calling. Every tool reads or writes local files only.</p>
+  <span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[3:20, 2 minutes 30]</b> I talk the room through the build as it happens: the boundary, Foundry Local, the agent, then the four tools one at a time.</p>
+    <p>Here is what you build. Everything inside this dashed line is one laptop, or a small VM. Nothing inside it needs the internet.</p>
+    <p>At the bottom is Foundry Local. It downloads models once, runs them on your GPU, NPU or CPU, and gives you an OpenAI-compatible endpoint on localhost. So your code uses the normal OpenAI SDK; only the base URL changes.</p>
+    <p>On top of that sits the agent: a small language model, phi-4-mini, with function calling. It has four tools. Machine status reads a local JSON file. Maintenance tickets writes to a local file, and notice the badge: anything that changes something waits for a person to say yes. SOP search finds the right procedure with a local embedding model. And a fault classifier predicts what is about to break.</p>
+    <p><b>[click]</b> That classifier is the one piece that comes from the cloud. You train it in Azure Machine Learning, export it to ONNX, and copy it onto the device. <i>(I wait for the file to land.)</i> Then the cloud is not needed at run time. That's the pattern for the whole day: use the cloud to build, and the device to run.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 5 CHAPTER 2 -->
+<section class="scene chapter c2" data-scene="chapter" data-noctl>
+  <p class="num" aria-hidden="true">02</p>
+  <div class="ch-copy">
+    <p class="ch-label k-wipe">Part 2</p>
+    <h1 class="k-wipe" style="--d:150ms">Evidence, not vibes</h1>
+    <p class="ch-sub k-rise" style="--d:500ms">Choose the model, the tools and the answers with numbers.</p>
+  </div>
+  <svg class="cord k-fade" style="--d:700ms" viewBox="0 0 420 24" aria-hidden="true">
+    <rect class="cord-line" x="0" y="11" width="392" height="2" rx="1"/><rect class="cord-plug" x="392" y="6" width="20" height="12" rx="2"/><circle class="cord-pulse" cx="10" cy="12" r="4"/>
+  </svg>
+  <aside class="notes">
+    <p><b>[5:50, 20 seconds]</b> A small model is a trade-off, so in this hack nobody picks one on gut feeling. You measure. Here is what we measured.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 6 BENCHMARK -->
+<section class="scene bench" data-scene="bench">
+  <p class="kicker k-wipe" style="--accent:var(--cyan)">Part 2 / Evidence, not vibes</p>
+  <h2 class="title k-wipe" style="--d:120ms">Choose the model with numbers</h2>
+  <p class="subtitle k-rise" style="--d:400ms">Three small models, one laptop, the same questions.</p>
+  <p class="colh k-rise c-speed" style="left:380px">Speed · tokens per second</p>
+  <p class="colh k-rise c-tools" style="left:800px">Tool calls · 8 cases</p>
+  <p class="colh k-rise c-qual" style="left:1088px">Answers</p>
+  <div class="lanes"></div>
+  <p class="moral k-land">The fastest model is not the one that <span class="amber">can use the tools.</span></p>
+  <p class="foot">benchmark.py on a Snapdragon X Elite laptop, Foundry Local 0.14. Tool calls with tool_choice "required". Answers: 13 SOP questions checked for the right facts.</p>
+  <span class="fragment beat"></span><span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[6:10, 3 minutes]</b> I let the speed bars race before I say anything about them.</p>
+    <p>In challenge 2, teams run a benchmark on three small models. These are our numbers, on a Snapdragon laptop. Look at speed first. qwen3 is the quickest at 27 tokens per second, phi-4-mini does 21, and the NPU build of qwen2.5 does 4, and it took 47 seconds just to load. If you stopped here, you'd pick qwen3.</p>
+    <p><b>[click]</b> But an agent has to call tools. So we give each model 8 requests that need a tool and force a tool call. phi-4-mini gets 7 of 8 right. qwen3 gets 1. And the NPU build of qwen2.5 doesn't answer at all: on this Foundry Local version, any request that includes tools returns an HTTP 500. That is exactly the kind of thing you only find by trying.</p>
+    <p><b>[click]</b> Last, answer quality on 13 questions from the procedures. phi-4-mini and qwen2.5 get all 13, qwen3 gets 9. So the fastest model is not the one that can use the tools. We pick phi-4-mini on the GPU, and the rest of the day runs on it.</p>
+    <p>Your numbers will differ, because they depend on the hardware and the model version. That's the point: measure on the device you'll deploy to. And if time is short, every script has a quick mode.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 7 ROUTER -->
+<section class="scene router" data-scene="router">
+  <p class="kicker k-wipe" style="--accent:var(--cyan)">Part 2 / Evidence, not vibes</p>
+  <h2 class="title k-wipe" style="--d:120ms">A small model picks the wrong tool</h2>
+  <p class="subtitle k-rise" style="--d:400ms">23 held-out requests, written once and never used for tuning.</p>
+  <div class="grid"></div>
+  <div class="scanbar k-fade"></div>
+  <div class="score k-rise">
+    <p class="lab">First tool correct</p>
+    <p class="big"><span class="cnt">0</span><small>/23</small></p>
+    <p class="secs">778 s for the set, all four tools shown</p>
+  </div>
+  <div class="misses"></div>
+  <p class="how k-land"><b>The router:</b> match the request against a short card for each tool, with the embedding model that is already loaded for SOP search. Show the model only the best match.</p>
+  <p class="foot">check_routing.py holdout · phi-4-mini on the GPU · other runs without the router scored 14 of 23.</p>
+  <span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[9:10, 3 minutes]</b> I let the dots fill in for a few seconds before I start.</p>
+    <p>Here's a surprise from challenge 3. Each dot is one request a technician might type, grouped by the tool that should answer it. With all four tools in front of it, phi-4-mini gets 19 of 23 right on this run. In other runs it was as low as 14.</p>
+    <p>And look at the four misses. "Run a diagnosis on CNC-07." "Classify the condition of PRESS-02." Two ticket requests. Every single one went to machine status. The model sees a machine name and grabs the status tool.</p>
+    <p><b>[click]</b> The fix is a router, and it costs almost nothing. Before the model sees a request, we compare it with a short card for each tool, using the embedding model we already loaded for search. Then we show the model only the best match. <i>(I let the scan pass and the red dots flip.)</i> 23 of 23.</p>
+    <p>And look at the time: 230 seconds for the set instead of 778. Fewer tools in the prompt means less work for a small model. That's a lesson that applies far beyond the factory: on small models, give the model fewer choices.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 8 SOP -->
+<section class="scene sop" data-scene="sop">
+  <p class="kicker k-wipe" style="--accent:var(--cyan)">Part 2 / Evidence, not vibes</p>
+  <h2 class="title k-wipe" style="--d:120ms">Answer from the SOP, and say where</h2>
+  <p class="subtitle k-rise" style="--d:400ms">The agent decides when to search, and cites what it used.</p>
+  <div class="panel chat k-rise">
+    <div class="bubble q" style="margin-top:0;margin-left:60px"><span class="who">Technician</span><span class="stream s-q" data-text="At what vibration level must a CNC spindle be stopped?"></span></div>
+    <div class="bubble a"><span class="who">Copilot</span><span class="stream s-a" data-text="The CNC spindle must be stopped if the vibration level reaches 7.1 mm/s RMS or higher. Create a high-priority ticket and do not restart the machine until the cause is fixed."></span>
+      <div class="chips"><span class="chip k-pop" data-sec="0">SOP-CNC-001 rev C / Vibration limits</span><span class="chip k-pop" data-sec="1" style="--d:150ms">SOP-CNC-001 rev C / First checks (about 20 minutes)</span><span class="chip k-pop" data-sec="2" style="--d:300ms">SOP-CNC-001 rev C / Records</span></div></div>
+  </div>
+  <div class="panel doc k-land">
+    <p class="dh">SOP-CNC-001 CNC spindle vibration and bearing replacement</p>
+    <p class="dm">Revision C · effective 2026-04-15 · E-SPN-214</p>
+    <div class="sec s0">Vibration limits
+      <table><tr><td>Normal</td><td>below 4.5 mm/s RMS</td><td>None</td></tr><tr><td>Warning</td><td>4.5 to 7.0</td><td>Medium ticket, inspect in 24 h</td></tr><tr class="stop"><td>Stop</td><td>7.1 or higher</td><td>Stop. High ticket. Do not restart.</td></tr></table></div>
+    <div class="sec s1">First checks (about 20 minutes)</div>
+    <div class="sec">Bearing replacement</div>
+    <div class="sec s2">Records</div>
+  </div>
+  <svg class="beams" viewBox="0 0 1280 720" aria-hidden="true"><path class="beam k-draw b0" pathLength="1"/><path class="beam k-draw b1" pathLength="1" style="--d:200ms"/><path class="beam k-draw b2" pathLength="1" style="--d:400ms"/></svg>
+  <div class="score">
+    <span class="ch k-rise"></span><span class="ch k-rise">Right SOP</span><span class="ch k-rise">Right facts</span><span class="ch k-rise">Cites it</span><span class="ch k-rise">Refuses the rest</span>
+    <span class="rh k-rise">Always retrieve</span><span class="v full k-land">13/13</span><span class="v part k-land">12/13</span><span class="v part k-land">11/13</span><span class="v full k-land">2/2</span>
+    <span class="rh agent k-rise">Agent decides</span><span class="v full k-land">13/13</span><span class="v full k-land">13/13</span><span class="v full k-land">13/13</span><span class="v full k-land">2/2</span>
+  </div>
+  <span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[12:10, 2 minutes 30]</b> I let the question, the procedure and the answer stream in, then point at the beams as they find the sections.</p>
+    <p>Challenge 4 is about trust. A technician will not follow an answer they can't check. So the copilot answers from the plant's own procedures, and says where.</p>
+    <p>Same question as before. The agent decides to search, finds SOP-CNC-001, and answers with the exact limit: 7.1 millimetres per second, stop, high-priority ticket, do not restart. Every claim points back to a section of the document. <i>(I point at the beams as they reach the sections.)</i></p>
+    <p><b>[click]</b> And we measure it. 13 questions with a known right answer, plus 2 that the procedures can't answer, like the cafeteria menu. A simple pipeline that always retrieves first does well, but misses a fact and two citations. When the agent decides when and what to search, it gets all 13 on every measure, and it still refuses the two it should refuse. Saying "I couldn't find that in the SOPs" is a feature, not a failure.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 9 ONNX -->
+<section class="scene onnx" data-scene="onnx">
+  <p class="kicker k-wipe" style="--accent:var(--cyan)">Part 2 / Evidence, not vibes</p>
+  <h2 class="title k-wipe" style="--d:120ms">Train in the cloud, run at the edge</h2>
+  <p class="subtitle k-rise" style="--d:400ms">The fault classifier is trained once in Azure and copied onto the device.</p>
+  <div class="panel side cl k-rise">
+    <p class="sl">Azure Machine Learning</p><p class="st">Notebook on a compute instance</p><p class="ss">fault_classifier.onnx · exported</p>
+    <p class="hash-l">SHA-256</p><p class="hash h-cl"></p>
+  </div>
+  <div class="panel side ed k-rise" style="--d:200ms">
+    <p class="sl">On the device</p><p class="st">onnxruntime on the CPU</p><p class="ss">fault_classifier.onnx · 143,730 bytes</p>
+    <p class="hash-l">SHA-256</p><p class="hash h-ed"></p>
+  </div>
+  <svg class="arc" viewBox="0 0 1280 720" aria-hidden="true"><path class="arcpath k-draw" pathLength="1" d="M512 250 C580 140 700 140 768 250"/></svg>
+  <div class="onnx-chip" style="offset-path:path('M512 250 C580 140 700 140 768 250')">.onnx</div>
+  <div class="eq k-land"><p class="s">Identical</p><p class="t">byte for byte</p></div>
+  <div class="acc k-land"><p class="n">0.94</p><p class="l">accuracy in the notebook</p></div>
+  <div class="lat k-land"><p class="n">0.3 ms</p><p class="l">per prediction on the device</p></div>
+  <table class="pred"><tbody></tbody></table>
+  <p class="foot">Studio export checked against the hack's shortcut file. Times from predict_fault on the laptop; the first call warms up.</p>
+  <span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[14:40, 2 minutes]</b> I let both sides appear and the file travel across before I explain the fingerprints.</p>
+    <p>Challenge 5 shows the other half of the story: the cloud is still where you train. Teams open Azure Machine Learning, run a notebook on a compute instance, train a small classifier on sensor history, and export it to ONNX. On the left is the fingerprint of the file the studio produced. On the right is the file on the laptop. <i>(I wait while the characters light up.)</i> Identical, byte for byte. So teams who skip the cloud part with the shortcut get exactly the same model.</p>
+    <p><b>[click]</b> 94 percent accuracy in the notebook. On the device, a prediction takes about a third of a millisecond. The first one takes 10 milliseconds because the runtime warms up. CNC-07 comes back as bearing wear, 98 percent. The agent calls this as a tool, so the technician just asks "what's wrong with CNC-07?"</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 10 CHAPTER 3 -->
+<section class="scene chapter c3" data-scene="chapter" data-noctl>
+  <p class="num" aria-hidden="true">03</p>
+  <div class="ch-copy">
+    <p class="ch-label k-wipe">Part 3</p>
+    <h1 class="k-wipe" style="--d:150ms">Cut the cord</h1>
+    <p class="ch-sub k-rise" style="--d:500ms">The only test that counts.</p>
+  </div>
+  <svg class="cord k-fade" style="--d:700ms" viewBox="0 0 420 24" aria-hidden="true">
+    <rect class="cord-line" x="0" y="11" width="392" height="2" rx="1"/><rect class="cord-plug" x="392" y="6" width="20" height="12" rx="2"/><circle class="cord-pulse" cx="10" cy="12" r="4"/>
+  </svg>
+  <aside class="notes">
+    <p><b>[16:40, 20 seconds]</b> Everything I've shown you so far could still be secretly calling the internet. There's only one way to know.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 11 PULL THE CABLE -->
+<section class="scene pull" data-scene="pull">
+  <p class="kicker k-wipe" style="--accent:var(--green)">Part 3 / Cut the cord</p>
+  <h2 class="title k-wipe" style="--d:120ms">Pull the cable</h2>
+  <p class="subtitle k-rise" style="--d:400ms">Block the internet, then ask the copilot everything again.</p>
+  <svg class="rig" viewBox="0 0 1280 720" aria-label="The device is connected to the internet by a cable. The cable is pulled out, every cloud region fails, and every capability on the device still answers.">
+    <g class="edge"></g>
+    <text class="inet-h k-fade" x="1012" y="200">Foundry catalog · 8 regions</text>
+    <g class="regions"></g>
+  </svg>
+  <div class="checks"></div>
+  <p class="verdict k-rise">Internet: <b class="inet">reachable</b></p>
+  <p class="err k-rise">error: region fallback exhausted all 8 candidate region(s): transport failure in westeurope, northeurope, … uaenorth</p>
+  <p class="hero k-land">Everything still answers.</p>
+  <span class="fragment beat"></span><span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[17:00, 3 minutes 30]</b> I wait on the six green lamps and let the room look before I say a word.</p>
+    <p>This is challenge 6, and it is my favourite moment of the day. On the left is everything the copilot can do. On the right is the internet: Foundry Local's catalog lives in eight Azure regions. Right now, everything is connected and everything is green.</p>
+    <p>Now, let's pull the cable. <b>[click]</b></p>
+    <p><i>(I stay quiet while the plug comes out and the regions fail one by one.)</i> That error is real, we recorded it: Foundry Local tried all eight regions and got a transport failure every time. So the internet is truly gone.</p>
+    <p>And now the copilot checks each capability again. The local model answers. Machine status. The fault prediction. The SOP answer with its sources. A ticket, after the technician approves it. Every lamp turns green again. All of it came from the device.</p>
+    <p>One more test, because this is where people get caught. <b>[click]</b> What if the service restarts while you're offline? A power cut, an update. <i>(I let the device go dark and come back.)</i> On Foundry Local 0.14, the models load from the local cache, phi-4-mini in about 5 seconds, the embedding model in about 3, and the whole copilot answers again. Everything still answers.</p>
+    <p>A tip for the room: on a managed laptop, a firewall rule for "Internet" did not block Foundry Local for us. We had to block the programs themselves. The walkthrough has the exact rules. Test it, don't assume it.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 12 CLOSING -->
+<section class="scene closing" data-scene="closing" data-noctl>
+  <p class="st k-rise">Build it in the <span class="c">cloud.</span><br>Prove it <span class="e">without</span> the cloud.</p>
+  <p class="call k-rise" style="--d:900ms">Six challenges, one laptop, and at the end no internet. Then pull the cable in front of the people who will rely on it.</p>
+  <p class="repo k-rise" style="--d:1400ms">github.com/microsoft/MicroHack › 03-Azure/01-04-AI/<b>10_Offline_Industrial_Copilot</b></p>
+  <svg class="orbs" viewBox="0 0 1280 720" aria-hidden="true">
+    <g class="k-bloom" style="--d:400ms"><circle class="orb-c" cx="1060" cy="200" r="86"/><text class="orb-n" x="1060" y="204" style="fill:var(--cyan)">Once</text><text class="orb-u" x="1060" y="228" style="fill:var(--cyan)">trained in Azure</text></g>
+    <g class="gap-a k-fade" style="--d:1000ms"><line class="orb-link" x1="1060" y1="286" x2="1060" y2="320" stroke="#3CD3F2"/><rect x="1053" y="318" width="14" height="10" rx="2" fill="#3CD3F2"/></g>
+    <g class="gap-b k-fade" style="--d:1000ms"><rect x="1053" y="334" width="14" height="10" rx="2" fill="#FFB547"/><line class="orb-link" x1="1060" y1="342" x2="1060" y2="376" stroke="#FFB547"/></g>
+    <g class="k-bloom" style="--d:700ms"><circle class="orb-e" cx="1060" cy="500" r="124"/><text class="orb-n" x="1060" y="502" style="fill:var(--amber)">Every shift</text><text class="orb-u" x="1060" y="528" style="fill:var(--amber)">runs on the floor</text></g>
+  </svg>
+  <aside class="notes">
+    <p><b>[20:30, 1 minute]</b> I let the two circles appear and the cable between them part before I speak.</p>
+    <p>So if you remember one sentence from this morning: build it in the cloud, and prove it without the cloud. You train once, in Azure. It runs every shift, on the floor.</p>
+    <p>You have six challenges, one laptop, and at the end, no internet. Your coaches have the walkthroughs, and every slow measurement has a quick mode, so nobody spends the afternoon waiting. Have fun pulling the cable.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 13 THANKS -->
+<section class="scene thanks" data-scene="thanks" data-noctl>
+  <h1 class="line" aria-label="Thank you">
+    <span class="tag t-open" aria-hidden="true"><i>&lt;</i>offline<i>&gt;</i></span>
+    <span class="word" aria-hidden="true"><span class="t-text">Thank you</span><span class="caret"></span></span>
+    <span class="tag t-close" aria-hidden="true"><i>&lt;/</i>offline<i>&gt;</i></span>
+  </h1>
+  <p class="sub">Digvijay Chauhan, Solution Engineer, Microsoft</p>
+  <svg class="cord" style="--accent:var(--amber)" viewBox="0 0 420 24" aria-hidden="true">
+    <rect class="cord-line" x="0" y="11" width="392" height="2" rx="1"/><rect class="cord-plug" x="392" y="6" width="20" height="12" rx="2"/><circle class="cord-pulse" cx="10" cy="12" r="4"/>
+  </svg>
+  <aside class="notes">
+    <p><b>[21:30]</b> Thank you. Let's get you set up: challenge 1 starts now, and if you ran the setup script yesterday, you're already ahead.</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="vendor/reveal.js-6.0.2/reveal.js"></script>
+<script src="vendor/reveal.js-6.0.2/plugin/notes.js"></script>
+<script src="js/data.js"></script>
+<script src="js/scenes.js"></script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+[
+  {"id": "H01", "request": "Tell me how LATHE-05 is doing.", "expected_tool": "get_machine_status"},
+  {"id": "H02", "request": "What temperature is CNC-03 at?", "expected_tool": "get_machine_status"},
+  {"id": "H03", "request": "Can you read out the numbers for PRESS-02?", "expected_tool": "get_machine_status"},
+  {"id": "H04", "request": "Is CONV-03 up and running?", "expected_tool": "get_machine_status"},
+  {"id": "H05", "request": "What is the current draw on CMP-01?", "expected_tool": "get_machine_status"},
+
+  {"id": "H06", "request": "Which fault does the model expect on ROB-04?", "expected_tool": "predict_fault"},
+  {"id": "H07", "request": "Run a diagnosis on CNC-07.", "expected_tool": "predict_fault"},
+  {"id": "H08", "request": "Can you tell what is likely breaking on LATHE-05?", "expected_tool": "predict_fault"},
+  {"id": "H09", "request": "Classify the condition of PRESS-02.", "expected_tool": "predict_fault"},
+  {"id": "H10", "request": "What failure mode do the readings of CMP-01 point to?", "expected_tool": "predict_fault"},
+
+  {"id": "H11", "request": "How tight should the coolant pump bolts be?", "expected_tool": "search_sops"},
+  {"id": "H12", "request": "When must the conveyor bearings be greased?", "expected_tool": "search_sops"},
+  {"id": "H13", "request": "What is the correct procedure for a lockout?", "expected_tool": "search_sops"},
+  {"id": "H14", "request": "What does the controller code E-HYD-031 stand for?", "expected_tool": "search_sops"},
+  {"id": "H15", "request": "PRESS-02 is showing E-HYD-031. How do I fix it?", "expected_tool": "search_sops"},
+  {"id": "H16", "request": "What is the temperature limit before the compressor trips?", "expected_tool": "search_sops"},
+  {"id": "H17", "request": "Who is allowed to replace a spindle bearing?", "expected_tool": "search_sops"},
+  {"id": "H18", "request": "What is the recommended mixing ratio of the coolant?", "expected_tool": "search_sops"},
+
+  {"id": "H19", "request": "Make a ticket for CNC-07: strange noise from the spindle.", "expected_tool": "create_maintenance_ticket"},
+  {"id": "H20", "request": "Write up a high priority work order for CMP-01, it overheats.", "expected_tool": "create_maintenance_ticket"},
+  {"id": "H21", "request": "Please log a ticket against ROB-04 for the worn contact tip.", "expected_tool": "create_maintenance_ticket"},
+  {"id": "H22", "request": "Create a service request for CONV-03, the belt is drifting.", "expected_tool": "create_maintenance_ticket"},
+  {"id": "H23", "request": "Open a low priority ticket for LATHE-05.", "expected_tool": "create_maintenance_ticket"}
+]

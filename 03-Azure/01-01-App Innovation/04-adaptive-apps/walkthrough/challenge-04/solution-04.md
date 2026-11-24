@@ -140,7 +140,7 @@ the same type while the application declaration remains unchanged.
 
 ## Manual tutorial, Stage 1: Create a SQL Server type
 
-Create `iac/sql-databases.yaml`:
+Review `iac/sql-databases.yaml`
 
 ```yaml
 namespace: Radius.Resources
@@ -223,15 +223,12 @@ Discuss:
 
 ## Manual tutorial, Stage 2: Import the catalog
 
-The source catalog is pinned to the Adaptive Apps commit used to author this
-MicroHack:
+The source catalog is sourced from the Adaptive Apps repo, we use this in this MicroHack and import it:
 
 ```bash
 export TYPES_URL="https://raw.githubusercontent.com/microsoft/adaptive-apps/885627980684e5bcc6fe4bbd2848c1ec247b0a0b/radius/resource-types/types.yaml"
 curl --fail --location "$TYPES_URL" --output /tmp/adaptive-apps-types.yaml
 ```
-
-Review the downloaded schema before registering it.
 
 ### Import manually on AKS
 

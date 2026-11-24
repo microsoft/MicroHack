@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Three agents and a yes: Agentic Inventory Planning</title>
+  <meta name="author" content="Digvijay Chauhan">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230D0A22'/%3E%3Crect x='6' y='13' width='14' height='6' rx='3' fill='%23C8F53C'/%3E%3Cpath d='M24 8a8 8 0 0 0 0 16' fill='none' stroke='%23C4A8FF' stroke-width='2.5'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="vendor/reveal.js-6.0.2/reset.css">
+  <link rel="stylesheet" href="vendor/reveal.js-6.0.2/reveal.css">
+  <link rel="stylesheet" href="css/motion.css">
+  <link rel="stylesheet" href="css/theme.css">
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+<!-- ===================================================================== 1 COVER -->
+<section class="scene cover" data-scene="cover" data-noctl>
+  <p class="cv-event k-wipe">MicroHack · Microsoft Foundry Agent Service</p>
+  <h1 class="k-wipe" style="--d:150ms">Three agents<br>and a <span class="yes">yes.</span></h1>
+  <p class="cv-sub k-rise">An inventory planning loop where agents do the legwork and a person signs the order.</p>
+  <p class="cv-by k-rise">Digvijay Chauhan, Solution Engineer, Microsoft</p>
+  <p class="cv-meta k-rise"><b>Tech talk</b>Agentic Inventory Planning</p>
+  <svg class="art" viewBox="0 0 1280 720" aria-hidden="true">
+    <path class="edge k-draw e1" pathLength="1" d="M818 240 C900 250 940 300 982 322"/>
+    <path class="edge k-draw e2" pathLength="1" d="M985 350 C940 400 900 420 858 432"/>
+    <path class="edge k-draw e3" pathLength="1" d="M858 446 C940 470 1000 520 1068 536"/>
+    <g class="sats k-fade">
+      <path class="edge" d="M790 232 L704 172 M790 232 L716 302 M1010 330 L1118 262 M1010 330 L1128 392 M830 438 L732 500"/>
+      <path class="edge dash" d="M1126 521 L1182 479"/>
+      <circle class="sat" cx="704" cy="172" r="7"/><circle class="sat" cx="716" cy="302" r="7"/>
+      <circle class="sat" cx="1118" cy="262" r="7"/><circle class="sat" cx="1128" cy="392" r="7"/>
+      <circle class="sat" cx="732" cy="500" r="7"/><circle class="sat" cx="1188" cy="474" r="7" style="stroke:var(--fail)"/>
+    </g>
+  </svg>
+  <div class="stn k-pop n1" style="left:762px;top:204px"></div>
+  <div class="stn k-pop n2" style="left:982px;top:302px"></div>
+  <div class="stn k-pop n3" style="left:802px;top:410px"></div>
+  <div class="gate k-pop n4" style="left:1070px;top:510px"><i></i><i></i></div>
+  <p class="nlabel k-fade l1" style="left:790px;top:270px">sense</p>
+  <p class="nlabel k-fade l2" style="left:1010px;top:368px">plan</p>
+  <p class="nlabel k-fade l3" style="left:830px;top:476px">propose</p>
+  <p class="nlabel k-fade l4" style="left:1100px;top:578px">approve</p>
+  <div class="travel bat t1" style="offset-path:path('M790 232 C900 250 940 300 1010 330 C940 400 900 420 830 438 C940 470 1000 520 1046 538');--dur:3200ms"></div>
+  <div class="baton rest"></div>
+  <aside class="notes">
+    <p><b>[0:00, 1 minute]</b> I let the cover build and wait until the lime baton has stopped at the gate before I start.</p>
+    <p>Good morning, and welcome. I'm Digvijay Chauhan, Solution Engineer at Microsoft, and today you are going to build a team of three AI agents for a retail company called Zava.</p>
+    <p>That little lime capsule is the hero of the day. It's a replenishment decision. One agent senses demand, the next plans what to order, the third prepares a purchase order. And then the baton stops, right there at that gate, because the last step belongs to a person.</p>
+    <p>Before you start coding, I want to spend twenty minutes on why the gate matters, and show you what the loop looked like when we ran it.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 2 CHAPTER 1 -->
+<section class="scene chapter" data-scene="chapter" data-part="1" data-noctl>
+  <p class="ch-kick k-wipe">Part 1 of 3</p>
+  <h1 class="k-wipe" style="--d:150ms">The shelf and the signal</h1>
+  <p class="ch-sub k-rise">Why last month's data reacts too late.</p>
+  <div class="trk k-fade"></div>
+  <div class="stn k-pop p1" style="left:292px"></div><div class="stn k-pop p2" style="left:612px"></div><div class="stn k-pop p3" style="left:932px"></div>
+  <p class="slab k-fade s1" style="left:320px">Part 1 · signal</p><p class="slab k-fade s2" style="left:640px">Part 2 · relay</p><p class="slab k-fade s3" style="left:960px">Part 3 · yes</p>
+  <div class="baton"></div>
+  <aside class="notes">
+    <p><b>[1:00, 20 seconds]</b> I let the baton slide into the first station.</p>
+    <p>Three parts today. First the problem: a shelf, and a signal that nobody connected to it.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 3 SHELF -->
+<section class="scene shelf" data-scene="shelf">
+  <p class="kicker k-wipe">Part 1 / The shelf and the signal</p>
+  <h2 class="title k-wipe" style="--d:120ms">Seventy-two shelves, one heatwave</h2>
+  <p class="subtitle k-rise">Zava's stock: 12 products in 6 locations, as the hack loads it into Cosmos DB.</p>
+  <div class="band k-fade"></div>
+  <div class="grid"></div>
+  <div class="scan"></div>
+  <p class="legend k-fade">bar: units on hand <i></i>reorder point <i class="s"></i>safety stock</p>
+  <div class="panel sig k-land">
+    <p class="plabel">External signal</p>
+    <p class="meta">SIG01 · WeatherIQ · score 0.80</p>
+    <p class="hl">Prolonged heatwave and early spring across the Pacific Northwest</p>
+    <p class="cats k-rise"><span>outdoor_power_tools</span><span>garden_and_lawn</span></p>
+  </div>
+  <div class="tally">
+    <p class="big k-land"><span class="n">0</span><small>exposed of 72</small></p>
+    <p class="row k-rise r1"><span class="coral"><span class="nc">5</span> CRITICAL</span> <span class="muted">below safety stock</span></p>
+    <p class="row k-rise r2"><span class="apricot"><span class="na">9</span> AT_RISK</span> <span class="muted">at or below reorder</span></p>
+    <p class="note k-rise">All five CRITICAL shelves are in Portland and Seattle.</p>
+  </div>
+  <p class="moral k-land">The risk sits exactly <em>where the signal is.</em> Nobody had joined them up.</p>
+  <p class="foot">src/data seed files with the rules of src/inventory_store.py and tools.py. The console header in the recorded run: 14 exposed.</p>
+  <span class="fragment beat"></span><span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[1:20, 2.5 minutes]</b> I let the grid fill row by row and talk over it.</p>
+    <p>This is Zava. Twelve products, four stores, Boston, Brooklyn, Portland and Seattle, and two warehouses in Chicago and Dallas. Every little bar is one product in one location: how many units are on the shelf. The tall tick is the reorder point, the short one is the safety stock. This is exactly the data the hack loads into your own Cosmos DB the first time the app runs.</p>
+    <p>Zava's planners look at this once a month. And right now, nothing on this screen looks alarming. <b>[click]</b></p>
+    <p>Meanwhile, outside the building, there's a signal. A prolonged heatwave and an early spring in the Pacific Northwest. It touches two categories: outdoor power tools and garden and lawn, these top six rows. Signals like this sit in the database right next to the stock, but nothing joins them up. <b>[click]</b></p>
+    <p>So let me apply the rule the hack uses. <i>(I wait while the light sweeps across the grid.)</i> Below the reorder point is AT_RISK, below the safety stock is CRITICAL. Fourteen shelves are exposed, and the five critical ones are all in Portland and Seattle. Leaf blowers, chainsaws, a hedge trimmer. Exactly where the heatwave is.</p>
+    <p>That's the job for the agents: join the outside world to the shelf, fast, and with real numbers.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 4 RULE -->
+<section class="scene rule" data-scene="rule">
+  <p class="kicker k-wipe">Part 1 / The shelf and the signal</p>
+  <h2 class="title k-wipe" style="--d:120ms">The rule fits on one line</h2>
+  <p class="subtitle k-rise">Leaf Blower X2 at the Seattle store, computed by the calc_reorder tool.</p>
+  <p class="axis k-fade">Units sold a week, all four stores</p>
+  <div class="base k-fade"></div>
+  <div class="bars"></div>
+  <p class="panel code k-rise">reorder_qty = max(0, avg_daily_sales * 30 - current_stock)</p>
+  <div class="eq k-rise e1" style="top:252px"><b>28</b><span>units sold last week</span></div>
+  <div class="eq k-rise e2" style="top:306px"><b>÷ 7 = 4.0</b><span>average daily sales</span></div>
+  <div class="eq k-rise e3" style="top:360px"><b>× 30 = 120</b><span>units for the next 30 days</span></div>
+  <div class="eq k-rise e4" style="top:414px"><b>− 6</b><span>on hand in Seattle</span></div>
+  <div class="eq res k-land e5" style="top:474px"><b>= <span class="n" style="position:static;font:inherit;color:inherit">0</span></b><span>units to order</span></div>
+  <p class="receipt k-rise">The recorded plan: 114 · 112 · 64 · 62 · 91 · 75</p>
+  <p class="moral k-land">The model never does the maths. <em>It calls the function that does.</em></p>
+  <p class="foot">Demand derived by _derive_demand in src/inventory_store.py (outdoor tools x 1.4 in the last two weeks). Plan: images/challenge-03-approve.png.</p>
+  <span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[3:50, 1.5 minutes]</b> I let the six weeks of demand grow before I speak.</p>
+    <p>So how much should Zava order? The hack keeps the planning rule deliberately simple, and it lives in Python, in a function tool called calc_reorder. Here are six weeks of leaf blower sales across the four stores. Twenty a week, and then the last two weeks jump to twenty-eight. <b>[click]</b></p>
+    <p>Twenty-eight last week, divided by seven, is four a day. Times thirty days is a hundred and twenty. Seattle has six on the shelf. So the order is a hundred and fourteen.</p>
+    <p>And that is exactly the first line of the plan we recorded when we ran the hack: 114, then 112 for Portland, 64 and 62 chainsaws, 91 and 75 hedge trimmers.</p>
+    <p>Here's the important design choice: the model never does this arithmetic. It decides which product and which location to look at, and then it calls the function. The numbers come from your code and your data.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 5 CHAPTER 2 -->
+<section class="scene chapter" data-scene="chapter" data-part="2" data-noctl>
+  <p class="ch-kick k-wipe">Part 2 of 3</p>
+  <h1 class="k-wipe" style="--d:150ms">Three agents, one baton</h1>
+  <p class="ch-sub k-rise">Each agent does one job, then hands the work on.</p>
+  <div class="trk k-fade"></div>
+  <div class="stn k-pop p1" style="left:292px"></div><div class="stn k-pop p2" style="left:612px"></div><div class="stn k-pop p3" style="left:932px"></div>
+  <p class="slab k-fade s1" style="left:320px">Part 1 · signal</p><p class="slab k-fade s2" style="left:640px">Part 2 · relay</p><p class="slab k-fade s3" style="left:960px">Part 3 · yes</p>
+  <div class="baton"></div>
+  <aside class="notes">
+    <p><b>[5:20, 20 seconds]</b> The baton moves on to the second station.</p>
+    <p>Part two: the relay itself. Three agents, and the one thing they pass along.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 6 SWITCHBOARD -->
+<section class="scene board" data-scene="board">
+  <p class="kicker k-wipe">Part 2 / Three agents, one baton</p>
+  <h2 class="title k-wipe" style="--d:120ms">Three agents, six tools</h2>
+  <p class="subtitle k-rise">Each hosted agent gets only the function tools its job needs.</p>
+  <div class="panel agent k-pop a1" style="left:100px;width:300px"><p class="id">demand-sensing-agent</p><p class="nm">Demand Sensing</p><p class="out">returns a demand assessment</p></div>
+  <div class="panel agent k-pop a2" style="left:490px;width:300px"><p class="id">inventory-optimisation-agent</p><p class="nm">Inventory Optimisation</p><p class="out">returns a reorder plan as JSON</p></div>
+  <div class="panel agent k-pop a3" style="left:880px;width:300px"><p class="id">replenishment-action-agent</p><p class="nm">Replenishment Action</p><p class="out">proposes a purchase order</p></div>
+  <svg class="art" viewBox="0 0 1280 720" aria-hidden="true">
+    <g class="c1">
+      <path class="cord k-draw" pathLength="1" d="M210 300 C210 400 160 386 160 486"/>
+      <path class="cord k-draw" pathLength="1" d="M250 300 C250 400 352 386 352 486" style="--d:150ms"/>
+      <path class="cord k-draw" pathLength="1" d="M290 300 C290 400 544 386 544 486" style="--d:300ms"/>
+    </g>
+    <g class="c2">
+      <path class="cord k-draw" pathLength="1" d="M580 300 C580 400 352 386 352 486"/>
+      <path class="cord k-draw" pathLength="1" d="M620 300 C620 400 544 386 544 486" style="--d:150ms"/>
+      <path class="cord k-draw" pathLength="1" d="M660 300 C660 400 736 386 736 486" style="--d:300ms"/>
+      <path class="cord k-draw" pathLength="1" d="M700 300 C700 400 928 386 928 486" style="--d:450ms"/>
+    </g>
+    <g class="c3">
+      <path class="cord k-draw" pathLength="1" d="M1000 300 C1000 400 928 386 928 486"/>
+    </g>
+    <path class="cord w k-draw cw" pathLength="1" d="M1060 300 C1060 400 1120 386 1120 486"/>
+    <g class="lock k-pop"><path d="M1083 390 v-6 a7 7 0 0 1 14 0 v6"/><rect x="1079" y="389" width="22" height="16" rx="3"/></g>
+    <circle class="ring lring" cx="1090" cy="396" r="16" style="color:var(--fail)"/>
+  </svg>
+  <div class="tool k-pop" style="left:74px">get_external_signals</div>
+  <div class="tool k-pop" style="left:266px">query_inventory</div>
+  <div class="tool k-pop" style="left:458px">list_low_stock</div>
+  <div class="tool k-pop" style="left:650px">calc_reorder</div>
+  <div class="tool k-pop" style="left:842px">get_product</div>
+  <div class="tool write k-pop" style="left:1034px">submit_purchase_order</div>
+  <div class="brk k-fade b1" style="left:74px;width:940px"></div>
+  <p class="blab k-fade b1" style="left:74px;width:940px">five tools that only read</p>
+  <div class="brk k-fade b2" style="left:1034px;width:172px;border-color:var(--fail)"></div>
+  <p class="blab k-fade b2" style="left:1034px;width:172px;color:var(--fail)">writes · locked</p>
+  <p class="moral k-land">Five tools read. One tool writes, <em>and it is locked.</em></p>
+  <p class="foot">Agents and tools from src/agents/__init__.py; READ_TOOLS and ACT_TOOLS in src/tools.py.</p>
+  <span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[5:40, 2 minutes]</b> I let the three agents and the tool rack appear, then the cords plug in one agent at a time.</p>
+    <p>Here's the team. Demand Sensing finds out which products are at risk. Inventory Optimisation works out how many units to order, and where. Replenishment Action prepares the purchase order. Each one is a hosted agent: you define it in Python, a name, instructions and a set of tools, and it's created as a versioned agent in your Foundry project, where you can see it and its traces.</p>
+    <p>Watch the cords. Demand Sensing gets the external signals and two ways to read the stock. Inventory Optimisation reads the stock and calls calc_reorder, the rule from the last slide, and get_product for the catalogue. Every one of these only reads. <b>[click]</b></p>
+    <p>And then there is one tool that is different. submit_purchase_order writes a real order into Cosmos DB. It's the only side effect in the whole system, and it is wired to the last agent with a lock on it. Hold on to that lock. Part three is about who holds the key.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 7 TOOL CALL -->
+<section class="scene call" data-scene="call">
+  <p class="kicker k-wipe">Part 2 / Three agents, one baton</p>
+  <h2 class="title k-wipe" style="--d:120ms">How a tool call really runs</h2>
+  <p class="subtitle k-rise">One recorded run of the Inventory Optimisation agent, and its trace in Foundry.</p>
+  <div class="panel box k-rise bl" style="left:72px">
+    <p class="plabel">Your process</p>
+    <p class="nm">agent_runtime.py</p>
+    <p class="tx">runs each tool call in Python:</p>
+    <p class="cl c1">calc_reorder  P004  ST03</p>
+    <p class="cl c2">calc_reorder  P004  ST04</p>
+    <p class="cl c3">query_inventory  P005</p>
+    <p class="cl c4">query_inventory  P004</p>
+  </div>
+  <div class="panel box k-rise br" style="left:828px">
+    <p class="plabel">Microsoft Foundry</p>
+    <p class="nm">inventory-optimisation-agent</p>
+    <p class="tx">gpt-5.4-mini reads the assessment, asks for the tools it needs, then writes the JSON.</p>
+    <p class="tx" style="color:var(--lilac)">It never touches the database. It only sees what your tools return.</p>
+  </div>
+  <svg class="art" viewBox="0 0 1280 720" aria-hidden="true">
+    <g class="k-fade m1"><path class="arr" d="M462 250 H816 M806 244 L816 250 L806 256"/></g>
+    <g class="k-fade m2"><path class="arr" d="M818 314 H464 M474 308 L464 314 L474 320"/></g>
+    <g class="k-fade m3"><path class="arr f" d="M462 378 H816 M806 372 L816 378 L806 384"/></g>
+    <g class="k-fade m4"><path class="arr" d="M818 442 H464 M474 436 L464 442 L474 448"/></g>
+  </svg>
+  <p class="msg k-fade m1" style="top:224px">responses.create(assessment)</p>
+  <p class="msg back k-fade m2" style="top:288px">function_call × 4</p>
+  <p class="msg k-fade m3" style="top:352px">function_call_output × 4</p>
+  <p class="msg back k-fade m4" style="top:416px">output_text: the reorder JSON</p>
+  <div class="travel bat h1" style="offset-path:path('M462 250 H816');--dur:1100ms"></div>
+  <div class="travel bat pulse-lilac h2" style="offset-path:path('M818 314 H464');--dur:1100ms"></div>
+  <div class="travel bat h3" style="offset-path:path('M462 378 H816');--dur:1100ms"></div>
+  <div class="travel bat pulse-lilac h4" style="offset-path:path('M818 442 H464');--dur:1100ms"></div>
+  <div class="wf">
+    <div class="wgrid k-fade" style="left:400px"></div><div class="wgrid k-fade" style="left:650px"></div><div class="wgrid k-fade" style="left:900px"></div>
+    <p class="wl k-rise w1" style="top:484px">invoke_agent inventory-optimisation-agent:1</p>
+    <div class="wb k-growx w1" style="left:400px;top:484px;width:585px"></div>
+    <p class="wv k-fade w1" style="left:995px;top:484px">1.17 s</p>
+    <p class="wl k-rise w2" style="top:516px">execute_tool multi_tool_use.parallel</p>
+    <div class="wb t k-growx w2" style="left:608px;top:516px;width:377px"></div>
+    <p class="wv k-fade w2" style="left:995px;top:516px">753 ms</p>
+    <p class="wax k-fade" style="left:400px">0 s</p><p class="wax k-fade" style="left:650px">0.5 s</p><p class="wax k-fade" style="left:900px">1.0 s</p>
+    <p class="badges k-fade">2 spans · 1 tool call · 1.2 s</p>
+  </div>
+  <p class="moral k-land">Every number in the plan has <em>a receipt in the trace.</em></p>
+  <p class="foot">Calls and durations from the recorded trace, images/challenge-02-trace.png. The loop is run() in src/agent_runtime.py.</p>
+  <span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[7:40, 2 minutes]</b> I let the two sides appear, then follow the baton across and back.</p>
+    <p>How does an agent actually call a tool? On the right is the agent in Foundry, with gpt-5.4-mini. On the left is your own Python process. Your code sends the assessment with the Responses API. The model doesn't answer yet: it comes back with four function calls. calc_reorder for leaf blowers in Portland and Seattle, and two inventory lookups.</p>
+    <p>Your runtime runs those four Python functions locally, against your Cosmos DB, and sends the results back. Only then does the model write the reorder JSON. That's the whole trick: the model chooses, your code computes. <b>[click]</b></p>
+    <p>And you can prove it. This is the trace of that exact run in the Foundry portal: one agent invocation, 1.17 seconds, with one parallel tool step of 753 milliseconds inside it. In challenge 3 you open this trace and point at the exact calc_reorder response behind a quantity. That is what makes an agent trustworthy: a receipt for every number.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 8 HANDOFF -->
+<section class="scene hand" data-scene="hand">
+  <p class="kicker k-wipe">Part 2 / Three agents, one baton</p>
+  <h2 class="title k-wipe" style="--d:120ms">The baton changes shape</h2>
+  <p class="subtitle k-rise">What each agent hands to the next, from the recorded console run.</p>
+  <div class="trk k-fade"></div>
+  <div class="stn k-pop" style="left:102px"></div><div class="stn k-pop" style="left:357px"></div><div class="stn k-pop" style="left:612px"></div><div class="stn k-pop" style="left:867px"></div><div class="stn ghost k-pop" style="left:1112px"></div>
+  <p class="slb k-fade" style="left:130px">Planner</p><p class="slb k-fade" style="left:385px">Demand Sensing</p><p class="slb k-fade" style="left:640px">Inventory Optimisation</p><p class="slb k-fade" style="left:895px">Replenishment</p><p class="slb k-fade" style="left:1140px">Step 4: a person</p>
+  <p class="elb k-fade" style="left:257px">scenario · <b>text</b></p><p class="elb k-fade" style="left:512px">assessment · <b>text</b></p><p class="elb k-fade" style="left:767px">recommendation · <b>JSON</b></p><p class="elb k-fade" style="left:1017px">proposal · <b>JSON</b></p>
+  <div class="baton"></div>
+  <div class="panel card k-rise" data-s="1">
+    <div class="st s1"><p class="hd"><span>Carrying: the scenario</span><span>plain text, from the planner</span></p>
+      <p class="prose" style="margin-top:18px">A prolonged heatwave is hitting the Pacific Northwest. Check our exposure on outdoor power tools.</p></div>
+    <div class="st s2"><p class="hd"><span>Carrying: the demand assessment</span><span>text for the next agent, and for you</span></p>
+      <p class="prose" style="margin-top:18px">Pacific Northwest heatwave exposure: HIGH. Leaf blowers and chainsaws are <em>CRITICAL</em> in Seattle and Portland. Current stock is not adequate for the heatwave-driven demand lift.</p></div>
+    <div class="st s3"><p class="hd"><span>Carrying: the reorder recommendation</span><span>JSON, so the console can draw a table</span></p>
+<pre>{<span class="k">"recommendations"</span>: [
+  {<span class="k">"sku"</span>: "P004", <span class="k">"productName"</span>: "Leaf Blower X2", <span class="k">"location"</span>: "ST04",
+   <span class="k">"currentStock"</span>: 6, <span class="k">"suggestedReorderQty"</span>: <span class="hl">114</span>, <span class="k">"priority"</span>: "CRITICAL"},
+  {<span class="k">"sku"</span>: "P004", <span class="k">"location"</span>: "ST03", <span class="k">"currentStock"</span>: 8, <span class="k">"suggestedReorderQty"</span>: <span class="hl">112</span>, ...},
+  <span class="c">... 4 more lines, every quantity from calc_reorder</span>
+]}</pre></div>
+    <div class="st s4"><p class="hd"><span>Carrying: the purchase order proposal</span><span>JSON, and the part a person approves</span></p>
+<pre>{<span class="k">"proposal"</span>: {<span class="k">"lines"</span>: [<span class="c">6 lines, unitCost from get_product</span>],
+              <span class="k">"totalEstimatedValue"</span>: 53220},
+ <span class="hl">"submitItems"</span>: [{"sku": "P004", "location": "ST04", "quantity": 114},
+                 {"sku": "P004", "location": "ST03", "quantity": 112}, <span class="c">... 4 more</span>]}</pre>
+      <p class="src" style="margin-top:12px;font:13px var(--mono);color:var(--lime)">submitItems is what submit_purchase_order receives, and only after approval.</p></div>
+  </div>
+  <p class="moral k-land">Text for people, JSON for code: <em>every handoff has a contract.</em></p>
+  <p class="foot">JSON shapes from the agent instructions in src/agents/__init__.py; values from the recorded run, images/challenge-03-approve.png.</p>
+  <span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[9:40, 2 minutes]</b> I let the track and the first card appear, and read the scenario aloud.</p>
+    <p>Now let's follow the baton itself. It starts as one sentence from the planner: a heatwave is hitting the Pacific Northwest, check our exposure. <b>[click]</b></p>
+    <p>Demand Sensing turns it into an assessment. That's text, for the next agent and for you: exposure high, leaf blowers and chainsaws critical in Seattle and Portland, stock not adequate.</p>
+    <p><i>(I wait for the card to flip.)</i> Inventory Optimisation hands on something different: JSON. A list of recommendations, every quantity straight from calc_reorder. The console turns it into a table.</p>
+    <p>And Replenishment produces the proposal: the lines with their unit costs, the total, and one small array called submitItems. That array is the only thing that will ever reach submit_purchase_order, and only after a person says yes.</p>
+    <p>So the baton changes shape at every handoff, and each shape is a contract. That's what makes a team of agents something code can rely on.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 9 CHAPTER 3 -->
+<section class="scene chapter" data-scene="chapter" data-part="3" data-noctl>
+  <p class="ch-kick k-wipe">Part 3 of 3</p>
+  <h1 class="k-wipe" style="--d:150ms">Only a person says yes</h1>
+  <p class="ch-sub k-rise">Automate everything except the decision.</p>
+  <div class="trk k-fade"></div>
+  <div class="stn k-pop p1" style="left:292px"></div><div class="stn k-pop p2" style="left:612px"></div><div class="stn k-pop p3" style="left:932px"></div>
+  <p class="slab k-fade s1" style="left:320px">Part 1 · signal</p><p class="slab k-fade s2" style="left:640px">Part 2 · relay</p><p class="slab k-fade s3" style="left:960px">Part 3 · yes</p>
+  <div class="baton"></div>
+  <aside class="notes">
+    <p><b>[11:40, 20 seconds]</b> The baton reaches the last station.</p>
+    <p>Part three, the most important one: the gate, and who is allowed to open it.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 10 TWO LOCKS -->
+<section class="scene locks" data-scene="locks">
+  <p class="kicker k-wipe">Part 3 / Only a person says yes</p>
+  <h2 class="title k-wipe" style="--d:120ms">Asking nicely is not a gate</h2>
+  <p class="subtitle k-rise">Two locks on submit_purchase_order. Only one of them is real.</p>
+  <svg class="art" viewBox="0 0 1280 720" aria-hidden="true"><path class="path k-fade" d="M304 334 H850"/><circle class="ring wr" cx="856" cy="334" r="34" style="color:var(--lime)"/></svg>
+  <div class="panel agent k-pop"><p class="id">replenishment-action-agent</p><p class="nm">asks to submit</p></div>
+  <div class="panel pcard k-rise">
+    <p class="plabel">Lock 1 · the prompt</p>
+    <p class="q">"You NEVER submit an order yourself without approval."</p>
+    <p class="src">src/agents/__init__.py, REPLENISHMENT</p>
+  </div>
+  <div class="soft k-fade"></div>
+  <p class="req k-fade">only a request</p>
+  <div class="wall k-bloom"></div>
+  <div class="panel ccard k-rise">
+    <p class="plabel" style="color:var(--lime)">Lock 2 · the code</p>
+<pre><span class="k">APPROVAL_REQUIRED</span> = {<span class="s">"submit_purchase_order"</span>}
+
+<span class="k">if</span> call.name <span class="k">in</span> APPROVAL_REQUIRED:
+    <span class="c"># Pause: a human must approve this action before we act.</span>
+    <span class="k">return</span> ToolApprovalRequest(tool_name=call.name, arguments=args)</pre>
+    <p class="src">src/agent_runtime.py, run()</p>
+  </div>
+  <div class="travel pulse-coral tk" style="offset-path:path('M304 334 H837');--dur:2400ms"></div>
+  <div class="tok k-pop"></div>
+  <p class="stamp k-drop">ToolApprovalRequest</p>
+  <p class="stl k-rise">returned to the console, not run</p>
+  <div class="panel tpanel k-rise">
+    <p class="plabel">In the trace of replenishment-action-agent</p>
+    <p class="tr k-rise t1" style="margin-top:10px">get_product <span>looked up the unit costs</span></p>
+    <p class="tr no k-rise t2">submit_purchase_order <span>not there: the code held it</span></p>
+    <p class="tr k-rise t3">approve() <span>in orchestrator.py runs it after a yes</span></p>
+  </div>
+  <p class="moral k-land">A prompt asks. <em>Code decides who can write.</em></p>
+  <p class="foot">The call slipping past the prompt is illustrative: the code stops it either way. Trace finding from challenge 4, Part D.</p>
+  <span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[12:00, 2 minutes]</b> I let both locks appear and read the prompt line aloud.</p>
+    <p>There are two locks on the write tool. The first is in the prompt: "You NEVER submit an order yourself without approval." That's a good instruction. But it's a sentence, and a model can ignore a sentence. The second lock is in the code: a set called APPROVAL_REQUIRED, with exactly one name in it.</p>
+    <p>So let's imagine the worst case: the model asks for submit_purchase_order anyway. <b>[click]</b></p>
+    <p><i>(I wait while the call slips past the dashed line.)</i> The prompt doesn't stop it. It was only ever a request. But when the call reaches the runtime, the code checks that set, and instead of running the tool it returns a ToolApprovalRequest to the console. Nothing is written.</p>
+    <p>You'll see it yourself in challenge 4: in the trace of the replenishment agent there are get_product calls, and no submit_purchase_order at all. The only thing that runs it is approve() in the orchestrator, and only a person's click calls that.</p>
+    <p>That's the line I'd like you to remember: a prompt asks; code decides who can write.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 11 EVENT -->
+<section class="scene event" data-scene="event">
+  <p class="kicker k-wipe">Part 3 / Only a person says yes</p>
+  <h2 class="title k-wipe" style="--d:120ms">The loop starts itself</h2>
+  <p class="subtitle k-rise">Challenge 6: a new signal in Cosmos DB runs the agents, with no click at all.</p>
+  <svg class="art" viewBox="0 0 1280 720" aria-hidden="true">
+    <path class="edge k-draw g1" pathLength="1" d="M322 251 C360 251 362 322 400 326"/>
+    <path class="edge k-draw g1" pathLength="1" d="M322 331 H400" style="--d:120ms"/>
+    <path class="edge k-draw g1" pathLength="1" d="M322 411 C360 411 362 340 400 338" style="--d:240ms"/>
+    <path class="edge k-draw g2" pathLength="1" d="M600 332 H660"/>
+    <path class="edge k-draw g3" pathLength="1" d="M880 332 H930"/>
+    <path class="edge k-draw g4" pathLength="1" d="M1130 332 H1141"/>
+  </svg>
+  <div class="panel src k-rise s1" style="top:222px"><p class="nm">Planner console</p><p class="dt">Inject signal · POST /api/signal</p></div>
+  <div class="panel src k-rise s2" style="top:302px"><p class="nm">An MCP client</p><p class="dt">mcp_client.py · inject_signal</p></div>
+  <div class="panel src k-rise s3" style="top:382px"><p class="nm">Any other writer</p><p class="dt">Data Explorer, SDK, a job</p></div>
+  <div class="panel node k-pop n1" style="left:400px;width:200px"><p class="id">Cosmos DB</p><p class="nm">signals</p><p class="dt">append_signal()</p></div>
+  <div class="panel node k-pop n2" style="left:660px;width:220px"><p class="id">Watcher</p><p class="nm">change feed</p><p class="dt">polls every 3 s, from Now</p></div>
+  <div class="panel node k-pop n3" style="left:930px;width:200px"><p class="id">_auto_run</p><p class="nm">sense, plan, propose</p><p class="dt">same three agents</p></div>
+  <div class="gate k-pop n4" style="left:1141px;top:302px"><i></i><i></i></div>
+  <p class="glab k-fade n4">the gate</p>
+  <div class="travel bat r1" style="offset-path:path('M322 251 C360 251 362 322 400 326 L1128 332');--dur:3000ms"></div>
+  <div class="travel bat r2" style="offset-path:path('M322 331 L1128 332');--dur:3000ms"></div>
+  <div class="travel bat r3" style="offset-path:path('M322 411 C360 411 362 340 400 338 L1128 332');--dur:3000ms"></div>
+  <div class="fact k-rise f1" style="left:72px"><p class="h">/api/signal only writes. It never calls an agent.</p><p class="s">src/ui/app.py</p></div>
+  <div class="fact k-rise f2" style="left:465px"><p class="h">The watcher starts from Now, so the seed data never starts a run.</p><p class="s">src/live.py, start_watcher</p></div>
+  <div class="fact k-rise f3" style="left:858px"><p class="h">A burst of signals queues up and runs one at a time.</p><p class="s">src/live.py, produce and consume</p></div>
+  <p class="moral k-land">Writing the signal is the trigger. <em>The gate stays where it is.</em></p>
+  <p class="foot">Event-driven layer: src/live.py, src/mcp_server.py, src/mcp_client.py (challenge 6).</p>
+  <span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[14:00, 2 minutes]</b> I let the pipeline build from left to right.</p>
+    <p>Planners don't want to click four buttons, and they don't watch a dashboard all day. So in the last challenge the loop starts itself. A new signal lands in the signals container in Cosmos DB. A watcher in the console app reads the Cosmos change feed every three seconds. When something new arrives, it runs sense, plan and propose with the same three agents. And then it stops, at the same gate. <b>[click]</b></p>
+    <p>And it doesn't matter who writes the signal. <i>(I let each source fire in turn.)</i> The Inject button in the console. An MCP client, so GitHub Copilot or another agent, calling a tool called inject_signal. Or anything else that can write a document: Data Explorer, a script, a scheduled job.</p>
+    <p>The design choice that makes this clean: the signal endpoint never calls an agent. It only writes. The change feed is the only trigger, so every writer gets exactly the same reaction, and it always ends at the gate.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 12 THE RELAY (WOW) -->
+<section class="scene relay" data-scene="relay">
+  <p class="kicker k-wipe">Part 3 / Only a person says yes</p>
+  <h2 class="title k-wipe" style="--d:120ms">The whole relay, and one yes</h2>
+  <p class="subtitle k-rise">A recorded run: one signal in, three agents, and a purchase order waiting for a person.</p>
+  <div class="trk k-fade"></div><div class="trk after k-fade"></div>
+  <div class="src-dot k-pop st0"></div>
+  <div class="stn k-pop st1" style="left:322px"></div>
+  <div class="stn k-pop st2" style="left:552px"></div>
+  <div class="stn k-pop st3" style="left:782px"></div>
+  <div class="gate k-pop st4"><i></i><i></i></div>
+  <div class="book k-pop st5"></div>
+  <p class="slab k-fade l0" style="left:130px">Signal</p>
+  <p class="slab k-fade l1" style="left:350px">Demand Sensing</p>
+  <p class="slab k-fade l2" style="left:580px">Inventory Optimisation</p>
+  <p class="slab k-fade l3" style="left:810px">Replenishment</p>
+  <p class="slab k-fade l4" style="left:1020px">Gate</p>
+  <p class="slab k-fade l5" style="left:1170px">orders</p>
+  <p class="tl k-fade t1" style="left:350px">get_external_signals<br>list_low_stock</p>
+  <p class="tl k-fade t2" style="left:580px">list_low_stock<br>calc_reorder</p>
+  <p class="tl k-fade t3" style="left:810px">get_product</p>
+  <p class="tl w k-fade t4" style="left:1020px">submit_purchase_order</p>
+  <div class="baton"></div>
+  <svg class="art" viewBox="0 0 1280 720" aria-hidden="true">
+    <circle class="ring rg" cx="1020" cy="270" r="30" style="color:var(--lilac)"/>
+    <circle class="burst bb" cx="1170" cy="270" r="26"/>
+  </svg>
+  <div class="panel log k-rise">
+    <p class="hd"><span class="plabel">Run log</span><span class="t k-land g27">signal to gate: <span class="lime">27 s</span></span></p>
+    <p class="ll k-rise x1"><span class="tm">9:11:08 PM</span>signal: Heatwave intensifies across the Pacific Northwest</p>
+    <p class="ll k-rise x2"><span class="tm">9:11:16 PM</span>step 1 sensed: Seattle and Portland critically exposed</p>
+    <p class="ll k-rise x3"><span class="tm">9:11:29 PM</span>step 2 planned: 3 CRITICAL lines</p>
+    <p class="ll k-rise x4"><span class="tm">9:11:35 PM</span>step 3 proposed: 3 lines, $27,525</p>
+    <p class="ll gatel k-rise x5"><span class="tm">9:11:35 PM</span>awaiting human approval, the gate holds</p>
+    <p class="ll yes k-rise x6"><span class="tm">on yes</span>purchase order written to the orders container</p>
+  </div>
+  <div class="panel appr k-rise">
+    <p class="hd"><span class="plabel">Step 4 · Approve &amp; act</span></p>
+    <div class="before">
+      <p class="sum k-rise p0">You're approving <b>3</b> purchase-order lines · total <b>$<span class="tot">27,525</span></b></p>
+      <div style="margin-top:8px">
+        <p class="po k-rise p1"><span class="n">Leaf Blower X2</span><span class="l">ST04</span><span class="q">114 × $95</span><span class="t">$10,830</span></p>
+        <p class="po k-rise p2"><span class="n">Chainsaw 16in</span><span class="l">ST03</span><span class="q">64 × $140</span><span class="t">$8,960</span></p>
+        <p class="po k-rise p3"><span class="n">Hedge Trimmer</span><span class="l">ST03</span><span class="q">91 × $85</span><span class="t">$7,735</span></p>
+      </div>
+      <p class="cancel">Order cancelled. No action taken.</p>
+    </div>
+    <div class="after">
+      <p class="conf k-land c0">Purchase order PO-yyyymmdd-001 submitted and recorded in the order book.</p>
+      <p class="ob new first k-land c1"><span>PO-yyyymmdd-001</span><span>submitted</span><span>Planner</span></p>
+      <p class="ob k-rise c2"><span>ORD-1004</span><span>submitted</span><span>Jordan Lee</span></p>
+      <p class="ob k-rise c2"><span>ORD-1003</span><span>rejected</span><span>Sam Rivera</span></p>
+      <p class="ob k-rise c2"><span>ORD-1002</span><span>completed</span><span>Sam Rivera</span></p>
+    </div>
+    <div class="btns k-pop"><button type="button" class="rej">Reject</button><button type="button" class="ok">Approve &amp; submit</button></div>
+  </div>
+  <p class="moral k-land">Three agents did the legwork. <em>One person said yes.</em></p>
+  <p class="foot">Run log and lines from images/challenge-05-reactive.png; the approve outcome as in challenges 4 and 6. The animation is faster than the 27 s run.</p>
+  <span class="fragment beat"></span>
+  <aside class="notes">
+    <p><b>[16:00, 3 minutes]</b> I let the whole run play without talking over every step: the baton needs about sixteen seconds to reach the gate.</p>
+    <p>So here's everything together, from a run we recorded. At 9:11 and 8 seconds, a signal lands: the heatwave intensifies across the Pacific Northwest. Nobody clicks anything.</p>
+    <p>Demand Sensing picks it up, calls its tools, and eight seconds later says: Seattle and Portland are critically exposed. Inventory Optimisation calls calc_reorder and plans three critical lines. Replenishment looks up the unit costs with get_product and proposes a purchase order: 114 leaf blowers for Seattle, 64 chainsaws and 91 hedge trimmers for Portland. Twenty-seven thousand, five hundred and twenty-five dollars.</p>
+    <p><i>(I wait until the baton stops at the gate and the gate starts to glow.)</i> Twenty-seven seconds from the signal to here. And here it stops. The agents have done all the legwork, and the decision is on the screen, line by line, with the total.</p>
+    <p>So, room: would you approve it? <i>(I take one or two answers.)</i> Then let's say yes. <b>[click]</b></p>
+    <p>The gate opens. Now, and only now, submit_purchase_order runs. The order is written to Cosmos DB and appears at the top of the order book, above the orders Zava already had.</p>
+    <p>Three agents did the legwork. One person said yes. That's the loop you'll build today.</p>
+    <p>If someone wants to see the other path, I click Reject instead before I say yes: it shows "Order cancelled. No action taken." That is the real message from the console.</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 13 THE DAY -->
+<section class="scene day" data-scene="day">
+  <p class="kicker k-wipe">Your day</p>
+  <h2 class="title k-wipe" style="--d:120ms">Six challenges, one relay</h2>
+  <p class="subtitle k-rise">You build one agent at a time, then let the loop run by itself. Full solutions are in walkthrough/.</p>
+  <div class="trk k-fade"></div>
+  <div class="days"></div>
+  <div class="baton"></div>
+  <div class="brk k-fade b1" style="left:80px;width:728px"></div><p class="brl k-fade b1" style="left:444px">core: 4 h 15 min</p>
+  <div class="brk k-fade b2" style="left:864px;width:336px"></div><p class="brl k-fade b2" style="left:1032px">stretch: 1 h 45 min</p>
+  <p class="moral k-land">After each challenge, ask: which of our planning decisions could agents prepare, <em>if a person still approves?</em></p>
+  <p class="foot">Challenge list and times from README.md. Everything runs in a GitHub Codespace with your own Foundry project and Cosmos DB.</p>
+  <aside class="notes">
+    <p><b>[19:00, 1.5 minutes]</b> I let the baton run along the six challenges.</p>
+    <p>Here's your day. In challenge 1 you set up your Codespace and open the planner console. In 2, 3 and 4 you build the three agents, one at a time, and in challenge 3 you read your first trace. Challenge 4 is the heart of the hack: the approval gate. That's the core, about four and a quarter hours.</p>
+    <p>If you have time, challenge 5 connects the loop to one button, and challenge 6 lets it start itself from a signal, including from an MCP client.</p>
+    <p>And after each one, take a minute for the question that matters most: which decisions in your own organisation could agents prepare, if a person still approves the final action?</p>
+  </aside>
+</section>
+
+<!-- ===================================================================== 14 SIGN-OFF -->
+<section class="scene outro" data-scene="outro" data-noctl>
+  <div class="trk k-fade"></div>
+  <div class="stn k-pop o1" style="left:412px"></div><div class="stn k-pop o2" style="left:532px"></div><div class="stn k-pop o3" style="left:652px"></div>
+  <div class="gate k-pop o4"><i></i><i></i></div>
+  <div class="baton"></div>
+  <p class="words"><span class="k-rise w1">Sense.</span><span class="k-rise w2">Plan.</span><span class="k-rise w3 ap">Approve.</span><span class="k-rise w4">Act.</span></p>
+  <h1 class="k-land hl">Your turn to say <span class="yes">yes.</span></h1>
+  <p class="by k-rise">Digvijay Chauhan, Solution Engineer, Microsoft</p>
+  <p class="where k-rise">github.com/microsoft/MicroHack · 03-Azure/01-04-AI/03_Inventory_Planning_Agentic</p>
+  <aside class="notes">
+    <p><b>[20:30, 1 minute]</b> I let the baton cross the three stations and the gate open before I say the last line.</p>
+    <p>Sense, plan, approve, act. The agents do three of those four. The one in lime is yours.</p>
+    <p>Open your Codespace, start with challenge 1, and call me over whenever you're stuck. Your turn to say yes. Thank you.</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="vendor/reveal.js-6.0.2/reveal.js"></script>
+<script src="vendor/reveal.js-6.0.2/plugin/notes.js"></script>
+<script src="js/data.js"></script>
+<script src="js/scenes.js"></script>
+<script src="js/relay-engine.js"></script>
+<script>startDeck();</script>
+</body>
+</html>

@@ -233,6 +233,7 @@ A row is **CRITICAL** when `onHand` is less than `safetyStock`. It is **AT_RISK*
 | Port 8000 didn't open | Open the **Ports** tab and click the globe on 8000. |
 | `az login` opens no browser | Use `az login --use-device-code` and follow the URL. |
 | Panels show "not connected" | Set `COSMOS_ENDPOINT` in `src/.env` and run `az login --use-device-code`. If the lab was just created, Cosmos data-plane permission can take up to 15 minutes to become active. Keep the app running, wait, and reload the page. If it still fails, copy the last error from the `uvicorn` terminal and ask the facilitator. |
+| `uvicorn` stops at startup with a Cosmos `Resource Not Found` / `NotFound` error | One of the seven Cosmos containers wasn't provisioned. Don't create it by hand with a guessed partition key. Ask your facilitator: the fix is in the coach walkthrough. |
 | `Forbidden` / 403 from Cosmos | A new **Cosmos DB Built-in Data Contributor** assignment can take up to 15 minutes to propagate. If 15 minutes have passed, run `az logout`, then `az login --use-device-code` with the Hackbox account and restart `uvicorn`. |
 
 ## 🚀 Go further

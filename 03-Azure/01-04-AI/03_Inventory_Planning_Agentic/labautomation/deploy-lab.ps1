@@ -410,30 +410,75 @@ if (-not $cosmosReachable) {
 }
 Write-Host "[OK]    Cosmos account public endpoint verified."
 
-# Database
-$dbUri = "$cosmosBase/sqlDatabases/${cosmosDb}?api-version=$cosmosApi"
-if ((Invoke-MhhArm -Method GET -Path $dbUri -AllowNotFound).StatusCode -ne 200) {
-    $dbBody = @{ properties = @{ resource = @{ id = $cosmosDb } } } | ConvertTo-Json -Depth 5
-    Invoke-MhhArm -Method PUT -Path $dbUri -Payload $dbBody | Out-Null
-    Write-Host "[OK]    Cosmos database '$cosmosDb' created."
+# Cosmos database and container PUTs are long-running: ARM answers 202 Accepted
+# and the create can still fail in the background (for example a container PUT
+# issued while its database is still being created, or while another operation
+# holds the account). A 2xx from the PUT therefore proves nothing. This helper
+# only returns once a GET shows the resource exists, re-issues the PUT if it
+# vanished, and throws if it never appears, so the lab never ships with a
+# missing container.
+function Confirm-MhhCosmosResource {
+    param(
+        [Parameter(Mandatory=$true)][string]$Uri,
+        [Parameter(Mandatory=$true)][string]$Body,
+        [Parameter(Mandatory=$true)][string]$Label,
+        [int]$Attempts = 5,
+        [int]$WaitSeconds = 90
+    )
+    for ($attempt = 1; $attempt -le $Attempts; $attempt++) {
+        if ((Invoke-MhhArm -Method GET -Path $Uri -AllowNotFound).StatusCode -eq 200) {
+            if ($attempt -gt 1) { Write-Host "[OK]    $Label created." }
+            return
+        }
+        $put = Invoke-AzRestMethod -Method PUT -Uri "https://management.azure.com$Uri" -Payload $Body
+        if ($put.StatusCode -notin @(200, 201, 202, 409, 412, 429, 500, 502, 503, 504)) {
+            throw "ARM PUT for $Label failed with HTTP $($put.StatusCode): $($put.Content)"
+        }
+        $deadline = (Get-Date).AddSeconds($WaitSeconds)
+        while ((Get-Date) -lt $deadline) {
+            Start-Sleep -Seconds 5
+            if ((Invoke-MhhArm -Method GET -Path $Uri -AllowNotFound).StatusCode -eq 200) {
+                Write-Host "[OK]    $Label created."
+                return
+            }
+        }
+        Write-Host "[WARN]  $Label not visible after attempt $attempt (PUT HTTP $($put.StatusCode)); retrying..."
+    }
+    throw "$Label was not created after $Attempts attempts."
 }
 
-# Containers (name -> partition key path)
+# Database
+$dbUri  = "$cosmosBase/sqlDatabases/${cosmosDb}?api-version=$cosmosApi"
+$dbBody = @{ properties = @{ resource = @{ id = $cosmosDb } } } | ConvertTo-Json -Depth 5
+Confirm-MhhCosmosResource -Uri $dbUri -Body $dbBody -Label "Cosmos database '$cosmosDb'"
+
+# Containers (name -> partition key path), created one at a time and each
+# confirmed before the next, because Cosmos serialises control-plane operations
+# per account.
 $containers = [ordered]@{
     products = "/productId"; stores = "/storeId"; suppliers = "/supplierId";
     signals  = "/signalId";  inventory = "/productId"; demand = "/productId"; orders = "/orderId"
 }
 foreach ($cName in $containers.Keys) {
-    $cUri = "$cosmosBase/sqlDatabases/$cosmosDb/containers/${cName}?api-version=$cosmosApi"
-    if ((Invoke-MhhArm -Method GET -Path $cUri -AllowNotFound).StatusCode -ne 200) {
-        $cBody = @{ properties = @{ resource = @{
-            id           = $cName
-            partitionKey = @{ paths = @($containers[$cName]); kind = "Hash" }
-        } } } | ConvertTo-Json -Depth 6
-        Invoke-MhhArm -Method PUT -Path $cUri -Payload $cBody | Out-Null
-        Write-Host "[OK]    Cosmos container '$cName' created."
-    }
+    $cUri  = "$cosmosBase/sqlDatabases/$cosmosDb/containers/${cName}?api-version=$cosmosApi"
+    $cBody = @{ properties = @{ resource = @{
+        id           = $cName
+        partitionKey = @{ paths = @($containers[$cName]); kind = "Hash" }
+    } } } | ConvertTo-Json -Depth 6
+    Confirm-MhhCosmosResource -Uri $cUri -Body $cBody -Label "Cosmos container '$cName'"
 }
+
+# Final gate: list the database's containers and fail if any expected one is
+# missing, so a partial data store is never published as a working lab.
+$listed = (Invoke-MhhArm -Method GET `
+    -Path "$cosmosBase/sqlDatabases/$cosmosDb/containers?api-version=$cosmosApi").Content |
+    ConvertFrom-Json
+$present = @($listed.value | ForEach-Object { $_.name })
+$missing = @($containers.Keys | Where-Object { $_ -notin $present })
+if ($missing.Count -gt 0) {
+    throw "Cosmos database '$cosmosDb' is missing container(s): $($missing -join ', ')."
+}
+Write-Host "[OK]    All $($containers.Count) Cosmos containers verified: $($present -join ', ')."
 
 # Data-plane RBAC: Cosmos DB Built-in Data Contributor (…0002) per attendee.
 $cosmosDataRole = "$cosmosBase/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002"

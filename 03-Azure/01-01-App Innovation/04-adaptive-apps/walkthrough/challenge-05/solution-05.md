@@ -6,7 +6,7 @@ Duration: 60-90 minutes
 
 ## Coach notes
 
-**Hosted Console:** after Challenges 03-04, source `artifacts/console-env.sh`.
+**Hosted Lab:** after Challenges 03-04, source `artifacts/console-env.sh`.
 Use the supplied ACR, resource group, and region. Skip registry creation;
 complete the recipe exercises below.
 
@@ -195,7 +195,9 @@ output result object = {
 Discuss why the password belongs in `secrets`, why the developer never supplies the
 Azure resource group, and what changes when a different recipe implements the type.
 
-## Manual tutorial, Stage 2: Publish and register the SQL recipe on AKS
+## Manual tutorial, Stage 2: Publish and register the SQL recipe on AKS and K3S
+
+If your run k3s in a spererate console session, make sure you login to the container registry also in the K3S console session. 
 
 Select AKS and its Radius workspace:
 
@@ -223,14 +225,14 @@ rad group switch rg-trading
 > produces a duplicated hostname and causes Radius recipe downloads to fail with
 > `RecipeDownloadFailed` / `no such host`.
 >
-> Hosted participants should source `artifacts/console-env.sh` and retain its supplied
+> Hosted Lab participants should source `artifacts/console-env.sh` and retain its supplied
 > `ACR_NAME`.
 
-**Hosted Console:** reuse the supplied registry; do not run the creation block.
+**Hosted Lab:** reuse the supplied registry; do not run the creation block.
 Source and verify your supplied values:
 
 ```bash
-source artifacts/console-env.sh
+source artifacts/lab-env.sh
 az acr show --resource-group "$RESOURCE_GROUP" --name "$ACR_NAME" \
   --query '{name:name,location:location,sku:sku.name,anonymousPull:anonymousPullEnabled}'
 ```
@@ -345,23 +347,19 @@ rad bicep publish \
   --target "br:${ACR_NAME}.azurecr.io/recipes/workload-identity-azure:1.0.8"
 ```
 
-Event Grid uses version `1.0.9` because its recipe now accepts the namespace name
-supplied by the environment. Do not overwrite an already published `1.0.8` artifact.
 The remaining AKS recipes already reference published GHCR templates and do not need
 republishing. Deploy the environment definition below to register the complete set,
 including the Azure SQL teaching recipe published and registered in Stage 2.
 
 The AKS environment definition registers Azure-backed implementations and the custom
 SQL recipe. PostgreSQL public access is restricted to the cluster's exact effective
-outbound IPs. The commands reject unsupported outbound types, public IP prefixes, and
-non-static IP resources rather than widening the database firewall.
+outbound IPs. The commands below is mostly about infra level access, at the end you can find the recipe registration.
 
 The environment supplies the same Event Grid namespace name to the broker and identity
 recipes. `iac/app.bicep` deploys the broker before either identity, so the `orders` topic
 space exists before role assignments and permission bindings are created. The identity
 recipe receives the AKS OIDC issuer and binds the application's service account
-(`default` unless overridden). This workshop uses one Trading broker per environment.
-The Radius Azure provisioning identity must be allowed to create managed identities,
+(`default` unless overridden). The Radius Azure provisioning identity must be allowed to create managed identities,
 federated credentials, and role assignments; resource Contributor alone cannot create
 role assignments.
 
@@ -490,14 +488,14 @@ rad deploy iac/aks-env.bicep \
 
 Publish the workshop-owned Kubernetes PostgreSQL recipe to the same ACR. It compiles
 the same `iac/recipes/trading-schema.sql` as the Azure implementation. The portable
-size `L` selects a 2 GiB memory limit in K3s rather than Azure compute. Use the pinned
-workshop tag and publish a new version if the source changes.
+size `L` selects a 2 GiB memory limit in K3s rather than Azure compute.
 
 ```bash
 rad bicep publish \
   --file iac/recipes/postgres-kubernetes.bicep \
   --target "br:${ACR_NAME}.azurecr.io/recipes/postgres-kubernetes:1.0.8"
 ```
+If you get an error like "Failed to publish Bicep file "iac/recipes/postgres-kubernetes.bicep" to "****.azurecr.io/recipes/postgres-kubernetes:1.0.8""connecting the ACR. Follow the steps in section 2 also for the K3S session to make sure you can access the Azure Container registry. 
 
 Switch both kube context and Radius workspace:
 
@@ -591,7 +589,7 @@ kubectl port-forward service/dashboard \
   --namespace radius-system 7007:80
 ```
 
-Open <http://localhost:7007>, navigate to the environment, and inspect **Recipes**.
+Open <http://localhost:7007>, navigate to the environment, and inspect **Recipes** (select the environment in the UI - default does not have recipies).
 
 
 ## Optional automation

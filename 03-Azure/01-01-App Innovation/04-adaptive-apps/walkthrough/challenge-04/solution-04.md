@@ -6,7 +6,7 @@ Duration: 45-75 minutes
 
 ## Coach notes
 
-**Hosted Console:** complete Challenge 03, then install the portfolio and resource
+**Hosted Lab:** complete Challenge 03, then install the portfolio and resource
 types with the exercises below.
 [Console setup](https://github.com/microsoft/MicroHack/blob/main/03-Azure/01-01-App%20Innovation/04-adaptive-apps/docs/console-setup.md)
 supplies cluster connections only. Generate each participant's local
@@ -91,6 +91,7 @@ export KUBECONFIG="$HOME/.kube/adaptive-apps-k3s.yaml"
 kubectl config use-context k3s-azure-vm
 
 export PORTFOLIO=core
+export ADAPTIVE_APPS_REPO="/tmp/adaptive-apps"
 helm upgrade --install "$PORTFOLIO" \
   "$ADAPTIVE_APPS_REPO/charts/adaptive-apps" \
   --values "$ADAPTIVE_APPS_REPO/charts/adaptive-apps/profiles/${PORTFOLIO}.yaml" \
@@ -139,7 +140,7 @@ the same type while the application declaration remains unchanged.
 
 ## Manual tutorial, Stage 1: Create a SQL Server type
 
-Create `iac/sql-databases.yaml`:
+Review `iac/sql-databases.yaml`
 
 ```yaml
 namespace: Radius.Resources
@@ -222,15 +223,12 @@ Discuss:
 
 ## Manual tutorial, Stage 2: Import the catalog
 
-The source catalog is pinned to the Adaptive Apps commit used to author this
-MicroHack:
+The source catalog is sourced from the Adaptive Apps repo, we use this in this MicroHack and import it:
 
 ```bash
 export TYPES_URL="https://raw.githubusercontent.com/microsoft/adaptive-apps/885627980684e5bcc6fe4bbd2848c1ec247b0a0b/radius/resource-types/types.yaml"
 curl --fail --location "$TYPES_URL" --output /tmp/adaptive-apps-types.yaml
 ```
-
-Review the downloaded schema before registering it.
 
 ### Import manually on AKS
 

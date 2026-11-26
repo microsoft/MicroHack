@@ -1,178 +1,149 @@
-# Challenge 5 — Orchestrate the Loop (Stretch)
+# Challenge 5 — Run and Publish the Inventory Planning Assistant (Stretch)
 
 **[← Previous](challenge-04.md)** - [Home](../README.md)
 
-> [!NOTE]
-> This is an **optional stretch challenge** for teams that finish early. It builds directly on the three agents you created in Challenges 2–4. Skip it without penalty — Challenges 1–4 are the core of the hack.
-
-> [!IMPORTANT]
-> This challenge uses the Foundry **visual workflow designer** (preview), which is supported in the portal until **30 November 2026**. Microsoft Foundry retires in-portal workflows on **1 December 2026**.
-
 ## 🎯 Objective
 
-Chain your three agents in a Foundry **Workflow** so the whole sense → plan → approve → act loop runs from **one prompt** and pauses only for your approval. No new agent and no code: you reuse the three agents you already built.
+Run the whole loop — demand sensing, inventory optimisation and a replenishment proposal — from **one prompt**, using a hosted assistant that you deploy from your browser. Approve the order with exact commands, inspect the trace, then (optionally) publish the assistant to Teams and Microsoft 365 Copilot. The final action stays a simulation: no real ERP is called.
+
+> [!NOTE]
+> **Stretch challenge.** The Foundry visual workflow designer retires on **1 December 2026**, so this challenge uses a small hosted assistant instead. It chains the three agents you built in Challenges 2–4. The earlier visual-workflow instructions are archived in the repository's `archive` folder on GitHub.
 
 ## 🧭 Context
 
-The planning team doesn't want to talk to three separate agents. They want to type one sentence — *"A heatwave is hitting the Pacific Northwest, check our outdoor power tool exposure and prepare a replenishment order for approval"* — and have the system run the whole loop.
+In Challenges 2–4 you ran each agent by hand and pasted the result into the next one. Now one hosted app does that for you: it runs your three agents' saved instructions in order and returns a purchase order proposal.
 
-How it works: a workflow runs its agent nodes **in order** in **one shared conversation**, so each agent automatically sees what the previous agent replied. You don't need to pass data between nodes — you only add a **human approval gate** on the last node.
-
-```
-Start ─▶ demand-sensing-agent ─▶ inventory-optimisation-agent ─▶ replenishment-action-agent ─▶ End
-                                                                   (waits for YES / NO / MODIFY)
-```
+The approval is **not** left to the AI. The app only accepts exact commands (`YES`, `NO`, `MODIFY`), so a model can never approve an order by itself.
 
 ## ✅ Tasks
 
-### Before you start — 2-minute pre-flight check
+### Part A — Deploy the assistant from your browser (15 min)
 
-- [ ] Your three agents exist with **exactly** these names: `demand-sensing-agent`, `inventory-optimisation-agent`, `replenishment-action-agent`.
-- [ ] In Challenge 4, `replenishment-action-agent` answered `YES` with `✅ Purchase order PO-… submitted to ERP.` and `NO` with `❌ Order cancelled. …`. The approval gate below looks for those exact phrases, so don't reword them.
+You don't install anything on your computer.
 
-If either check fails, finish Challenge 4 first — the workflow only reuses your agents.
+1. Make sure your three agents from Challenges 2–4 are **saved**, use **Fabric IQ**, and that your Fabric capacity is **running**.
+2. Follow the [deployment guide](../orchestrator/README.md). It takes you through three short steps: open Cloud Shell in a private window, download the lab files, and run one command with the **ResourceGroupName** from your lab dashboard. (Prefer VS Code? The guide also covers running it from GitHub Codespaces or a local Dev Container.)
+3. Wait for `PASS: hosted multi-turn checks` (about 10 minutes in total). If it fails, read the message and ask your facilitator before moving on.
 
-> [!WARNING]
-> **The workflow designer does not save automatically**, and it only saves a **valid** workflow (every agent node has an agent, and the chain ends in **End**). Select **Save** once the workflow is valid, and again after every later change.
+> [!IMPORTANT]
+> Never type your Temporary Access Pass (TAP) into the terminal. Enter it only on the Microsoft sign-in page. If you change an agent later, run the deployment again so the assistant picks up the new version.
 
-### Part A — Create the workflow from the Sequential template (10 min)
+### Part B — Run the complete planning loop (10 min)
 
-1. In the [Foundry portal](https://ai.azure.com), select **Build** in the upper-right menu, then **Workflows → Create new workflow** (or **+ New workflow**).
-2. Pick the **Sequential** template. It opens a canvas with **Start**, three **agent nodes**, and three yellow **notes** with sample marketing instructions.
-3. **Delete the three yellow notes** (they're only sample text for the template).
-
-   ![The Sequential template canvas with three yellow sample notes above the agent nodes](../images/challenge-05-workflow-template.png)
-
-Don't save yet — the template isn't valid until you finish Part B.
-
-### Part B — Put your three agents in the nodes (15 min)
-
-1. Select the **first** agent node. Choose **Use an existing agent** (labelled **existing**), search for `demand-sensing-agent`, and select it.
-2. Select the **second** agent node and pick `inventory-optimisation-agent` in the same way.
-3. If there is no third agent node, select the **+** after the second node → **Invoke agent**. Pick `replenishment-action-agent` for the **third** node.
-4. Remove any **extra** template nodes you don't use (select the node's **⋯ → Delete**).
-5. If there's no **End** node after `replenishment-action-agent`, select the **+** after it → **Basics → End**. The chain must be exactly:
-   **Start → `demand-sensing-agent` → `inventory-optimisation-agent` → `replenishment-action-agent` → End**.
-
-   ![Adding an End node from the + after replenishment-action-agent, under Basics](../images/challenge-05-workflow-add-end.png)
-6. Select the **`replenishment-action-agent`** node, open **Node settings**, and add the **human approval gate**:
-   1. Leave **Conversation context** = `System.ConversationId` and **Input message** = `Local.LatestMessage` (the defaults — don't change them).
-   2. Turn on **Allow multi-turn conversation**. This makes the node wait for your reply instead of ending after its first answer.
-   3. In **Loop condition**, paste this formula, then select **Done**:
-
-      ```powerfx
-      And(
-        IsBlank(Find("submitted to ERP", Last(Local.LatestMessage).Text)),
-        IsBlank(Find("Order cancelled", Last(Local.LatestMessage).Text))
-      )
-      ```
-
-      In plain words: *keep waiting for the human until the agent says the order was submitted or cancelled.* `MODIFY` re-presents the order and keeps waiting; `YES` or `NO` ends the node.
-
-      ![Node settings of replenishment-action-agent: Input message Local.LatestMessage, multi-turn on, loop condition pasted, Done](../images/challenge-05-workflow-approval-gate.png)
-7. Leave every other setting at its default. Select **Save**, and when asked, name the workflow `inventory-planning-workflow`.
-
-   ![Saved inventory-planning-workflow at version 1 with Start, the three agents and End](../images/challenge-05-workflow-saved.png)
-
-**✔ Checkpoint:** the name `inventory-planning-workflow` and a **Version** number show at the top, and the canvas shows the three agents in order between Start and End.
-
-### Part C — Run the full loop from one prompt (15 min)
-
-1. **Refresh the browser page**, then select **Preview** to open the chat pane. (Preview stays disabled while there are unsaved changes, and the chat box may not accept input until the page is refreshed after saving.)
-2. Send this request:
+1. In the Foundry portal, open the **hosted** agent `inventory-planning-assistant` and select **Test in playground**. Start a new conversation.
+2. Send:
 
    ```text
    A prolonged heatwave is hitting the Pacific Northwest. Check our exposure on outdoor power tools and prepare a replenishment order for approval. Include Leaf Blower X2 (P004) at Seattle and Portland.
    ```
 
    > [!TIP]
-   > **Keep the product and stores in the prompt, as in Challenge 3.** Naming the SKU (`P004`) and the locations avoids a Fabric query error (*collation conflict*) that would leave the later agents with no data.
+   > **Name the product, as in Challenge 3.** A category-only request can make the
+   > Fabric Data Agent generate a query with a collation conflict. Naming `P004`,
+   > Seattle and Portland makes the request more precise. If inventory cannot be
+   > verified, retry the request before approving anything.
 
-3. Watch the nodes turn green one after another: demand sensing → optimisation → replenishment. Each agent's answer appears in the chat pane.
-4. When the purchase-order proposal appears, check that the unit cost for P004 is **$95** (not the **$20** fallback). Then reply `YES`. Optionally try `MODIFY 1 50` first, then `YES`.
-5. Confirm the final message is `✅ Purchase order PO-… submitted to ERP.` and the **End** node turns green.
+3. Wait 2–4 minutes: three agents run in turn and query your Fabric data. You should get **PURCHASE ORDER PROPOSAL (simulation only)** with status **AWAITING_APPROVAL**, a proposal ID, revision 1 and one or more lines. Locations appear as store IDs (`ST03` is Portland, `ST04` is Seattle). The model decides how many lines to propose.
 
-   ![All nodes green; the replenishment agent confirms the purchase order was submitted after YES](../images/challenge-05-workflow-run-complete.png)
-6. Open the **Traces** tab of the workflow (or **Traces** next to a reply) and find your run. Expand it to see each agent node with its **Fabric IQ** tool call, and your approval turn on the replenishment node.
+   ![The hosted assistant's purchase order proposal with five lines, unit costs, a total, and the approve, cancel and change commands](../images/challenge-05-proposal.png)
+4. Check the unit costs against your data. For the seed data they are **$95** (P004 Leaf Blower X2), **$140** (P005 Chainsaw) and **$85** (P006 Hedge Trimmer). Quantities vary a little between runs.
 
-**✔ Checkpoint:** one prompt plus one `YES` produced a submitted purchase order, and the trace shows all three agents.
+### Part C — Modify, approve and cancel (15 min)
+
+Use the exact proposal ID printed in your answer, and stay in the **same conversation**.
+
+1. Change line 1: `MODIFY <proposal-id> 1 1 50`. Confirm the new quantity, the new total and **revision 2**.
+2. Try the old approval: `YES <proposal-id> 1`. It must be rejected as stale.
+3. Send the new one: `YES <proposal-id> 2`. Expect **SIMULATED submission** and a statement that nothing went to a real ERP.
+4. Send the same approval again. It must **not** submit twice.
+
+   ![The approval accepted as a SIMULATED submission at revision 2, followed by the same approval rejected with No duplicate submission](../images/challenge-05-approve-and-replay.png)
+5. Send `NEW`, then ask for another plan, and cancel it with `NO <new-proposal-id> <revision>`.
+6. Send `STATUS` to see the saved result.
+
+   ![An order cancelled with NO, then STATUS showing the same proposal as CANCELLED](../images/challenge-05-cancel-status.png)
+
+### Part D — Inspect the trace (10 min)
+
+Open the assistant's **Traces** tab and select your run (a planning run lasts about three minutes and has many spans). Expect a tree like this:
+
+```text
+invoke_agent inventory-planning-assistant:<version>
+  invoke_agent
+    workflow.build
+    workflow.run                       (the fixed graph)
+      executor.process demand          -> model and Fabric calls
+      executor.process optimisation    -> model and Fabric calls
+      executor.process replenishment   -> model and Fabric cost lookup
+```
+
+![A planning run's trace with workflow.run and the three executor.process stages: demand, optimisation and replenishment](../images/challenge-05-trace.png)
+
+Under each stage you see `POST .../openai/v1/responses` calls: the model calls that run your agent's instructions and the Fabric lookups that return the data. Short calls elsewhere in the same trace are your commands (`MODIFY`, `YES` and so on), which are handled by code and not by a model. Your own agents' instructions drive each stage. Span names can change between preview versions, so look for the three stages rather than the exact names.
+
+### Part E — Publish and try it in Teams and Microsoft 365 (optional, 20 min)
+
+Ask your facilitator whether publishing is enabled for your lab before you start.
+
+1. In the hosted agent, choose the latest **active** version, then **Publish → Teams & Microsoft 365 Copilot**.
+2. In the dialog, keep the pre-filled **Agent name**, **Publish version** and **Azure bot services** name. Check the **Short description**, write a one-sentence **Description** (for example, *Plans replenishment for outdoor power tools and asks for approval before a simulated order*), and enter your own name as the **Developer**.
+
+   ![The Publish to Teams and Microsoft 365 dialog with the agent name, version, descriptions, Azure bot service name and developer filled in](../images/challenge-05-publish-dialog.png)
+
+3. Select **Next: Publish options**. On the **Direct publish** tab, choose **Just you** (the default, available immediately). Leave **People in your organization** alone: it needs approval from your Microsoft 365 admin. Then select **Publish**.
+
+   ![The Publish options screen with Just you selected and People in your organization requiring admin approval](../images/challenge-05-publish-options.png)
+
+   When it finishes you see **Publish successful**. It says your assistant is now in the **Microsoft 365 Copilot agent store** (**All agents → Your agents**) and in Teams (**Apps → Manage your apps**). Select **Done**.
+
+   ![The Publish successful message pointing to the Microsoft 365 Copilot agent store and Teams](../images/challenge-05-publish-success.png)
+
+4. Open a **new private window**, sign in with your lab account, and open [Teams for the web](https://teams.cloud.microsoft/). Find your assistant under **Apps → Manage your apps** and repeat Parts B and C.
+5. In another tab, open [Microsoft 365 Copilot for the web](https://m365copilot.com/). Open **All agents → Your agents**, start a **new chat** with the assistant, run Part B, then cancel an order and send `STATUS`.
+6. If you are asked to sign in or consent, use the same private window and your lab account.
+
+> [!TIP]
+> Use the **web** apps, not desktop clients. **Just you** means only you can use the assistant. A private window can reset your browser sign-in, but your conversation stays on the server — use **New chat** to start fresh.
 
 ## 🏁 Success criteria
 
-- [ ] `inventory-planning-workflow` chains Start → `demand-sensing-agent` → `inventory-optimisation-agent` → `replenishment-action-agent` → End.
-- [ ] A single prompt runs the full sense → plan → approve → act loop and pauses only at the approval gate.
-- [ ] Replying `YES` ends the run with `✅ Purchase order PO-… submitted to ERP.` (and `NO` would end it with `❌ Order cancelled…`).
-- [ ] The trace shows node-by-node execution — each agent's Fabric IQ tool call, plus your approval turn.
-- [ ] You can explain the trade-off between a deterministic workflow and three agents a human drives manually.
+- [ ] The assistant deployed (from Cloud Shell, or a Codespace / Dev Container) and the check printed `PASS`.
+- [ ] One prompt ran all three agents and produced a proposal with **AWAITING_APPROVAL** and Fabric unit costs.
+- [ ] `MODIFY` changed the revision and total, and the old approval was rejected as stale.
+- [ ] `YES` gave a **simulated** submission, and repeating it did not submit again.
+- [ ] `NO` cancelled an order and `STATUS` showed it.
+- [ ] You found the three stages and the Data Agent calls in the trace.
+- [ ] *(Optional)* You tried the assistant in Teams for the web and Microsoft 365 Copilot for the web.
 
 ## 🛠️ Troubleshooting
 
 | Symptom | Fix |
 |---------|-----|
-| No **Workflows** option, or you can't create one | Make sure you use the new Foundry portal (the **New Foundry** toggle is on) and select **Build**. You need the **Contributor** role or higher on the project — ask your facilitator. |
-| Your changes are gone | The designer doesn't save automatically. Redo the change and select **Save** after each step. |
-| Your agent isn't in the **existing** agent list | Search by the exact name from Challenges 2–4. The agent must be saved in the **same** Foundry project. |
-| **Save** does nothing or shows an error | The workflow isn't valid yet: every agent node needs an agent, the yellow template notes should be deleted, and the chain must end in **End** (**+ → Basics → End**). |
-| **Preview** is greyed out, or you can't type in the preview chat | Select **Save** first, then refresh the browser page and open **Preview** again. |
-| Loop condition error *"Name isn't valid"* | On the replenishment node, keep **Input message** = `Local.LatestMessage` (the default) and re-paste the formula exactly. |
-| The run ends right after the proposal, without waiting for you | **Allow multi-turn conversation** is off on the replenishment node. Turn it on, **Save**, and run again in a **new** conversation. |
-| The replenishment node never stops asking | The confirmation wording changed. The formula looks for `submitted to ERP` and `Order cancelled` (case-sensitive), exactly as in the Challenge 4 instructions. |
-| A later agent says it has no data, or asks you to paste a table | An earlier agent returned no usable result. Start a **new** conversation and send the prompt again with the product and stores named, as in Part C. |
-| The purchase order shows **$20** unit costs | That's the fallback: the agent skipped the Fabric cost lookup. Reply `NO` and run again in a **new** conversation. Expect $95 (P004), $140 (P005) and $85 (P006). |
-| Something else looks wrong between nodes | Open **Traces** for the run and check which node produced the unexpected answer. Fix that agent's instructions in its own playground first, then re-run the workflow. |
+| The deployment says permission denied | Tell your facilitator — a lab role may be missing. Don't ask for Owner. |
+| No `inventory-planning-assistant` in Foundry | Rerun Part A. You don't create a visual workflow in this challenge. |
+| Planning fails and mentions Fabric | Check that your Fabric capacity is **running**, that your Data Agent is **published**, and that you can query it in Fabric. Rerun, and give your facilitator the request ID from the error. |
+| The proposal is missing or has no costs | Send the request again. Costs must come from Fabric, and the assistant retries once by itself. |
+| The assistant asks you to paste a recommendation table or SKU data | An earlier stage returned no usable recommendation. Start a new conversation and name Leaf Blower X2 (`P004`) at Seattle and Portland, as in Part B. |
+| An approval is rejected | Copy the command from the **newest** proposal in the **same** conversation. The ID and revision must match. |
+| You changed an agent but the assistant behaves as before | Rerun Part A so the assistant is deployed with the new version. |
+| You can't find the assistant in Teams or Microsoft 365 | Publishing can take a few minutes, and your lab might not enable it. Ask your facilitator. |
+| Sign-in loops or shows a blank page in the private window | Ask your facilitator for the approved browser settings. Don't switch to a desktop client. |
 
-## ⭐ Optional extras (if you have time)
+## 🚀 Go further
 
-These are **not** needed to complete the challenge.
-
-### A — Evaluate an agent (15 min)
-
-1. Open **Evaluation** in the portal (preview).
-2. Create a small dataset of 3–5 questions with expected answers about the inventory data (e.g. *"Which store has the lowest leaf blower stock?"* → *"Portland"*).
-3. Run an evaluation against `inventory-optimisation-agent` and review the **groundedness** and **relevance** scores.
-4. Discuss: what would you add to the agent's instructions to improve the weakest score?
-
-### B — Showcase: chat with an agent in Teams & Microsoft 365 Copilot (15 min)
-
-The planners who place orders live in Teams. Publishing an agent lets them chat with it there.
-
-> [!IMPORTANT]
-> **Publish a prompt agent, not the workflow.** Teams / Microsoft 365 publishing supports only **prompt and hosted agents**; a workflow fails with *"Agent kind 'workflow' is not supported"*. Use the **Just you** scope — it needs no admin approval.
-
-1. Open **`demand-sensing-agent`** and select **Publish → Publish to Teams and Microsoft 365 Copilot**.
-
-   ![A prompt agent with the Publish menu open, showing the Teams & Microsoft 365 Copilot publish target](../images/challenge-04-teams.png)
-2. Fill in **Name** (e.g. *Inventory Planning Assistant*), **Publish version** `1.0.0`, a short and a long **Description**, and your **Developer** name. Don't put secrets in any field — this metadata is user-visible.
-3. Select **Next: Publish options → Direct publish**, choose **Just you**, then **Publish**.
-4. Open [Microsoft 365 Copilot](https://m365.cloud.microsoft) or [Teams](https://teams.microsoft.com) **signed in with the same lab user** you used in Foundry, open the **agent store → Your agents**, pick your agent, and ask:
-
-   ```text
-   A heatwave is hitting the Pacific Northwest — check our outdoor power tool exposure and tell me whether we're covered or exposed.
-   ```
-
-**Discuss:** what governance would you add before hundreds of planners trigger real purchase orders from Teams? (Think: the approval gate, a spend cap, who may call the bot, and audit via the trace.)
+- Open the assistant's code in the `orchestrator` folder, change the graph or the approval rules, run its tests and deploy a new version.
+- Ask for a different scenario, for example a paint-and-supplies spike, and compare the proposal.
+- Compare the Data Agent's source descriptions with the agent-level description overrides. You don't need an ontology for this lab.
 
 ## 🧠 Reflection
 
-- When would you choose a deterministic workflow over three agents a human drives manually — and when would the **Group chat** pattern (dynamic hand-off) fit better?
-- Once the loop runs end-to-end from one prompt, the approval gate is the only human checkpoint. What else would you add before production?
-
-> [!NOTE]
-> **Using this pattern in your own scenarios after 1 December 2026.** The visual designer and in-portal workflow runs retire, but the pattern you built — specialist agents in a fixed order with a human approval gate — carries over:
->
-> - **Keep your design:** before you leave, open your workflow's **YAML** view and copy the YAML. It is the portable definition of what you built today.
-> - **Code-first (recommended):** run the same sequence with **Microsoft Agent Framework** — reuse the YAML as a *declarative workflow*, or write it in Python/.NET — and deploy it to Foundry as a **hosted agent**. Your prompt agents from Challenges 2–4 stay unchanged.
-> - **Low-code, visual:** use **Azure Logic Apps** to call your Foundry agents as steps and mix them with business actions (approvals, emails, ERP or database writes).
-> - **Simple hand-off:** if one agent only needs to call another, connect them **agent-to-agent (A2A)** instead of building a workflow.
->
-> Whichever path you pick, keep the human approval gate in front of any action that changes a real system. See the [migration guide](https://learn.microsoft.com/azure/foundry/agents/concepts/workflow#migration-guide).
+- Why is a fixed graph of three agents easier to trust than letting a model choose its own next agent?
+- Why does the app, not the AI, decide whether an order was approved?
+- What would you add before connecting this to a real ERP (think idempotency, audit trail and spend limits)?
 
 ## 📚 Learning resources
 
-- [Build a workflow in Microsoft Foundry (Preview)](https://learn.microsoft.com/azure/foundry/agents/concepts/workflow)
-- [Microsoft Agent Framework declarative workflows (the YAML behind the designer)](https://learn.microsoft.com/agent-framework/workflows/declarative)
-- [Automate Foundry agents with workflows in Azure Logic Apps](https://learn.microsoft.com/azure/logic-apps/automate-foundry-agents-with-workflows)
-- [Publish agents to Microsoft 365 Copilot and Microsoft Teams](https://learn.microsoft.com/azure/foundry/agents/how-to/publish-copilot)
-- [Agent tracing — Foundry](https://learn.microsoft.com/azure/foundry/observability/concepts/trace-agent-concept)
-- [Evaluate agents — Foundry](https://learn.microsoft.com/azure/foundry/observability/how-to/evaluate-agent)
-- [Orchestration patterns for AI agents](https://learn.microsoft.com/azure/architecture/ai-ml/guide/ai-agent-design-patterns)
+- [Workflow retirement and supported migration paths](https://learn.microsoft.com/azure/foundry/agents/concepts/workflow#migration-guide)
+- [Agent Framework hosting and persistent sessions](https://learn.microsoft.com/agent-framework/hosting/foundry-hosted-agent?pivots=programming-language-python)
+- [Fabric IQ migration](https://learn.microsoft.com/azure/foundry/agents/how-to/tools/fabric-iq#migrate-from-the-fabric-data-agent-tool)
+- [Publishing and personal/tenant access](https://learn.microsoft.com/azure/foundry/agents/how-to/publish-copilot)

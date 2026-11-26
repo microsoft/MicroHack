@@ -37,7 +37,7 @@ inside this container; the lab platforms run in Azure.
 3. Select branch **main**, devcontainer configuration
    **Azure / App Innovation / Adaptive Apps**, and a **2-core** machine, then
    **Create codespace**. The configuration file is
-   [`.devcontainer/03-azure-01-01-app-innovation-04-adaptive-apps/devcontainer.json`](../../../../../.devcontainer/03-azure-01-01-app-innovation-04-adaptive-apps/devcontainer.json).
+   [`.devcontainer/03-azure-01-01-app-innovation-04-adaptive-apps/devcontainer.json`](../../../../.devcontainer/03-azure-01-01-app-innovation-04-adaptive-apps/devcontainer.json).
    Wait for the post-create setup to finish before using the terminal. If this
    configuration is not offered, use the local Dev Container path instead of
    the default Codespace.
@@ -82,7 +82,7 @@ inside this container; the lab platforms run in Azure.
 - **Browser access:** use the Ports view's forwarded HTTPS URLs, not browser
   `localhost`. Organizers must validate the Bastion connection and the frontend,
   Keycloak, and identity redirect URLs before the event; see
-  [Console setup](../../docs/console-setup.md#optional-extensions-and-hosted-browsers).
+  [Console setup](../docs/console-setup.md#optional-extensions-and-hosted-browsers).
   Challenge 10's GitHub Copilot app / Radius Canvas work still requires a host
   installation, not just a Codespace.
 - **Finish for the day:** use **Codespaces: Stop Codespace** in the Command

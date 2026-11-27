@@ -9,7 +9,7 @@
       - Azure AI Services account (AIServices kind — this is the Foundry account)
       - Azure AI Foundry project inside the account
       - gpt-5.4-mini model deployment (capacity 200 GlobalStandard = 200K TPM)
-      - A per-attendee Fabric capacity (default F4; -FabricSkuName to override), with the attendee set as capacity admin
+      - A per-attendee Fabric capacity (default F8; -FabricSkuName to override), with the attendee set as capacity admin
       - Application Insights (+ Log Analytics) connected to the project for agent tracing
     
     Each attendee gets their OWN Fabric capacity (no shared backend, no shared
@@ -43,7 +43,7 @@
     Entra user object IDs for this lab — passed in by the platform.
 
 .PARAMETER FabricSkuName
-    Per-attendee Fabric capacity SKU (default F4). Drop to F2 to halve cost if
+    Per-attendee Fabric capacity SKU (default F8). Drop to F4 to halve Fabric cost if
     attendees don't hit capacity throttling. If you change it, ALSO adjust
     estimatedDailyCostsUsd in lab-defaults.json to match — Fabric is the dominant
     cost and each SKU step roughly doubles it.
@@ -62,12 +62,12 @@ param(
 
     [string[]]$AllowedEntraUserIds = @(),
 
-    # Per-attendee Fabric capacity SKU. Default F4 avoids capacity throttling; drop
-    # to F2 to halve cost. If you change this, ALSO adjust estimatedDailyCostsUsd
+    # Per-attendee Fabric capacity SKU. Default F8 provides more capacity; drop
+    # to F4 to halve Fabric cost. If you change this, ALSO adjust estimatedDailyCostsUsd
     # in lab-defaults.json (Fabric is the dominant cost; each SKU step roughly
     # doubles it).
     [ValidateSet('F2','F4','F8','F16','F32','F64')]
-    [string]$FabricSkuName = "F4"
+    [string]$FabricSkuName = "F8"
 )
 
 $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
@@ -389,8 +389,8 @@ if ($existingDeploy.StatusCode -ne 200) {
 # Per-attendee Fabric capacity (ARM REST — no az CLI / Fabric extension needed).
 # The attendee is set as capacity ADMIN so they can create a workspace, assign it
 # to this capacity, and Run All the setup notebook themselves (Challenge 1).
-# Default F4 = 4 CU; a 512-CU subscription supports ~128 attendees. Drop to F2 (2 CU)
-# to double attendees/subscription and halve cost — override with -FabricSkuName and
+# Default F8 = 8 CU; a 512-CU subscription supports ~64 attendees. Drop to F4 (4 CU)
+# to double attendees/subscription and halve Fabric cost — override with -FabricSkuName and
 # adjust estimatedDailyCostsUsd in lab-defaults.json to match.
 #
 # Capacity admin members must be UPNs (or service principals) — bare object IDs are
